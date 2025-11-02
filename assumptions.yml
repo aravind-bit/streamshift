@@ -1,0 +1,7 @@
+bundle_fit:
+  "Amazon+Warner Bros. Discovery": 0.7
+  "NBCUniversal+Warner Bros. Discovery": 0.6
+  "Disney+Warner Bros. Discovery": 0.6
+  "Warner Bros. Discovery+Paramount Skydance": 0.55
+use_headline_sentiment: true
+overlap_top_k: 5
