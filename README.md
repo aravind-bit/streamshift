@@ -52,7 +52,7 @@ Agentic feel — tiny pipeline that nudges messy rights chatter into transparent
 
 Design & product copy were iterated with ChatGPT (GPT-5 Thinking) and Google AI Studio (for rapid UI text and layout sketches). Human judgment.
 
-for the mood pulse):
+Data model:
 
 brand,headline,link,date
 Amazon,"Prime Video and NBA announce landmark 11-year global media-rights deal","https://advertising.amazon.com/blog/prime-video-nba-2025-deal",2024-07-25
