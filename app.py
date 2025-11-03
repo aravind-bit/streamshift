@@ -268,5 +268,76 @@ with st.expander("Sources / Traceability (for titles shown)"):
             for u in links:
                 st.write(f"- {u}")
 
+# ---------- Headline Mood (quick check) ----------
+import pandas as pd
+import numpy as np
+import streamlit as st
+
+try:
+    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    _vader_ok = True
+except Exception:
+    _vader_ok = False
+
+st.markdown("### Headline Mood (quick check)")
+st.caption("Tiny NLP pulse based on recent headlines for the selected brands. Not investment advice—just a vibe check.")
+
+@st.cache_data(show_spinner=False)
+def load_headlines(path="data/headlines.csv"):
+    df = pd.read_csv(path)
+    for col in ["brand","headline","link","date"]:
+        if col not in df.columns:
+            raise ValueError("headlines.csv must have columns: brand, headline, link, date")
+    return df
+
+def _score_texts(texts):
+    if not _vader_ok:
+        return [np.nan]*len(texts)
+    analyzer = SentimentIntensityAnalyzer()
+    return [analyzer.polarity_scores(t)["compound"] for t in texts]
+
+try:
+    h = load_headlines()
+    # focus on buyer/target rows when possible
+    focus = set()
+    if "buyer_label" in st.session_state:
+        focus.add(st.session_state["buyer_label"])
+    if "target_label" in st.session_state:
+        focus.add(st.session_state["target_label"])
+    hh = h.copy()
+    if focus:
+        hh = hh[hh["brand"].isin(focus)] or h
+
+    hh = hh.copy()
+    hh["sentiment"] = _score_texts(hh["headline"].fillna(""))
+
+    # small, readable view
+    col1, col2 = st.columns((2,3))
+    with col1:
+        if _vader_ok and len(hh):
+            s = hh.groupby("brand")["sentiment"].mean().reset_index()
+            s["sentiment"] = s["sentiment"].round(3)
+            st.dataframe(s, use_container_width=True, hide_index=True)
+        else:
+            st.info("Add a few headlines to `data/headlines.csv` and ensure `vaderSentiment` is installed.")
+
+    with col2:
+        if _vader_ok and len(hh):
+            # quick bar meter (−1..+1)
+            chart_df = hh.groupby("brand")["sentiment"].mean().to_frame()
+            chart_df.columns = ["Mood"]
+            st.bar_chart(chart_df, height=180)
+        else:
+            st.empty()
+
+    # top links
+    if len(hh):
+        st.write("**Recent headlines**")
+        for _, row in hh.sort_values("date", ascending=False).head(6).iterrows():
+            st.write(f"- **{row['brand']}** — [{row['headline']}]({row['link']})  \n  _{row['date']}_")
+except FileNotFoundError:
+    st.info("Optional: add `data/headlines.csv` for mood check (columns: brand, headline, link, date).")
+
 # ---------------- footer ----------------
 st.caption("Hobby demo for media M&A what-ifs. Data: TMDB where available; status/notes are heuristic for illustration.")
+

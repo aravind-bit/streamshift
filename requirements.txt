@@ -5,3 +5,4 @@ scikit-learn==1.5.2
 numpy>=1.26
 requests>=2.32
 python-dotenv>=1.0
+vaderSentiment==3.3.2
