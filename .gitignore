@@ -13,3 +13,4 @@ data/tmp/
 
 # local virtual envs
 .venv*/
+secrets.toml
