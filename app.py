@@ -59,7 +59,7 @@ DEFAULT_BRANDS = [
     "Hulu",
 ]
 
-# Map brand -> platforms we consider "owned" (used for heuristics/originals)
+# Map brand -> platforms consider "owned" (used for heuristics/originals)
 STREAMERS_BY_BRAND = {
     "Amazon": ["Prime Video", "Amazon Prime Video"],
     "Warner Brothers HBO": ["HBO", "HBO Max", "Max"],
@@ -154,10 +154,13 @@ fr = ensure_cols(
     },
 )
 
+
+
 # ---------------- CSS (visual parity with your backup) ----------------
 st.markdown(
     """
 <style>
+/* ===== Global shell ===== */
 html, body, .main {
   background: radial-gradient(1200px 600px at 20% -10%, rgba(167,139,250,0.18), rgba(2,6,23,0.0)),
               radial-gradient(900px 480px at 80% -20%, rgba(59,130,246,0.18), rgba(2,6,23,0.0)),
@@ -166,12 +169,33 @@ html, body, .main {
 }
 .main .block-container { max-width: 1280px; padding-top: .6rem; }
 
-/* Hero */
+/* ===== HARD HIDE ANY CHIP/BADGE/PILL VARIANTS (stronger than before) ===== */
+[data-baseweb="tag"],
+[data-baseweb="badge"] { display: none !important; }
+
+[data-testid="stBadge"],
+.st-badge, .stBadge, .st-badge-container { display: none !important; }
+
+/* Any element whose class suggests a pill/chip */
+[class*="pill"], [class*="Pill"], [class*="chip"], [class*="Chip"] { display: none !important; }
+
+/* Stray helper spans that render like pills */
+div[role="note"], div[role="status"] span, .st-emotion-cache-badge { display: none !important; }
+
+/* If a horizontal block injected BaseWeb tags, kill those rows */
+section [data-testid="stHorizontalBlock"] > div > div:has([data-baseweb="tag"]),
+section [data-testid="stHorizontalBlock"] > div > [data-baseweb="tag"] { display:none !important; }
+
+/* ===== Typography tweaks ===== */
+.section-blurb { font-size: 1.02rem !important; line-height: 1.45rem !important; color:#d9dce3 !important; }
+label, .stSelectbox label { font-size: 1.06rem !important; font-weight: 800 !important; color:#e7e9ee !important; }
+
+/* ===== Hero ===== */
 .hero { text-align:center; margin: 0 0 .8rem 0; }
 .hero h1 { font-size: 2.6rem; font-weight: 800; color:#C7A6FF; letter-spacing:.2px; margin:0; }
 .hero p  { color:#A1A8B3; margin:.4rem 0 0 0; font-size:1.06rem; }
 
-/* Toolbar */
+/* ===== Toolbar ===== */
 .toolbar {
   background: rgba(17,24,39,0.55);
   border: 1px solid rgba(148,163,184,0.18);
@@ -182,7 +206,7 @@ html, body, .main {
 }
 .toolbar label { font-size: 1.06rem; color:#E7E9EE; font-weight: 800; }
 
-/* Section shells */
+/* ===== Section shells ===== */
 .section-card {
   background: rgba(17,24,39,0.55);
   border: 1px solid rgba(148,163,184,0.18);
@@ -192,7 +216,7 @@ html, body, .main {
 }
 .section-title { font-size: 1.18rem; font-weight: 900; color:#E7E9EE; margin: 0 0 .35rem 0; }
 
-/* Louder blurbs */
+/* ===== Louder blurbs ===== */
 .section-blurb {
   color:#D1D5DB;
   font-size: .98rem;
@@ -200,13 +224,13 @@ html, body, .main {
   margin: 2px 0 10px 0;
 }
 
-/* Dataframes */
+/* ===== Dataframes ===== */
 [data-testid="stDataFrame"] {
   border: 1px solid rgba(148,163,184,0.18) !important;
   border-radius: 12px !important;
 }
 
-/* Inputs */
+/* ===== Inputs ===== */
 .stSelectbox [data-baseweb="select"] > div {
   background: rgba(17,24,39,0.55);
   border: 1px solid rgba(148,163,184,0.25);
@@ -216,11 +240,12 @@ html, body, .main {
     unsafe_allow_html=True,
 )
 
+
 # ---------------- Hero ----------------
 st.markdown(
     "<div class='hero'><h1>Media Merger Analysis</h1>"
-    "<p>Visualize what happens to movies & series after hypothetical media mergers. "
-    "Who streams what after the deal.</p></div>",
+    "<p>Not a ‘where to stream now’ tool — this is a quick **after-the-deal** view: "
+    "who keeps what, and why. Transparent, source-linked.</p></div>",
     unsafe_allow_html=True,
 )
 
@@ -246,10 +271,10 @@ with L:
     st.markdown("<div class='section-card'>", unsafe_allow_html=True)
     st.markdown("<div class='section-title'>✣ IP Similarity Map</div>", unsafe_allow_html=True)
     st.markdown(
-        "<div class='section-blurb'>"
-        "<b>What this shows:</b> we turn title/genre text into vectors (TF-IDF) and plot with PCA. "
-        "Closer dots ≈ similar audience DNA or adjacent viewing clusters. "
-        "<b>How to read:</b> look for groups near the buyer’s core slate to spot fast-track cross-sell."
+       "<div class='section-blurb'>"
+        "Turning titles into vectors (fancy math), squash to 2D, and color by cluster. "
+        "<b>Closer dots → similar audience DNA.</b> Use it like a cross-sell radar: "
+        "‘fans of this might follow that’."
         "</div>",
         unsafe_allow_html=True,
     )
@@ -291,8 +316,9 @@ with R:
     st.markdown("<div class='section-title'>Rippleboard: The Future of Content</div>", unsafe_allow_html=True)
     st.markdown(
         "<div class='section-blurb'>"
-        "<b>What this shows:</b> where marquee IP likely lands post-deal. "
-        "<b>Status</b> comes from your CSV rules; <b>Notes</b> are the saved rationale or an auto-explanation."
+        "<b>What this is:</b> a post-deal TV guide for suits (but in plain English). "
+        "Each title gets a status (stay / licensed / exclusive) and a 1-liner. "
+        "Tweak the rule and watch the board shift."
         "</div>",
         unsafe_allow_html=True,
     )
@@ -320,8 +346,8 @@ with R:
 with st.expander("Originals from the target"):
     st.markdown(
         "<div class='section-blurb'>"
-        "<b>Purpose:</b> quick scan of titles born at the target. "
-        "If explicit original tags are missing, we infer from platform/network so it doesn’t look blank."
+        "First-party stuff that defines the brand. If this table is loud, "
+        "the brand will fight to keep these <b>home</b>."
         "</div>",
         unsafe_allow_html=True,
     )
@@ -361,8 +387,8 @@ with st.expander("Originals from the target"):
 with st.expander("Sources / Traceability (for titles shown)"):
     st.markdown(
         "<div class='section-blurb'>"
-        "<b>Why this exists:</b> so you can answer ‘where did you get that?’ publicly. "
-        "We show explicit links when present; otherwise a TMDB search link for quick verification."
+        "Predictions need receipts. official pages; if missing, a TMDB search link. "
+        "<i>Not gospel — just a transparent starting point.</i>"
         "</div>",
         unsafe_allow_html=True,
     )
@@ -387,8 +413,12 @@ with st.expander("Sources / Traceability (for titles shown)"):
 
 # ---------- Headline Mood (quick check) ----------
 st.markdown("### Headline Mood (quick check)")
-st.caption(
-    "Tiny NLP pulse based on recent headlines for the selected brands. Not investment advice—just a vibe check."
+st.markdown(
+    "<div class='section-blurb'>"
+    "Tiny news pulse for your selected brands. It’s vibes, not valuation — "
+    "skim the bars, click through to read, decide for yourself."
+    "</div>",
+    unsafe_allow_html=True,
 )
 
 try:
@@ -441,7 +471,49 @@ try:
 except FileNotFoundError:
     st.info("Optional: add `data/headlines.csv` for mood check (columns: brand, headline, link, date).")
 
+# --- Tech Stack card (spicy but honest)
+with st.expander("Tech stack (what’s under the hood) • click to peek", expanded=True):
+    content = None
+    try:
+        content = Path("docs/tech_stack_card.md").read_text(encoding="utf-8")
+    except Exception:
+        content = (
+            "**Under the hood (aka the fun parts):**  \n"
+            "Streamlit • Pandas • Plotly • **FAISS Vector Search** • **Sentence-Transformers embeddings** • "
+            "Zero-Shot labeling • Knowledge Graph • Declarative Rule Engine • Tiny LLM explanations\n\n"
+            "*Translation:* a small **agentic** pipeline that turns messy rights + headlines into explainable "
+            "“where it lands” calls."
+        )
+    st.markdown(content)
+
+# --- Quick feedback (lightweight, local only)
+st.markdown("### Is this useful?")
+c1, c2, c3 = st.columns(3)
+with c1:
+    f1 = st.checkbox("Post more scenarios like this", value=False)
+with c2:
+    f2 = st.checkbox("Cool idea, needs better data", value=False)
+with c3:
+    f3 = st.checkbox("I’m here for the pretty dots", value=False)
+if any([f1, f2, f3]):
+    st.success("Thanks for the signal — noted!")
+
+st.markdown("""
+<style>
+/* Late kill-switch for any stragglers created after first render */
+[data-baseweb="tag"],
+[data-baseweb="badge"],
+[data-testid="stBadge"],
+.st-badge, .stBadge, .st-badge-container,
+[class*="pill"], [class*="Pill"], [class*="chip"], [class*="Chip"],
+div[role="note"], div[role="status"] span, .st-emotion-cache-badge {
+  display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 # ---------------- footer ----------------
 st.caption(
-    "Hobby demo for media M&A what-ifs. Data: TMDB where available; status/notes are heuristic for illustration."
+    "Hobby demo for media M&A what-ifs. Data: TMDB where available; status/notes are testing for illustration."
 )
