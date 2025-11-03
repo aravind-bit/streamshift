@@ -55,27 +55,29 @@ Design & product copy were iterated with ChatGPT (GPT-5 Thinking) and Google AI 
 Data model:
 
 brand,headline,link,date
-Amazon,"Prime Video and NBA announce landmark 11-year global media-rights deal","https://advertising.amazon.com/blog/prime-video-nba-2025-deal",2024-07-25
-Warner Brothers HBO,"WBD: Max will become HBO Max this summer (official)","https://press.wbd.com/us/media-release/warner-bros-discovery-announces-max-become-hbo-max-summer",2025-05-14
-Netflix,"Netflix and Universal expand U.S. licensing deal — live-action films from 2027 (official)","https://about.netflix.com/news/netflix-and-universal-filmed-entertainment-group-expand-us-licensing-deal",2024-10-29
+Amazon,"Prime Video and NBA announce landmark 11-year global media-rights deal",
+"https://advertising.amazon.com/blog/prime-video-nba-2025-deal",2024-07-25
+Warner Brothers HBO,"WBD: Max will become HBO Max this summer (official)",
+"https://press.wbd.com/us/media-release/warner-bros-discovery-announces-max-become-hbo-max-summer",2025-05-14
+Netflix,"Netflix and Universal expand U.S. licensing deal — live-action films from 2027 (official)",
+"https://about.netflix.com/news/netflix-and-universal-filmed-entertainment-group-expand-us-licensing-deal",2024-10-29
 
 
 config/news.yml (used to render the articles list under the mood bars):
 
 Amazon:
-  rss: []
   articles:
     - title: "Prime Video and NBA announce landmark 11-year global media-rights deal (starts 2025–26)"
       url: "https://advertising.amazon.com/blog/prime-video-nba-2025-deal"
-      date: "2024-07-25"
+      date: "2024-07-25".
+      
 Warner Brothers HBO:
-  rss: []
   articles:
     - title: "WBD: Max will become HBO Max this summer (official press room)"
       url: "https://press.wbd.com/us/media-release/warner-bros-discovery-announces-max-become-hbo-max-summer"
-      date: "2025-05-14"
+      date: "2025-05-14".
+      
 Netflix:
-  rss: []
   articles:
     - title: "Netflix and Universal expand U.S. licensing deal — live-action films from 2027 (official)"
       url: "https://about.netflix.com/news/netflix-and-universal-filmed-entertainment-group-expand-us-licensing-deal"
