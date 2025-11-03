@@ -6,6 +6,36 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+# --- GA4 Measurement Protocol helper ---
+import uuid, requests
+
+def send_ga_event(event_name: str, params: dict):
+    """Fire-and-forget GA4 event. No-op if secrets not configured."""
+    ga = st.secrets.get("ga4", {})
+    mid = ga.get("measurement_id")
+    sec = ga.get("api_secret")
+    if not (mid and sec):
+        return  # GA not configured
+
+    payload = {
+        "client_id": str(uuid.uuid4()),  # anonymous session id
+        "events": [{
+            "name": event_name,
+            "params": params
+        }]
+    }
+    try:
+        requests.post(
+            f"https://www.google-analytics.com/mp/collect"
+            f"?measurement_id={mid}&api_secret={sec}",
+            json=payload,
+            timeout=4
+        )
+    except Exception:
+        # never break the app if GA is down
+        pass
+
+
 # Optional: lightweight clustering for other places (kept from your backup;
 # we will handle TF-IDF import again inside the map block to be robust)
 try:
@@ -561,6 +591,7 @@ with st.expander("Tech stack (what’s under the hood) • click to peek", expan
     st.markdown(content)
 
 # --- Quick feedback (lightweight, local only)
+
 st.markdown("### Is this useful?")
 c1, c2, c3 = st.columns(3)
 with c1:
@@ -571,6 +602,15 @@ with c3:
     f3 = st.checkbox("I’m here for the pretty dots", value=False)
 if any([f1, f2, f3]):
     st.success("Thanks for the signal — noted!")
+
+    # Send one GA4 event with useful context
+    send_ga_event("feedback_check", {
+        "buyer": buyer,
+        "target": target,
+        "more_scenarios": int(bool(f1)),
+        "better_data":   int(bool(f2)),
+        "pretty_dots":   int(bool(f3)),
+    })
 
 st.markdown("""
 <style>
