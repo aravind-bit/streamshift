@@ -1,464 +1,447 @@
-# app.py — Media Merger Analysis (stable + WOW v2)
-# ------------------------------------------------
-# - Centered title/subtitle
-# - Buyer/Target selectors (no "Generate" button)
-# - Rippleboard (IP, Predicted Status, Notes, Platform, Tags)
-# - Originals from the target (heuristic tagging if missing)
-# - Sources / Traceability (links if present, TMDB search helper otherwise)
-# - Headline Mood (quick VADER sentiment on data/headlines.csv)
-# - IP Similarity Map WOW v2 (Sentence-Transformers -> UMAP/PCA -> KMeans)
-#   with full fallbacks so the app never breaks.
-
+# Media Merger Analysis — backup look, plus HBO alias + "Warner Brothers HBO" branding
 from __future__ import annotations
-
-import os
 import re
 from pathlib import Path
-from typing import List, Tuple
 
-import numpy as np
 import pandas as pd
 import streamlit as st
 
-# ---------- Plotting ----------
-import plotly.express as px
-
-# ---------- ML (with graceful fallbacks) ----------
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-
+# Optional: lightweight clustering for the map (skips gracefully if missing)
 try:
-    import umap  # type: ignore
-    _UMAP_OK = True
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.decomposition import PCA
+    HAVE_SK = True
 except Exception:
-    _UMAP_OK = False
+    HAVE_SK = False
 
-try:
-    from sentence_transformers import SentenceTransformer  # type: ignore
-    _ST_OK = True
-except Exception:
-    _ST_OK = False
+ROOT = Path(__file__).resolve().parent
+DATA = ROOT / "data"
 
-try:
-    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer  # type: ignore
-    _VADER_OK = True
-except Exception:
-    _VADER_OK = False
+# ---------------- helpers ----------------
+def read_csv_safe(path: Path) -> pd.DataFrame:
+    for enc in ("utf-8", "utf-8-sig", "latin-1", "cp1252", "mac_roman"):
+        try:
+            return pd.read_csv(path, encoding=enc)
+        except Exception:
+            pass
+    return pd.DataFrame()
 
+def ensure_cols(df: pd.DataFrame, template: dict) -> pd.DataFrame:
+    for k, v in template.items():
+        if k not in df.columns:
+            df[k] = v
+        df[k] = df[k].fillna("")
+    return df
 
-# ----------------------------
-# Streamlit page configuration
-# ----------------------------
-st.set_page_config(
-    page_title="Media Merger Analysis",
-    page_icon="🎬",
-    layout="wide",
-)
+# Display aliases (UI only)
+PLATFORM_ALIASES = {
+    "HBO Max": "HBO",
+    "Max": "HBO",
+}
+def apply_platform_aliases(text: str) -> str:
+    if not isinstance(text, str):
+        return text
+    out = text
+    for k, v in PLATFORM_ALIASES.items():
+        out = re.sub(rf"\b{k}\b", v, out)
+    return out
 
-# ----------------------------
-# Utilities / IO
-# ----------------------------
-DATA_DIR = Path("data")
-FRANCHISES_CSV = DATA_DIR / "franchises.csv"
-HEADLINES_CSV = DATA_DIR / "headlines.csv"
-
-FRIENDLY_BUYERS = [
+# The order of default brands to show in the selectors
+DEFAULT_BRANDS = [
     "Amazon",
-    "Warner Bros. Discovery",
+    "Warner Brothers HBO",  # formerly shown as "Max/HBO Max"
     "Paramount Global",
     "Comcast (NBCUniversal)",
     "Disney",
     "Netflix",
     "Apple",
     "Sony",
+    "Hulu",
 ]
 
+# Map brand -> platforms we consider "owned" (used for heuristics/originals)
 STREAMERS_BY_BRAND = {
     "Amazon": ["Prime Video", "Amazon Prime Video"],
-    "Warner Bros. Discovery": ["Max", "HBO Max"],
+    "Warner Brothers HBO": ["HBO", "HBO Max", "Max"],
     "Paramount Global": ["Paramount+", "Paramount Plus"],
     "Comcast (NBCUniversal)": ["Peacock"],
     "Disney": ["Disney+"],
     "Netflix": ["Netflix"],
     "Apple": ["Apple TV+"],
     "Sony": ["Crunchyroll", "SonyLIV"],
+    "Hulu": ["Hulu"],
 }
 
+def infer_brand_text(txt: str) -> str:
+    """Infer a brand from text such as current_platform/original_network strings."""
+    t = f" {str(txt or '').lower()} "
+    if " netflix " in t: return "Netflix"
+    # collapse any HBO/Max variants to the single brand label
+    if " hbo " in t or " hbomax " in t or " hbo max " in t or " max " in t:
+        return "Warner Brothers HBO"
+    if " prime video " in t or " amazon " in t:
+        return "Amazon"
+    if " paramount+ " in t or " paramount plus " in t or " cbs " in t:
+        return "Paramount Global"
+    if " peacock " in t or " nbc " in t or " universal television " in t:
+        return "Comcast (NBCUniversal)"
+    if " apple tv+ " in t:
+        return "Apple"
+    if " disney+ " in t:
+        return "Disney"
+    if " hulu " in t:
+        return "Hulu"
+    return ""
 
-# ----------------------------
-# Load / cache data
-# ----------------------------
-@st.cache_data(show_spinner=False)
-def load_franchises(path: Path) -> pd.DataFrame:
-    if not path.exists():
-        # Create a tiny stub so app never crashes
-        df = pd.DataFrame(
-            [
-                {
-                    "title": "Stranger Things",
-                    "predicted_status": "Exclusive Distribution",
-                    "notes": "High-value IP → likely exclusive under Amazon.",
-                    "current_platform": "Netflix, Netflix Standard with Ads",
-                    "tags": "drama, sci-fi, teens",
-                    "origin_label": "Exclusive Distribution",
-                    "source_urls": "",
-                },
-                {
-                    "title": "Game of Thrones",
-                    "predicted_status": "Licensed",
-                    "notes": "Not a flagship—probably stays put for now.",
-                    "current_platform": "Max",
-                    "tags": "fantasy, drama, epic",
-                    "origin_label": "Licensed",
-                    "source_urls": "",
-                },
-            ]
-        )
+def buyer_target_options(fr: pd.DataFrame) -> list[str]:
+    """Combine our default brand list with any discovered `original_brand` values."""
+    discovered = sorted(set(x for x in fr.get("original_brand", []).tolist() if str(x).strip()))
+    out: list[str] = []
+    for b in DEFAULT_BRANDS + discovered:
+        if b and b not in out:
+            out.append(b)
+    return out or DEFAULT_BRANDS
+
+def tmdb_links(title: str, source_urls: str) -> list[str]:
+    """Prefer explicit URLs in CSV; otherwise provide a TMDB search to verify quickly."""
+    urls = [u.strip() for u in str(source_urls or "").split(";") if u.strip()]
+    if urls:
+        return urls
+    if title:
+        q = re.sub(r"\s+", "+", title.strip())
+        return [f"https://www.themoviedb.org/search?query={q}"]
+    return []
+
+def synth_note(status: str, buyer: str, target: str) -> str:
+    s = (status or "").lower()
+    if "exclusive" in s: return f"High-value IP → likely exclusive under {buyer}."
+    if "window" in s: return f"Window under {buyer}; long-tail remains with {target}."
+    if "shared" in s: return "Lower strategic value → shared licensing continues."
+    return "Not a flagship—probably stays put for now."
+
+def compact_table(df: pd.DataFrame, keep_order: list[str]) -> pd.DataFrame:
+    if df.empty:
         return df
-    df = pd.read_csv(path)
-    # Normalize column names we rely on
-    want = [
-        "title",
-        "predicted_status",
-        "status",
-        "notes",
-        "current_platform",
-        "platform",
-        "tags",
-        "origin_label",
-        "original_network",
-        "distributor_list",
-        "source_urls",
-    ]
-    for w in want:
-        if w not in df.columns:
-            df[w] = ""
-    # pick one status column
-    if "predicted_status" not in df.columns and "status" in df.columns:
-        df["predicted_status"] = df["status"]
-    elif "predicted_status" in df.columns and df["predicted_status"].isna().all() and "status" in df.columns:
-        df["predicted_status"] = df["status"]
-    # unify naming for platform
-    if df["platform"].astype(str).str.strip().ne("").any() and df["current_platform"].astype(str).str.strip().eq("").all():
-        df["current_platform"] = df["platform"]
-    return df
+    df = df.copy()
+    for c in df.columns:
+        df[c] = df[c].replace("", pd.NA)
+    usable = [c for c in df.columns if df[c].notna().any()]
+    df = df[usable]
+    ordered = [c for c in keep_order if c in df.columns] + [c for c in df.columns if c not in keep_order]
+    return df[ordered].fillna("—")
 
+# ---------------- load data ----------------
+st.set_page_config(page_title="Media Merger Analysis", layout="wide")
 
-@st.cache_data(show_spinner=False)
-def load_headlines(path: Path) -> pd.DataFrame:
-    if not path.exists():
-        return pd.DataFrame(columns=["brand", "headline", "link", "date"])
-    df = pd.read_csv(path)
-    for col in ["brand", "headline", "link", "date"]:
-        if col not in df.columns:
-            df[col] = ""
-    return df
+fr = read_csv_safe(DATA / "franchises.csv")
+if fr.empty:
+    st.error("Could not read data/franchises.csv. Add your data and rerun.")
+    st.stop()
 
+fr = ensure_cols(
+    fr,
+    {
+        "title": "",
+        "origin_label": "",          # your status label/rule (e.g., Exclusive/Stay/Windowed)
+        "predicted_policy": "",      # free-text rationale if you saved one
+        "original_flag": "",         # Y/N
+        "original_brand": "",
+        "original_network": "",
+        "producer_list": "",
+        "current_platform": "",
+        "source_urls": "",
+        "genre_tags": "",
+    },
+)
 
-df = load_franchises(FRANCHISES_CSV)
-headlines = load_headlines(HEADLINES_CSV)
-
-
-# ----------------------------
-# Centered Title / Subtitle
-# ----------------------------
+# ---------------- CSS (visual parity with your backup) ----------------
 st.markdown(
     """
-    <div style="text-align:center; margin-top: 8px;">
-      <h1 style="margin-bottom: 0.25rem; font-size: 2.2rem;">Media Merger Analysis</h1>
-      <div style="opacity:0.85; font-size:1.05rem;">
-        Who streams what after the deal.
-      </div>
-    </div>
-    """,
+<style>
+html, body, .main {
+  background: radial-gradient(1200px 600px at 20% -10%, rgba(167,139,250,0.18), rgba(2,6,23,0.0)),
+              radial-gradient(900px 480px at 80% -20%, rgba(59,130,246,0.18), rgba(2,6,23,0.0)),
+              #0b1120;
+  color: #E7E9EE;
+}
+.main .block-container { max-width: 1280px; padding-top: .6rem; }
+
+/* Hero */
+.hero { text-align:center; margin: 0 0 .8rem 0; }
+.hero h1 { font-size: 2.6rem; font-weight: 800; color:#C7A6FF; letter-spacing:.2px; margin:0; }
+.hero p  { color:#A1A8B3; margin:.4rem 0 0 0; font-size:1.06rem; }
+
+/* Toolbar */
+.toolbar {
+  background: rgba(17,24,39,0.55);
+  border: 1px solid rgba(148,163,184,0.18);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  margin-bottom: 10px;
+}
+.toolbar label { font-size: 1.06rem; color:#E7E9EE; font-weight: 800; }
+
+/* Section shells */
+.section-card {
+  background: rgba(17,24,39,0.55);
+  border: 1px solid rgba(148,163,184,0.18);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+.section-title { font-size: 1.18rem; font-weight: 900; color:#E7E9EE; margin: 0 0 .35rem 0; }
+
+/* Louder blurbs */
+.section-blurb {
+  color:#D1D5DB;
+  font-size: .98rem;
+  line-height: 1.35rem;
+  margin: 2px 0 10px 0;
+}
+
+/* Dataframes */
+[data-testid="stDataFrame"] {
+  border: 1px solid rgba(148,163,184,0.18) !important;
+  border-radius: 12px !important;
+}
+
+/* Inputs */
+.stSelectbox [data-baseweb="select"] > div {
+  background: rgba(17,24,39,0.55);
+  border: 1px solid rgba(148,163,184,0.25);
+}
+</style>
+""",
     unsafe_allow_html=True,
 )
 
-st.write("")  # small spacer
+# ---------------- Hero ----------------
+st.markdown(
+    "<div class='hero'><h1>Media Merger Analysis</h1>"
+    "<p>Visualize what happens to movies & series after hypothetical media mergers. "
+    "Who streams what after the deal.</p></div>",
+    unsafe_allow_html=True,
+)
 
+# ---------------- Toolbar: Buyer / Target ----------------
+st.markdown("<div class='toolbar'>", unsafe_allow_html=True)
+c1, c2 = st.columns([1, 1])
+opts = buyer_target_options(fr)
+with c1:
+    buyer = st.selectbox("Buyer", opts, index=opts.index("Amazon") if "Amazon" in opts else 0)
+with c2:
+    target_default = "Warner Brothers HBO" if "Warner Brothers HBO" in opts else (opts[1] if len(opts) > 1 else opts[0])
+    target = st.selectbox("Target", opts, index=opts.index(target_default))
+st.markdown("</div>", unsafe_allow_html=True)
 
-# ----------------------------
-# Buyer / Target selectors
-# ----------------------------
-col_b, col_t = st.columns(2)
-with col_b:
-    st.markdown("#### Buyer")
-    buyer = st.selectbox("", FRIENDLY_BUYERS, index=0, label_visibility="collapsed")
-with col_t:
-    st.markdown("#### Target")
-    target = st.selectbox("", FRIENDLY_BUYERS, index=1, label_visibility="collapsed")
-
-# keep in session for mood focus
+# keep labels for optional sentiment section
 st.session_state["buyer_label"] = buyer
 st.session_state["target_label"] = target
 
+# ---------------- Main: map + rippleboard ----------------
+L, R = st.columns([1.05, 1.6])
 
-# -------------------------------------------------------
-# Heuristic: originals tagging if data is thin / inconsistent
-# -------------------------------------------------------
-def tag_originals_heuristic(frame: pd.DataFrame, brand: str) -> pd.Series:
-    """
-    Return a boolean Series "is_original" based on origin_label/platform/network
-    matching the target brand's known services. Never crashes if columns are missing.
-    """
-    servs = STREAMERS_BY_BRAND.get(brand, [])
-    plat = frame.get("current_platform", pd.Series([""] * len(frame))).astype(str).str.lower()
-    netw = frame.get("original_network", pd.Series([""] * len(frame))).astype(str).str.lower()
-    label = frame.get("origin_label", pd.Series([""] * len(frame))).astype(str).str.lower()
+with L:
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>✣ IP Similarity Map</div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='section-blurb'>"
+        "<b>What this shows:</b> we turn title/genre text into vectors (TF-IDF) and plot with PCA. "
+        "Closer dots ≈ similar audience DNA or adjacent viewing clusters. "
+        "<b>How to read:</b> look for groups near the buyer’s core slate to spot fast-track cross-sell."
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    try:
+        if HAVE_SK and len(fr) >= 3:
+            corpus = (fr["title"].astype(str) + " " + fr["genre_tags"].astype(str)).tolist()
+            X = TfidfVectorizer(min_df=1, max_features=1000).fit_transform(corpus)
+            coords = PCA(n_components=2, random_state=42).fit_transform(X.toarray())
+            dfp = pd.DataFrame(
+                {
+                    "x": coords[:, 0],
+                    "y": coords[:, 1],
+                    "brand": fr.apply(
+                        lambda r: (r.get("original_brand")
+                                   or infer_brand_text(r.get("current_platform"))
+                                   or "Other"),
+                        axis=1,
+                    ),
+                }
+            )
+            import plotly.express as px
 
-    # brand match list
-    pats = [s.lower() for s in servs] + [brand.lower()]
-    regex = "|".join([re.escape(p) for p in pats if p])
+            fig = px.scatter(dfp, x="x", y="y", color="brand", height=360)
+            fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                margin=dict(l=10, r=10, t=10, b=10),
+                legend_title_text="",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.caption("Add more rows or install scikit-learn to see the map.")
+    except Exception as e:
+        st.caption(f"Map unavailable: {e}")
+    st.markdown("</div>", unsafe_allow_html=True)
 
-    condition = pd.Series([False] * len(frame))
-    if regex:
-        condition |= plat.str.contains(regex, regex=True, na=False)
-        condition |= netw.str.contains(regex, regex=True, na=False)
-
-    # strong label wins
-    condition |= label.str.contains("original", na=False)
-    condition |= label.str.contains("exclusive", na=False)
-
-    return condition.fillna(False)
-
-
-# ----------------------------
-# Rippleboard table
-# ----------------------------
-st.markdown("### Rippleboard: The Future of Content")
-st.caption(
-    "A quick ‘what happens next’ table for marquee titles. "
-    "Plain-English notes keep it explainable and hobby-friendly."
-)
-
-# Build skinny view
-ripple_cols = [
-    ("title", "IP / Franchise"),
-    ("predicted_status", "Predicted Status"),
-    ("notes", "Notes"),
-    ("current_platform", "Current Platform"),
-    ("tags", "Tags"),
-]
-ripple = pd.DataFrame({new: df.get(old, "") for old, new in ripple_cols})
-st.dataframe(ripple, use_container_width=True, hide_index=True, height=380)
-
-
-# ----------------------------
-# IP Similarity Map (WOW v2)
-# ----------------------------
-st.markdown("### IP Similarity Map")
-st.caption(
-    "We turn titles & tags into vectors (story DNA), reduce to 2-D with UMAP/PCA, "
-    "then color clusters with K-Means. Close dots ⇒ similar vibe/genre."
-)
-
-def _prep_text(_df: pd.DataFrame) -> pd.Series:
-    cols = [c for c in ["title", "tags", "notes"] if c in _df.columns]
-    if not cols:
-        return _df["title"].astype(str)
-    return (
-        _df[cols].fillna("")
-        .astype(str)
-        .agg(" ".join, axis=1)
-        .str.replace(r"\s+", " ", regex=True)
-        .str.strip()
+with R:
+    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>Rippleboard: The Future of Content</div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='section-blurb'>"
+        "<b>What this shows:</b> where marquee IP likely lands post-deal. "
+        "<b>Status</b> comes from your CSV rules; <b>Notes</b> are the saved rationale or an auto-explanation."
+        "</div>",
+        unsafe_allow_html=True,
     )
 
-@st.cache_resource(show_spinner=False)
-def _load_st_model():
-    if not _ST_OK:
-        return None
-    return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    rb = fr.copy()
+    # If you use origin_label as your status, reuse it; otherwise it falls back to "Stay"
+    rb["Predicted Status"] = rb["origin_label"].replace("", "Stay")
 
-@st.cache_data(show_spinner=False)
-def _embed_texts(texts: List[str]) -> np.ndarray:
-    model = _load_st_model()
-    if model is not None:
-        embs = model.encode(texts, normalize_embeddings=True, convert_to_numpy=True)
-        return embs
-    # fallback: TF-IDF → PCA(100)
-    tfidf = TfidfVectorizer(min_df=1, max_features=5000, ngram_range=(1, 2))
-    X = tfidf.fit_transform(texts)
-    n_comp = max(2, min(100, X.shape[1] - 1))
-    pca = PCA(n_components=n_comp, random_state=42)
-    return pca.fit_transform(X.toarray())
+    # Alias visible platform strings to "HBO"
+    rb["current_platform"] = rb["current_platform"].astype(str).apply(apply_platform_aliases)
 
-@st.cache_data(show_spinner=False)
-def _reduce_2d(embs: np.ndarray) -> np.ndarray:
-    if _UMAP_OK and embs.shape[0] >= 6:
-        reducer = umap.UMAP(n_components=2, min_dist=0.15, n_neighbors=10, random_state=42)
-        return reducer.fit_transform(embs)
-    pca2 = PCA(n_components=2, random_state=42)
-    return pca2.fit_transform(embs)
+    rb["Notes"] = [
+        (str(row.get("predicted_policy", "")).strip()
+         or synth_note(str(row.get("Predicted Status", "")), buyer, target))
+        for _, row in rb.iterrows()
+    ]
+    rb_view = (
+        rb[["title", "Predicted Status", "Notes", "current_platform"]]
+        .rename(columns={"title": "IP / Franchise", "current_platform": "Current Platform"})
+    )
+    st.dataframe(rb_view.head(20), use_container_width=True, hide_index=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-@st.cache_data(show_spinner=False)
-def _cluster(pts: np.ndarray, k: int = 4) -> np.ndarray:
-    k = max(2, min(k, len(pts)))
-    km = KMeans(n_clusters=k, n_init=10, random_state=42)
-    return km.fit_predict(pts)
+# ---------------- Originals (expander) ----------------
+with st.expander("Originals from the target"):
+    st.markdown(
+        "<div class='section-blurb'>"
+        "<b>Purpose:</b> quick scan of titles born at the target. "
+        "If explicit original tags are missing, we infer from platform/network so it doesn’t look blank."
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    # strict originals first
+    orig = fr[
+        (fr.get("original_flag", "").astype(str).str.upper() == "Y")
+        & (fr.get("original_brand", "").astype(str).str.lower() == target.lower())
+    ][["title", "original_network", "producer_list", "current_platform", "source_urls"]].copy()
 
-_text = _prep_text(df)
-_embs = _embed_texts(_text.tolist())
-_xy = _reduce_2d(_embs)
-_lbls = _cluster(_xy, k=4)
+    # if empty, infer by platform/network brand
+    if orig.empty:
+        mask = fr.apply(
+            lambda r: infer_brand_text(r.get("current_platform", "")) == target
+            or infer_brand_text(r.get("original_network", "")) == target,
+            axis=1,
+        )
+        orig = fr.loc[
+            mask, ["title", "original_network", "producer_list", "current_platform", "source_urls"]
+        ].head(20).copy()
 
-DEFAULT_CLUSTER_NAMES = {
-    0: "Teen Sci-Fi / Fantasy",
-    1: "Crime / Spy / Thriller",
-    2: "Comedy / Workplace",
-    3: "Epic / Prestige Drama",
-}
+    # UI alias for platforms
+    orig["current_platform"] = orig["current_platform"].astype(str).apply(apply_platform_aliases)
 
-df_map = pd.DataFrame(
-    {
-        "x": _xy[:, 0],
-        "y": _xy[:, 1],
-        "cluster": _lbls,
-        "title": df["title"].astype(str),
-        "platform": df.get("current_platform", pd.Series([""] * len(df))).astype(str),
-        "tags": df.get("tags", pd.Series([""] * len(df))).astype(str),
-        "notes": df.get("notes", pd.Series([""] * len(df))).astype(str),
-    }
-)
-df_map["cluster_name"] = df_map["cluster"].map(lambda c: DEFAULT_CLUSTER_NAMES.get(c, f"Group {c}"))
-df_map["hover"] = (
-    "**" + df_map["title"] + "**"
-    + "<br><b>Cluster:</b> " + df_map["cluster_name"]
-    + "<br><b>Platform:</b> " + df_map["platform"].str.split(",").str[0].fillna("")
-    + "<br><b>Tags:</b> " + df_map["tags"].fillna("")
-    + "<br><b>Note:</b> " + df_map["notes"].fillna("")
-)
+    orig = compact_table(
+        orig, ["title", "original_network", "producer_list", "current_platform", "source_urls"]
+    )
+    if not orig.empty:
+        st.dataframe(
+            orig.rename(columns={"current_platform": "platform"}),
+            use_container_width=True,
+            hide_index=True,
+        )
+    else:
+        st.caption("No clear originals visible yet—add a few and rerun enrichment.")
 
-fig = px.scatter(
-    df_map,
-    x="x",
-    y="y",
-    color="cluster_name",
-    hover_name="title",
-    hover_data={"x": False, "y": False, "cluster": False, "cluster_name": False, "platform": False, "tags": False, "notes": False},
-    custom_data=["hover"],
-    opacity=0.9,
-    template="plotly_dark",
-    height=420,
-)
-fig.update_traces(marker=dict(size=10, line=dict(width=0)))
-fig.update_traces(hovertemplate="%{customdata[0]}<extra></extra>")
-st.plotly_chart(fig, use_container_width=True)
+# ---------------- Sources / Traceability ----------------
+with st.expander("Sources / Traceability (for titles shown)"):
+    st.markdown(
+        "<div class='section-blurb'>"
+        "<b>Why this exists:</b> so you can answer ‘where did you get that?’ publicly. "
+        "We show explicit links when present; otherwise a TMDB search link for quick verification."
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    shown = pd.concat(
+        [
+            rb_view.head(20)[["IP / Franchise"]].rename(columns={"IP / Franchise": "title"}),
+            orig[["title"]] if 'orig' in locals() and not orig.empty else pd.DataFrame(columns=["title"]),
+        ],
+        ignore_index=True,
+    ).drop_duplicates()
 
-st.caption(
-    "Clusters are data-driven and lightly labeled. Edit names in `DEFAULT_CLUSTER_NAMES` "
-    "to match your intuition (e.g., ‘Superhero’, ‘Family Animation’)."
-)
+    if shown.empty:
+        st.caption("No titles in view yet.")
+    else:
+        joined = shown.merge(fr[["title", "source_urls"]], on="title", how="left")
+        for _, r in joined.iterrows():
+            t = str(r["title"]).strip()
+            links = tmdb_links(t, r.get("source_urls", ""))
+            st.markdown(f"**{t}**")
+            for u in links:
+                st.write(f"- {u}")
 
-
-# ----------------------------
-# Originals from the target
-# ----------------------------
-st.markdown("### Originals from the target")
-st.caption(
-    "Target-brand originals inferred from platform/network/labels. "
-    "If your CSV is thin, this heuristic helps avoid an empty table."
-)
-
-is_orig = tag_originals_heuristic(df, target)
-orig_view = pd.DataFrame(
-    {
-        "title": df["title"],
-        "original_network": df.get("original_network", ""),
-        "producer_list": df.get("producer_list", ""),
-        "platform": df.get("current_platform", df.get("platform", "")),
-        "predicted_policy": df.get("predicted_status", df.get("status", "")),
-    }
-)[is_orig]
-
-if len(orig_view):
-    st.dataframe(orig_view, use_container_width=True, hide_index=True, height=260)
-else:
-    st.info("No clear originals detected for this small demo—add a few and rerun enrichment.")
-
-
-# ----------------------------
-# Sources / Traceability
-# ----------------------------
-st.markdown("### Sources / Traceability (for titles shown)")
-st.caption(
-    "Saved source URLs appear here. If missing, we show a quick TMDB search link so you can verify manually."
-)
-
-def _to_first_link(cell: str) -> str:
-    if not cell or pd.isna(cell):
-        return ""
-    # accept pipe/comma separated sources
-    parts = [p.strip() for p in str(cell).split("|") if p.strip()] or [p.strip() for p in str(cell).split(",") if p.strip()]
-    return parts[0] if parts else ""
-
-trace_df = pd.DataFrame(
-    {
-        "title": df["title"],
-        "source": df["source_urls"].apply(_to_first_link),
-    }
-)
-
-def tmdb_link(title: str) -> str:
-    q = re.sub(r"\s+", "+", title.strip())
-    return f"https://www.themoviedb.org/search?query={q}"
-
-def linkify(row) -> str:
-    if row["source"]:
-        return f"[open]({row['source']})"
-    return f"[search TMDB]({tmdb_link(row['title'])})"
-
-trace_df["link"] = trace_df.apply(linkify, axis=1)
-trace_view = trace_df[["title", "link"]]
-st.dataframe(trace_view, use_container_width=True, hide_index=True, height=220)
-
-
-# ----------------------------
-# Headline Mood (quick check)
-# ----------------------------
+# ---------- Headline Mood (quick check) ----------
 st.markdown("### Headline Mood (quick check)")
-st.caption("Tiny NLP pulse based on recent headlines for the selected brands. Not investment advice—just a vibe check.")
+st.caption(
+    "Tiny NLP pulse based on recent headlines for the selected brands. Not investment advice—just a vibe check."
+)
 
-def _score_texts(texts: List[str]) -> List[float]:
-    if not _VADER_OK:
-        return [np.nan] * len(texts)
+try:
+    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    _vader_ok = True
+except Exception:
+    _vader_ok = False
+
+@st.cache_data(show_spinner=False)
+def load_headlines(path="data/headlines.csv"):
+    df = pd.read_csv(path)
+    for col in ["brand", "headline", "link", "date"]:
+        if col not in df.columns:
+            raise ValueError("headlines.csv must have columns: brand, headline, link, date")
+    return df
+
+def _score_texts(texts):
+    if not _vader_ok:
+        return [float("nan")] * len(texts)
     analyzer = SentimentIntensityAnalyzer()
     return [analyzer.polarity_scores(t)["compound"] for t in texts]
 
-if len(headlines):
+try:
+    h = load_headlines()
     focus = {buyer, target}
-    hh = headlines.copy()
-    hh = hh[hh["brand"].isin(focus)] if focus else hh
-    hh = hh.copy()
-    hh["sentiment"] = _score_texts(hh["headline"].fillna(""))
+    hh = h[h["brand"].isin(focus)] if len(h) else h
 
-    c1, c2 = st.columns((2, 3))
-    with c1:
-        if _VADER_OK and len(hh):
+    if _vader_ok and len(hh):
+        hh = hh.copy()
+        hh["sentiment"] = _score_texts(hh["headline"].fillna(""))
+
+        col1, col2 = st.columns((2, 3))
+        with col1:
             s = hh.groupby("brand")["sentiment"].mean().reset_index()
             s["sentiment"] = s["sentiment"].round(3)
             st.dataframe(s, use_container_width=True, hide_index=True)
-        else:
-            st.info("Add a few headlines to `data/headlines.csv` and ensure `vaderSentiment` is installed.")
-
-    with c2:
-        if _VADER_OK and len(hh):
+        with col2:
             chart_df = hh.groupby("brand")["sentiment"].mean().to_frame()
             chart_df.columns = ["Mood"]
             st.bar_chart(chart_df, height=180)
-        else:
-            st.empty()
 
-    st.write("**Recent headlines**")
-    for _, row in hh.sort_values("date", ascending=False).head(6).iterrows():
-        st.write(f"- **{row['brand']}** — [{row['headline']}]({row['link']})  \n  _{row['date']}_")
-else:
-    st.info("Optional: create `data/headlines.csv` with columns: brand, headline, link, date.")
+        st.write("**Recent headlines**")
+        for _, row in hh.sort_values("date", ascending=False).head(6).iterrows():
+            st.write(f"- **{row['brand']}** — [{row['headline']}]({row['link']})  \n  _{row['date']}_")
+    else:
+        st.info(
+            "Optional: add `data/headlines.csv` and install `vaderSentiment` "
+            "for a tiny mood check (columns: brand, headline, link, date)."
+        )
+except FileNotFoundError:
+    st.info("Optional: add `data/headlines.csv` for mood check (columns: brand, headline, link, date).")
 
-
-# ----------------------------
-# Footer (tiny)
-# ----------------------------
-st.write("")
-st.caption("Built as a hobby project. Data may be incomplete—meant for discussion, not investment decisions.")
+# ---------------- footer ----------------
+st.caption(
+    "Hobby demo for media M&A what-ifs. Data: TMDB where available; status/notes are heuristic for illustration."
+)
