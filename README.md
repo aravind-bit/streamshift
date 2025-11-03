@@ -82,3 +82,41 @@ Netflix:
     - title: "Netflix and Universal expand U.S. licensing deal — live-action films from 2027 (official)"
       url: "https://about.netflix.com/news/netflix-and-universal-filmed-entertainment-group-expand-us-licensing-deal"
       date: "2024-10-29"
+
+How predictions work (high level)
+
+Explainable rules: We start with transparent heuristics: flagship originals tend to stay; prestige tentpoles consolidate; long-tail may be licensed; windowing depends on existing deals.
+
+Adjacency clusters: Embeddings group titles with similar “audience DNA” so you can spot cross-sell or consolidation reasons.
+
+Traceability: We show the source link(s) for each title on screen, or a TMDB search link if we’re missing a specific page.
+
+Headlines mood: VADER runs on recent brand headlines to give a vibe—not investment advice—alongside dates and links to read yourself.
+
+This is a thinking tool: you can disagree with any call, tweak the row, and watch the board shift.
+
+Roadmap
+
+Deal Playbooks (one-click strategy presets: Keep Flagships, Eventize Exclusives, Consolidate Franchises)
+
+Synergy Scorecard (overlap %, flagship concentration, window conflicts, antitrust heat, cross-sell lift)
+
+Graph-aware explanations (title → studio → platform → window → constraint path)
+
+Torchless embeddings (FastEmbed/ONNX) for ultra-portable deploys
+
+Credits
+
+Product copy & UI exploration iterated with ChatGPT (GPT-5 Thinking) and Google AI Studio (prompted for tone and layout ideas).
+
+Data sources include official press rooms, show pages, and reputable trade outlets; links surfaced in the UI under Sources / Traceability.
+
+Disclaimer
+
+This is a personal, exploratory project for learning and discussion.
+It’s not investment advice, and it may contain mistakes. Always verify with official sources.
+
+Maintainer
+
+Aravind Anisetti — Data Science · Data Engineering · ML · Agentic AI
+Portfolio: https://aravind-bit.github.io/portfolio-aravind/ • LinkedIn: linkedin.com/jobs/collections/recommended/?currentJobId=4319982063
