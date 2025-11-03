@@ -1,18 +1,11 @@
-# python
 __pycache__/
 *.pyc
 .venv/
 .env
 *.egg-info/
-
-# macOS
 .DS_Store
-
-# streamlit cache/creds
 .streamlit/secrets.toml
 **/.streamlit/credentials.toml
-
-# large data artifacts
 data/*.parquet
 data/*.feather
 data/*.xlsx

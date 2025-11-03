@@ -152,7 +152,7 @@ html, body, .main {
 st.markdown(
     "<div class='hero'><h1>Media Merger Analysis</h1>"
     "<p>Visualize what happens to movies & series after hypothetical media mergers. "
-    "See content outcomes, investor snapshots, and an IP similarity map.</p></div>",
+    "See content outcomes and an IP similarity map.</p></div>",
     unsafe_allow_html=True
 )
 
