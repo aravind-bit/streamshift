@@ -6,7 +6,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-# Optional: lightweight clustering for the map (skips gracefully if missing)
+# Optional: lightweight clustering for other places (kept from your backup;
+# we will handle TF-IDF import again inside the map block to be robust)
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.decomposition import PCA
@@ -16,6 +17,47 @@ except Exception:
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data"
+
+# ---------------- embeddings + projection helpers (NEW) ----------------
+def _load_embeddings():
+    """
+    Return (index, meta_df) if FAISS artifacts exist; else (None, None).
+    We still re-encode text with Sentence-Transformers to keep logic simple and portable.
+    """
+    idx_path = DATA / "embeddings.index"
+    meta_path = DATA / "embeddings_meta.parquet"
+    try:
+        if idx_path.exists() and meta_path.exists():
+            import faiss  # type: ignore
+            meta = pd.read_parquet(meta_path)
+            index = faiss.read_index(str(idx_path))
+            if index.ntotal == len(meta):
+                return index, meta
+    except Exception:
+        pass
+    return None, None
+
+def project_points(X):
+    """Project high-dimensional vectors to 2D with UMAP (preferred) or PCA fallback."""
+    import numpy as np
+    try:
+        import umap  # type: ignore
+        reducer = umap.UMAP(n_components=2, random_state=42, n_neighbors=10, min_dist=0.12)
+        pts = reducer.fit_transform(X)
+    except Exception:
+        # PCA fallback (works for dense arrays)
+        try:
+            from sklearn.decomposition import PCA  # type: ignore
+            pts = PCA(n_components=2, random_state=42).fit_transform(X)
+        except Exception:
+            # final fallback: make a tiny dummy projection if everything is missing
+            n = X.shape[0]
+            pts = __import__("numpy").random.RandomState(42).randn(n, 2)
+
+    # Normalize to [0,1] for stable plotting bounds
+    x = (pts[:, 0] - pts[:, 0].min()) / (pts[:, 0].ptp() + 1e-9)
+    y = (pts[:, 1] - pts[:, 1].min()) / (pts[:, 1].ptp() + 1e-9)
+    return x, y
 
 # ---------------- helpers ----------------
 def read_csv_safe(path: Path) -> pd.DataFrame:
@@ -154,8 +196,6 @@ fr = ensure_cols(
     },
 )
 
-
-
 # ---------------- CSS (visual parity with your backup) ----------------
 st.markdown(
     """
@@ -240,11 +280,10 @@ label, .stSelectbox label { font-size: 1.06rem !important; font-weight: 800 !imp
     unsafe_allow_html=True,
 )
 
-
 # ---------------- Hero ----------------
 st.markdown(
     "<div class='hero'><h1>Media Merger Analysis</h1>"
-    "<p>Not a ‘where to stream now’ tool — this is a quick **after-the-deal** view: "
+    "<p>Not a ‘where to stream now’ tool — this is a quick <b>after-the-deal</b> view: "
     "who keeps what, and why. Transparent, source-linked.</p></div>",
     unsafe_allow_html=True,
 )
@@ -278,25 +317,58 @@ with L:
         "</div>",
         unsafe_allow_html=True,
     )
-    try:
-        if HAVE_SK and len(fr) >= 3:
-            corpus = (fr["title"].astype(str) + " " + fr["genre_tags"].astype(str)).tolist()
-            X = TfidfVectorizer(min_df=1, max_features=1000).fit_transform(corpus)
-            coords = PCA(n_components=2, random_state=42).fit_transform(X.toarray())
-            dfp = pd.DataFrame(
-                {
-                    "x": coords[:, 0],
-                    "y": coords[:, 1],
-                    "brand": fr.apply(
-                        lambda r: (r.get("original_brand")
-                                   or infer_brand_text(r.get("current_platform"))
-                                   or "Other"),
-                        axis=1,
-                    ),
-                }
-            )
-            import plotly.express as px
 
+    # --------- NEW MAP ENGINE: Embeddings → TF-IDF fallback ----------
+    try:
+        import numpy as np
+        # corpus: title + tags
+        if "genre_tags" not in fr.columns:
+            fr["genre_tags"] = ""
+        corpus_full = (fr["title"].astype(str).str.strip() + " " + fr["genre_tags"].astype(str).str.strip()).str.strip()
+        mask = corpus_full.str.len() > 0
+        df_map = fr.loc[mask].reset_index(drop=True).copy()
+
+        use_embeddings = False
+        X = None
+
+        # 1) Try embeddings via Sentence-Transformers (preferable locally)
+        index, meta = _load_embeddings()
+        try:
+            from sentence_transformers import SentenceTransformer  # type: ignore
+            model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+            vecs = model.encode(
+                df_map["title"].astype(str).str.cat(df_map["genre_tags"].astype(str), sep=" ").tolist(),
+                batch_size=64, show_progress_bar=False, normalize_embeddings=True
+            ).astype("float32")
+            X = vecs
+            use_embeddings = True
+        except Exception:
+            # 2) Fallback to TF-IDF if ST missing (e.g., Streamlit Cloud)
+            try:
+                from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
+                tfidf = TfidfVectorizer(max_features=3000, ngram_range=(1, 2), min_df=1)
+                X = tfidf.fit_transform(corpus_full.loc[mask].tolist()).toarray().astype("float32")
+                use_embeddings = False
+            except Exception as e:
+                st.caption(f"Map unavailable (no embeddings, no scikit-learn): {e}")
+                X = None
+
+        engine_label = "Embeddings • FAISS/ST" if use_embeddings else "Classic • TF-IDF"
+        st.caption(f"Similarity engine: {engine_label}")
+
+        if X is not None and len(df_map) >= 3:
+            mx, my = project_points(X)
+            dfp = pd.DataFrame({
+                "x": mx,
+                "y": my,
+                "brand": df_map.apply(
+                    lambda r: (r.get("original_brand")
+                               or infer_brand_text(r.get("current_platform"))
+                               or "Other"),
+                    axis=1,
+                ),
+            })
+            import plotly.express as px
             fig = px.scatter(dfp, x="x", y="y", color="brand", height=360)
             fig.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
@@ -305,8 +377,10 @@ with L:
                 legend_title_text="",
             )
             st.plotly_chart(fig, use_container_width=True)
+        elif X is None:
+            pass  # already messaged
         else:
-            st.caption("Add more rows or install scikit-learn to see the map.")
+            st.caption("Add more rows to see the map.")
     except Exception as e:
         st.caption(f"Map unavailable: {e}")
     st.markdown("</div>", unsafe_allow_html=True)
@@ -511,7 +585,6 @@ div[role="note"], div[role="status"] span, .st-emotion-cache-badge {
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 # ---------------- footer ----------------
 st.caption(
