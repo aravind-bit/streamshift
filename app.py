@@ -1,19 +1,17 @@
 # app.py
 # Media Merger Analysis — "Who streams what after the deal."
-# Minimal, explainable, hobby-friendly app with a few smart flourishes:
-# - Rippleboard: plain-English notes + predicted status
-# - IP Similarity Map: embeddings -> UMAP/PCA -> KMeans clusters (+ graceful fallback)
-# - Originals from the target: heuristics so it never looks empty
-# - Sources / Traceability: links if present; otherwise quick TMDB search
-# - Headline Mood: tiny VADER sentiment over a small CSV of headlines
+# Friendly hobby app with explainable rules + small WOW features.
+# - Rippleboard (plain-English notes + predicted status)
+# - IP Similarity Map (embeddings/TF-IDF -> UMAP/PCA -> KMeans)
+# - Originals from the target (heuristics so it’s never blank)
+# - Sources / Traceability (real links or quick TMDB search)
+# - Headline Mood (tiny VADER sentiment over optional CSV)
 
 from __future__ import annotations
 
 import os
 import re
-import json
 import math
-import textwrap
 from typing import List, Tuple
 
 import streamlit as st
@@ -21,7 +19,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 
-# --- Optional NLP/ML deps (guarded imports) ---
+# --- Optional deps (graceful fallbacks) ---
 try:
     from sentence_transformers import SentenceTransformer
     _st_ok = True
@@ -45,62 +43,100 @@ except Exception:
     _vader_ok = False
 
 
-# =========================================
-# Page config + tiny CSS for nicer headline
-# =========================================
+# =========================
+# Page config + light CSS
+# =========================
 st.set_page_config(page_title="Media Merger Analysis", page_icon="🎬", layout="wide")
-
-# Small CSS touches (keeps your “older” aesthetic)
 st.markdown(
     """
     <style>
       .app-title { font-size: 40px; font-weight: 800; letter-spacing: 0.5px; text-align: center; margin-top: 0.25rem; }
       .app-subtitle { font-size: 16px; opacity: 0.85; text-align: center; margin-bottom: 1.25rem; }
       .section-note { opacity: 0.85; font-size: 13.5px; margin-top: -6px; margin-bottom: 8px; }
-      .metric-chip { padding: 3px 8px; border-radius: 999px; background: rgba(148, 124, 255, .18); border: 1px solid rgba(148,124,255,.35); font-size: 12px; }
       .small-muted { font-size: 12.5px; opacity: 0.8; }
     </style>
     """,
     unsafe_allow_html=True,
 )
-
 st.markdown('<div class="app-title">Media Merger Analysis</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="app-subtitle">Who streams what after the deal.</div>',
-    unsafe_allow_html=True,
-)
-
+st.markdown('<div class="app-subtitle">Who streams what after the deal.</div>', unsafe_allow_html=True)
 st.markdown(
     '<p class="app-subtitle" style="margin-top:-10px;">'
-    "Visual sandbox for hypothetical media mergers — pick a buyer & target to see "
-    "a Rippleboard of outcomes, an IP similarity map, and traceable sources. "
-    "It’s a hobby project, not investment advice."
+    "Visual sandbox for hypothetical media mergers — pick a buyer & target to see a Rippleboard of outcomes, "
+    "an IP similarity map, and traceable sources. It’s a hobby project, not investment advice."
     "</p>",
     unsafe_allow_html=True,
 )
 
-# ==================
-# Utility / Loaders
-# ==================
+# =========
+# Constants
+# =========
 DATA_FRANCHISES = "data/franchises.csv"
 DATA_HEADLINES = "data/headlines.csv"
 
+# =========
+# Helpers
+# =========
+def _s(v) -> str:
+    """Safe string (so we never call .strip on NaN/None)."""
+    try:
+        if pd.isna(v):
+            return ""
+    except Exception:
+        pass
+    return "" if v is None else str(v)
+
+def _tmdb_link(title: str) -> str:
+    q = re.sub(r"\s+", "%20", title.strip())
+    return f"https://www.themoviedb.org/search?query={q}"
+
+def _split_urls(cell: str) -> List[str]:
+    if not cell or cell.strip().lower() in {"nan","none"}:
+        return []
+    parts = re.split(r"[;|,]", cell)
+    return [p.strip() for p in parts if p.strip()]
+
+def _is_flagship(title: str) -> bool:
+    flagship = {
+        "Stranger Things", "Game of Thrones", "Harry Potter",
+        "The Lord of the Rings", "James Bond", "The Witcher",
+        "The Last of Us", "House of the Dragon"
+    }
+    return _s(title).strip().lower() in {t.lower() for t in flagship}
+
+def _predict_status_and_note(row: pd.Series, buyer: str, target: str) -> Tuple[str, str]:
+    title = _s(row.get("title")).strip()
+    platform = _s(row.get("current_platform")).lower()
+    buyer_l = _s(buyer).lower()
+    target_l = _s(target).lower()
+
+    if _is_flagship(title):
+        if buyer_l and buyer_l in platform:
+            return "Exclusive Distribution", "High-value IP → likely exclusive under buyer."
+        if target_l and (target_l in platform or target_l.split()[0] in platform):
+            return "Exclusive Distribution", "Flagship of the target; exclusivity likely after integration."
+        return "Exclusive Distribution", "Flagship title; consolidation would push exclusive window."
+    return "Licensed", "Not a flagship—probably stays put for now."
+
+# =============
+# Data loaders
+# =============
 @st.cache_data(show_spinner=False)
 def load_franchises(path: str = DATA_FRANCHISES) -> pd.DataFrame:
     if not os.path.exists(path):
         return pd.DataFrame(columns=[
-            "title", "current_platform", "tags", "notes",
-            "predicted_status", "origin_label", "origin_brand", "source_urls"
+            "title","current_platform","tags","notes",
+            "predicted_status","origin_label","origin_brand","source_urls"
         ])
     df = pd.read_csv(path)
-    # normalize expected columns
-    for c in ["title", "current_platform", "tags", "notes", "predicted_status",
-              "origin_label", "origin_brand", "source_urls"]:
+    # ensure columns exist
+    for c in ["title","current_platform","tags","notes","predicted_status",
+              "origin_label","origin_brand","source_urls"]:
         if c not in df.columns:
-            df[c] = np.nan
-    # clean strings
-    for c in ["title", "current_platform", "tags", "notes", "origin_label", "origin_brand", "source_urls"]:
-        df[c] = df[c].astype(str).replace({"nan":"", "None":""})
+            df[c] = ""
+    # normalize to strings
+    for c in df.columns:
+        df[c] = df[c].apply(_s)
     return df
 
 @st.cache_data(show_spinner=False)
@@ -111,82 +147,38 @@ def load_headlines(path: str = DATA_HEADLINES) -> pd.DataFrame:
     for c in ["brand","headline","link","date"]:
         if c not in df.columns:
             df[c] = ""
+    for c in df.columns:
+        df[c] = df[c].apply(_s)
     return df
 
 def _list_unique_brands_from_platforms(df: pd.DataFrame) -> List[str]:
-    """Extract rough brand candidates from current_platform strings."""
     if "current_platform" not in df.columns:
         return []
     brands = set()
     for s in df["current_platform"].dropna().astype(str).tolist():
-        # split by comma to get first platforms
         parts = [p.strip() for p in s.split(",") if p.strip()]
         for p in parts:
-            # simplify “Netflix Standard with Ads” -> “Netflix”
             base = re.split(r"\s+(Standard|with|Plus|TV|Channel|Premium)", p)[0].strip()
             if base:
                 brands.add(base)
-    # canonical additions seen in UI
     brands.update(["Amazon", "Netflix", "Max", "Paramount+", "Peacock", "Apple TV+", "Disney+"])
     return sorted(brands)
 
-def _tmdb_link(title: str) -> str:
-    q = re.sub(r"\s+", "%20", title.strip())
-    return f"https://www.themoviedb.org/search?query={q}"
-
-def _is_flagship(title: str) -> bool:
-    """Very small demo heuristic (you can externalize as CSV)."""
-    flagship = {
-        "Stranger Things", "Game of Thrones", "Harry Potter", "The Lord of the Rings",
-        "James Bond", "The Witcher", "The Last of Us", "House of the Dragon"
-    }
-    return title.strip().lower() in {t.lower() for t in flagship}
-
-def _predict_status_and_note(row: pd.Series, buyer: str, target: str) -> Tuple[str, str]:
-    """
-    Simple, friendly rules:
-      - If a title feels 'flagship' of the target -> Exclusive Distribution under buyer (if aligned) or 'stay' if conflict.
-      - Else Licensed (stays put for now).
-    It's intentionally explainable, not a black box.
-    """
-    title = (row.get("title") or "").strip()
-    platform = (row.get("current_platform") or "").lower()
-    buyer_l = (buyer or "").lower()
-    target_l = (target or "").lower()
-
-    # very small/regret-free logic:
-    if _is_flagship(title):
-        if buyer_l in platform:
-            return "Exclusive Distribution", "High-value IP → likely exclusive under buyer."
-        if target_l in platform or (target_l and target_l.split()[0] in platform):
-            return "Exclusive Distribution", "Flagship of the target; exclusivity likely after integration."
-        return "Exclusive Distribution", "Flagship title; consolidation would push exclusive window."
-    # non-flagship
-    return "Licensed", "Not a flagship—probably stays put for now."
-
-def _split_urls(cell: str) -> List[str]:
-    if not cell or cell.strip().lower() in {"nan","none"}:
-        return []
-    # support ';' or '|' or ',' separated
-    parts = re.split(r"[;|,]", cell)
-    return [p.strip() for p in parts if p.strip()]
-
-# ==================================
-# Session state for Buyer / Target
-# ==================================
+# ===========================
+# Buyer / Target selectors
+# ===========================
 df = load_franchises()
 brand_options = _list_unique_brands_from_platforms(df)
 
 col_a, col_b, col_btn = st.columns([3,3,2])
 with col_a:
-    buyer = st.selectbox("Buyer", brand_options or ["Amazon", "Netflix", "Max", "Paramount+", "Peacock", "Apple TV+", "Disney+"], index=0)
+    buyer = st.selectbox("Buyer", brand_options or ["Amazon","Netflix","Max","Paramount+","Peacock","Apple TV+","Disney+"], index=0)
 with col_b:
-    target = st.selectbox("Target", brand_options or ["Netflix", "Max", "Paramount+", "Peacock", "Amazon", "Apple TV+", "Disney+"], index=1)
+    target = st.selectbox("Target", brand_options or ["Netflix","Max","Paramount+","Peacock","Amazon","Apple TV+","Disney+"], index=1)
 with col_btn:
-    st.write("")  # spacing
-    run = st.button("Generate Analysis", use_container_width=True)
+    st.write("")
+    st.button("Generate Analysis", use_container_width=True)
 
-# stash names for other sections
 st.session_state["buyer_label"] = buyer
 st.session_state["target_label"] = target
 
@@ -201,32 +193,27 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-view_cols = ["title", "predicted_status", "notes", "current_platform", "tags"]
+view_cols = ["title","predicted_status","notes","current_platform","tags"]
 rows = []
 for _, r in df.iterrows():
-    status = (r.get("predicted_status") or "").strip()
-    note = (r.get("notes") or "").strip()
+    status = _s(r.get("predicted_status")).strip()
+    note   = _s(r.get("notes")).strip()
     if not status:
         status, auto_note = _predict_status_and_note(r, buyer, target)
         if not note:
             note = auto_note
     rows.append({
-        "title": r.get("title", ""),
+        "title": _s(r.get("title")),
         "predicted_status": status,
         "notes": note,
-        "current_platform": r.get("current_platform", ""),
-        "tags": r.get("tags", "")
+        "current_platform": _s(r.get("current_platform")),
+        "tags": _s(r.get("tags")),
     })
 rb = pd.DataFrame(rows, columns=view_cols)
-
-st.dataframe(
-    rb,
-    use_container_width=True,
-    hide_index=True,
-)
+st.dataframe(rb, use_container_width=True, hide_index=True)
 
 # =======================================
-# Originals from the target (distribution)
+# Originals from the target (heuristics)
 # =======================================
 st.markdown("### Originals from the target")
 st.markdown(
@@ -238,23 +225,18 @@ st.markdown(
 )
 
 def _looks_like_original(row: pd.Series, target_brand: str) -> bool:
-    tg = (target_brand or "").lower()
+    tg = _s(target_brand).lower()
     if not tg:
         return False
-    nets = f"{row.get('origin_brand','')} {row.get('origin_label','')} {row.get('current_platform','')}".lower()
+    nets = f"{_s(row.get('origin_brand'))} {_s(row.get('origin_label'))} {_s(row.get('current_platform'))}".lower()
     return tg in nets
 
 orig = df[df.apply(lambda r: _looks_like_original(r, target), axis=1)].copy()
-
-originals_cols = ["title", "origin_brand", "origin_label", "current_platform", "source_urls"]
+originals_cols = ["title","origin_brand","origin_label","current_platform","source_urls"]
 if len(orig) == 0:
     st.info("No clear originals discovered in this small demo—add a few and rerun enrichment.")
 else:
-    st.dataframe(
-        orig[originals_cols],
-        use_container_width=True,
-        hide_index=True,
-    )
+    st.dataframe(orig[originals_cols], use_container_width=True, hide_index=True)
 
 # ========================================
 # Sources / Traceability (for titles shown)
@@ -268,14 +250,13 @@ st.markdown(
 )
 
 def _trace_rows(df_like: pd.DataFrame) -> pd.DataFrame:
-    out = []
-    seen = set()
+    out, seen = [], set()
     for _, r in df_like.iterrows():
-        title = (r.get("title") or "").strip()
+        title = _s(r.get("title")).strip()
         if not title or title in seen:
             continue
         seen.add(title)
-        urls = _split_urls(r.get("source_urls", ""))
+        urls = _split_urls(_s(r.get("source_urls")))
         if not urls:
             urls = [_tmdb_link(title)]
         out.append({"title": title, "source": urls[0]})
@@ -288,7 +269,7 @@ else:
     st.dataframe(trace_df, use_container_width=True, hide_index=True)
 
 # =========================
-# IP Similarity Map (WOW v2)
+# IP Similarity Map (WOW)
 # =========================
 st.markdown("### IP Similarity Map")
 st.markdown(
@@ -300,33 +281,28 @@ st.markdown(
 )
 
 def _prep_text(df_in: pd.DataFrame) -> pd.Series:
-    cols = [c for c in ["title", "tags", "notes"] if c in df_in.columns]
+    cols = [c for c in ["title","tags","notes"] if c in df_in.columns]
     if not cols:
-        return df_in["title"].astype(str)
+        return df_in["title"].apply(_s)
     return (
-        df_in[cols].fillna("")
-        .astype(str).agg(" ".join, axis=1)
-        .str.replace(r"\s+", " ", regex=True)
-        .str.strip()
+        df_in[cols].applymap(_s).agg(" ".join, axis=1)
+        .str.replace(r"\s+", " ", regex=True).str.strip()
     )
 
 @st.cache_resource(show_spinner=False)
 def load_st_model():
     if not _st_ok:
         return None
-    # tiny + fast
     return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 @st.cache_data(show_spinner=False)
 def embed_texts(texts: List[str]) -> np.ndarray:
     model = load_st_model()
     if model is not None:
-        embs = model.encode(texts, normalize_embeddings=True, convert_to_numpy=True)
-        return embs
-    # fallback TF-IDF -> PCA(100)
-    tfidf = TfidfVectorizer(min_df=1, max_features=5000, ngram_range=(1, 2))
+        return model.encode(texts, normalize_embeddings=True, convert_to_numpy=True)
+    # TF-IDF fallback
+    tfidf = TfidfVectorizer(min_df=1, max_features=5000, ngram_range=(1,2))
     X = tfidf.fit_transform(texts)
-    # guard for tiny matrices
     n_comp = min(100, max(2, X.shape[1]-1))
     pca = PCA(n_components=n_comp, random_state=42)
     return pca.fit_transform(X.toarray())
@@ -351,7 +327,6 @@ if len(text_for_map) >= 2:
     xy = reduce_2d(embs)
     labels = cluster_labels(xy, k=4)
 
-    # Friendly cluster names — edit for taste
     DEFAULT_CLUSTER_NAMES = {
         0: "Teen Sci-Fi / Fantasy",
         1: "Crime / Spy / Thriller",
@@ -360,13 +335,13 @@ if len(text_for_map) >= 2:
     }
 
     m = pd.DataFrame({
-        "x": xy[:, 0],
-        "y": xy[:, 1],
+        "x": xy[:,0],
+        "y": xy[:,1],
         "cluster": labels,
-        "title": df["title"].astype(str),
-        "platform": (df.get("current_platform") or pd.Series([""]*len(df))).astype(str),
-        "tags": (df.get("tags") or pd.Series([""]*len(df))).astype(str),
-        "notes": (df.get("notes") or pd.Series([""]*len(df))).astype(str),
+        "title": df["title"].apply(_s),
+        "platform": df["current_platform"].apply(_s) if "current_platform" in df else "",
+        "tags": df["tags"].apply(_s) if "tags" in df else "",
+        "notes": df["notes"].apply(_s) if "notes" in df else "",
     })
     m["cluster_name"] = m["cluster"].map(lambda c: DEFAULT_CLUSTER_NAMES.get(c, f"Group {c}"))
     m["hover"] = (
@@ -390,11 +365,7 @@ if len(text_for_map) >= 2:
     fig.update_traces(marker=dict(size=10, line=dict(width=0)))
     fig.update_traces(hovertemplate="%{customdata[0]}<extra></extra>")
     st.plotly_chart(fig, use_container_width=True)
-
-    st.caption(
-        "Clusters are data-driven and lightly labeled. Edit names in `DEFAULT_CLUSTER_NAMES` to match your intuition "
-        "(e.g., “Superhero”, “Family Animation”)."
-    )
+    st.caption("Clusters are data-driven and lightly labeled. Edit names in `DEFAULT_CLUSTER_NAMES` to match your intuition.")
 else:
     st.info("Need at least 2 titles to draw the map.")
 
@@ -416,11 +387,8 @@ def _score_texts(texts: List[str]) -> List[float]:
     return [analyzer.polarity_scores(t or "")["compound"] for t in texts]
 
 hh = load_headlines()
-focus = set()
-if st.session_state.get("buyer_label"):
-    focus.add(st.session_state["buyer_label"])
-if st.session_state.get("target_label"):
-    focus.add(st.session_state["target_label"])
+focus = {st.session_state.get("buyer_label",""), st.session_state.get("target_label","")}
+focus = {x for x in focus if x}
 
 if len(hh) == 0:
     st.info("Optional: add `data/headlines.csv` (brand, headline, link, date) to enable mood check.")
@@ -438,22 +406,17 @@ else:
             st.dataframe(s, use_container_width=True, hide_index=True)
         else:
             st.info("Install `vaderSentiment` and add headlines to `data/headlines.csv`.")
-
     with c2:
         if _vader_ok and len(hh):
             chart_df = hh.groupby("brand")["sentiment"].mean().to_frame()
             chart_df.columns = ["Mood"]
             st.bar_chart(chart_df, height=200)
-        else:
-            st.empty()
 
     if len(hh):
         st.write("**Recent headlines**")
         for _, row in hh.sort_values("date", ascending=False).head(6).iterrows():
-            brand = row.get("brand","")
-            headline = row.get("headline","")
-            link = row.get("link","")
-            date = row.get("date","")
+            brand = _s(row.get("brand"))
+            headline = _s(row.get("headline"))
+            link = _s(row.get("link"))
+            date = _s(row.get("date"))
             st.write(f"- **{brand}** — [{headline}]({link})  \n  _{date}_")
-
-# end of app
