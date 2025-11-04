@@ -374,6 +374,24 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# --- Why this matters (Investors & Newcomers) ---
+with st.container():
+    st.markdown("""
+<div class="section-card">
+  <div class="section-title">Why this is useful</div>
+  <div class="section-blurb">
+    <b>For investors:</b> Rights timing = cash timing. The app flags which titles likely stay put (contracts/windows)
+    versus those that could move near-term, highlights portfolio fit via audience embeddings, and shows licensing exposure
+    (value at risk) with traceable sources for quick DD.
+    <br><br>
+    <b>For newcomers:</b> One screen answers “who keeps what” after a merger, in plain English—with receipts and a tiny
+    headlines mood pulse.
+    <br><br>
+    <i>Roadmap:</i> region-aware windows, “fit” scores, expiry maps, and deal-prep views (value at risk, churn lift).
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
 # --- Brand matching helpers (place near imports / after reading CSV) ---
 BRAND_PATTERNS = {
     "Amazon": ["Amazon", "Prime Video"],
@@ -576,6 +594,8 @@ with R:
     rb_view["Current Platform"] = rb_view["Current Platform"].astype(str).apply(apply_platform_aliases)
 
     st.dataframe(rb_view, hide_index=True, use_container_width=True)
+
+st.caption("Investor lens: ‘Stay’ often = locked windows/contracts; ‘Exclusive’ = potential near-term pull-in.")
 
 # ---------------- Originals (expander) ----------------
 with st.expander("Originals from the target"):
