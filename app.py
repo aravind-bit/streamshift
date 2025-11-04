@@ -482,7 +482,7 @@ rb_view = (
 )
 st.dataframe(rb_view.head(20), use_container_width=True, hide_index=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------------- Originals (expander) ----------------
 with st.expander("Originals from the target"):
