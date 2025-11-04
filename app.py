@@ -390,85 +390,54 @@ st.session_state["buyer_canon"] = buyer_c
 st.session_state["target_canon"] = target_c
 
 # --- Side-by-side: IP Similarity Map (left) and Rippleboard (right) ---
-left, right = st.columns([1, 1], vertical_alignment="top")
+# --- Side-by-side: IP Similarity Map (left) and Rippleboard (right) ---
+L, R = st.columns([1, 1], vertical_alignment="top")
 
-with left:
+with L:
     st.subheader("✣ IP Similarity Map")
     st.markdown(
         "Turning titles into vectors (fancy math), squash to 2D, and color by cluster. "
         "Closer dots → **similar audience DNA**. Use it like a cross-sell radar."
     )
-    st.caption("Similarity engine: Embeddings · FAISS/ST")
-    # NOTE: ensure your plot function returns a figure and you set a modest height
-    fig = build_similarity_figure(df)  # <- use your existing function
+
+    # ---------------- Map engine: Embeddings → TF-IDF fallback ----------------
     try:
-        fig.update_layout(height=360, margin=dict(l=10, r=10, t=10, b=10))
-    except Exception:
-        pass
-    st.plotly_chart(fig, use_container_width=True, theme="streamlit")
-
-with right:
-    st.subheader("Rippleboard: The Future of Content")
-    st.markdown(
-        "What this is: a post-deal TV guide for suits (but in plain English). "
-        "Each title gets a status (stay/licensed/exclusive) and a 1-liner."
-    )
-
-    # Filter for buyer OR target using platforms and origin labels
-    rb = filter_for_buyer_target(df, buyer, target)
-
-    # Keep just the columns you show on the board (rename if needed)
-    rb_view = rb[["title", "predicted_policy", "notes", "current_platform"]].copy()
-    rb_view.columns = ["IP / Franchise", "Predicted Status", "Notes", "Current Platform"]
-
-    st.dataframe(
-        rb_view,
-        hide_index=True,
-        use_container_width=True
-    )
-    rng = np.ptp(x)  # not x.ptp()
-    x = (x - np.min(x)) / (rng + 1e-9)
-
-    # --------- NEW MAP ENGINE: Embeddings → TF-IDF fallback ----------
-    try:
-        import numpy as np
-        # corpus: title + tags
+        # Build corpus: title + optional tags
         if "genre_tags" not in fr.columns:
             fr["genre_tags"] = ""
-        corpus_full = (fr["title"].astype(str).str.strip() + " " + fr["genre_tags"].astype(str).str.strip()).str.strip()
-        mask = corpus_full.str.len() > 0
+        corpus = (fr["title"].astype(str).str.strip() + " " +
+                  fr["genre_tags"].astype(str).str.strip()).str.strip()
+        mask = corpus.str.len() > 0
         df_map = fr.loc[mask].reset_index(drop=True).copy()
 
-        use_embeddings = False
         X = None
+        used_embeddings = False
 
-        # 1) Try embeddings via Sentence-Transformers (preferable locally)
-        index, meta = _load_embeddings()
+        # 1) Try Sentence-Transformers
         try:
             from sentence_transformers import SentenceTransformer  # type: ignore
             model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-            vecs = model.encode(
+            X = model.encode(
                 df_map["title"].astype(str).str.cat(df_map["genre_tags"].astype(str), sep=" ").tolist(),
                 batch_size=64, show_progress_bar=False, normalize_embeddings=True
             ).astype("float32")
-            X = vecs
-            use_embeddings = True
+            used_embeddings = True
         except Exception:
-            # 2) Fallback to TF-IDF if ST missing (e.g., Streamlit Cloud)
+            # 2) Fall back to TF-IDF if ST is unavailable (e.g., Streamlit Cloud)
             try:
                 from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
                 tfidf = TfidfVectorizer(max_features=3000, ngram_range=(1, 2), min_df=1)
-                X = tfidf.fit_transform(corpus_full.loc[mask].tolist()).toarray().astype("float32")
-                use_embeddings = False
+                X = tfidf.fit_transform(corpus.tolist()).toarray().astype("float32")
+                used_embeddings = False
             except Exception as e:
                 st.caption(f"Map unavailable (no embeddings, no scikit-learn): {e}")
                 X = None
 
-        engine_label = "Embeddings • FAISS/ST" if use_embeddings else "Classic • TF-IDF"
+        engine_label = "Embeddings • FAISS/ST" if used_embeddings else "Classic • TF-IDF"
         st.caption(f"Similarity engine: {engine_label}")
 
         if X is not None and len(df_map) >= 3:
-            mx, my = project_points(X)
+            mx, my = project_points(X)  # uses np.ptp internally (NumPy 2-safe)
             dfp = pd.DataFrame({
                 "x": mx,
                 "y": my,
@@ -494,55 +463,40 @@ with right:
             st.caption("Add more rows to see the map.")
     except Exception as e:
         st.caption(f"Map unavailable: {e}")
-    st.markdown("</div>", unsafe_allow_html=True)
 
 with R:
-    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='section-title'>Rippleboard: The Future of Content</div>", unsafe_allow_html=True)
+    st.subheader("Rippleboard: The Future of Content")
     st.markdown(
-        "<div class='section-blurb'>"
-        "<b>What this is:</b> a post-deal TV guide for suits (but in plain English). "
+        "What this is: a post-deal TV guide for suits (but in plain English). "
         "Each title gets a status (stay / licensed / exclusive) and a 1-liner. "
         "Tweak the rule and watch the board shift."
-        "</div>",
-        unsafe_allow_html=True,
     )
 
-# 1) Start from full set
-rb = fr.copy()
+    # Filter rows related to Buyer or Target (platform or origin label)
+    rb = filter_for_buyer_target(fr, buyer, target)  # use FR, not df
 
-# 2) Derive a lightweight inferred brand from platform/network (used for filter)
-rb["brand_inferred"] = rb.apply(
-    lambda r: (r.get("original_brand")
-               or infer_brand_text(r.get("current_platform"))
-               or infer_brand_text(r.get("original_network"))
-               or ""),
-    axis=1,
-)
+    # Visible columns
+    rb_view = rb[["title", "predicted_policy", "current_platform"]].copy()
+    rb_view.rename(columns={
+        "title": "IP / Franchise",
+        "predicted_policy": "Predicted Status",
+        "current_platform": "Current Platform"
+    }, inplace=True)
 
-# 3) Filter to rows tied to Buyer or Target (canonical)
-mask_bt = rb["brand_inferred"].isin({buyer_c, target_c})
-rb = rb.loc[mask_bt].copy()
+    # Synthesize notes when missing
+    if "Notes" not in rb.columns:
+        rb_view["Notes"] = rb.apply(
+            lambda r: (str(r.get("predicted_policy", "")).strip()
+                       or synth_note(str(r.get("origin_label", "")), buyer, target)),
+            axis=1,
+        )
+        # Reorder
+        rb_view = rb_view[["IP / Franchise", "Predicted Status", "Notes", "Current Platform"]]
 
-# 4) Status + visible platform aliasing
-rb["Predicted Status"] = rb["origin_label"].replace("", "Stay")
-rb["current_platform"] = rb["current_platform"].astype(str).apply(apply_platform_aliases)
+    # Alias HBO/Max for consistency
+    rb_view["Current Platform"] = rb_view["Current Platform"].astype(str).apply(apply_platform_aliases)
 
-# 5) Notes (use canonical brand names for a consistent voice)
-rb["Notes"] = [
-    (str(row.get("predicted_policy", "")).strip()
-     or synth_note(str(row.get("Predicted Status", "")), buyer_c, target_c))
-    for _, row in rb.iterrows()
-]
-
-# 6) Final view
-rb_view = (
-    rb[["title", "Predicted Status", "Notes", "current_platform"]]
-    .rename(columns={"title": "IP / Franchise", "current_platform": "Current Platform"})
-)
-st.dataframe(rb_view.head(20), use_container_width=True, hide_index=True)
-
-st.markdown("</div>", unsafe_allow_html=True)
+    st.dataframe(rb_view, hide_index=True, use_container_width=True)
 
 # ---------------- Originals (expander) ----------------
 with st.expander("Originals from the target"):
