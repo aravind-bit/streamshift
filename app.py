@@ -113,13 +113,41 @@ PLATFORM_ALIASES = {
     "HBO Max": "HBO",
     "Max": "HBO",
 }
-def apply_platform_aliases(text: str) -> str:
-    if not isinstance(text, str):
-        return text
-    out = text
-    for k, v in PLATFORM_ALIASES.items():
-        out = re.sub(rf"\b{k}\b", v, out)
-    return out
+def apply_platform_aliases(txt: str) -> str:
+    """
+    Normalize platform names for display consistency.
+    Example: Max/HBO -> HBO; Apple TV variants -> Apple TV+; remove dupes, trim.
+    """
+    if not txt:
+        return txt
+    s = str(txt)
+
+    # HBO / Max
+    s = s.replace("HBO Max", "HBO")
+    s = s.replace("Max", "HBO")  # show as HBO for simplicity
+
+    # Apple TV+ variants
+    s = s.replace("Apple TV Plus", "Apple TV+")
+    s = s.replace("AppleTV+", "Apple TV+")
+    s = s.replace("Apple TV +", "Apple TV+")
+    s = s.replace("Apple Tv+", "Apple TV+")
+
+    # Paramount+ variants
+    s = s.replace("Paramount Plus", "Paramount+")
+    s = s.replace("Paramount Plus Apple TV Channel", "Paramount+ Apple TV Channel ")
+
+    # Remove accidental double spaces
+    s = " ".join(s.split())
+
+    # De-dupe comma-separated platforms while preserving order
+    parts = [p.strip() for p in s.split(",")]
+    seen, out = set(), []
+    for p in parts:
+        if p and p not in seen:
+            seen.add(p)
+            out.append(p)
+    return ", ".join(out)
+
 
 # The order of default brands to show in the selectors
 DEFAULT_BRANDS = [
@@ -150,26 +178,48 @@ STREAMERS_BY_BRAND = {
     "Hulu": ["Hulu"],
 }
 
-def infer_brand_text(txt: str) -> str:
-    """Infer a brand from text such as current_platform/original_network strings."""
-    t = f" {str(txt or '').lower()} "
-    if " netflix " in t: return "Netflix"
-    # collapse any HBO/Max variants to the single brand label
-    if " hbo " in t or " hbomax " in t or " hbo max " in t or " max " in t:
-        return "Warner Brothers HBO"
-    if " prime video " in t or " amazon " in t:
-        return "Amazon"
-    if " paramount+ " in t or " paramount plus " in t or " cbs " in t:
-        return "Paramount Global"
-    if " peacock " in t or " nbc " in t or " universal television " in t:
-        return "Comcast (NBCUniversal)"
-    if " apple tv+ " in t:
+def infer_brand_text(txt: str | None) -> str | None:
+    """
+    Best-effort brand inference from an arbitrary platform/network string.
+    Returns a canonical brand name or None.
+    """
+    if not txt:
+        return None
+    s = str(txt).lower()
+
+    # Apple — match first to avoid accidental hits
+    if "apple tv" in s or "appletv" in s or "apple tv+" in s or "apple tv plus" in s:
         return "Apple"
-    if " disney+ " in t:
+
+    # Amazon
+    if "prime video" in s or "amazon" in s or "freevee" in s:
+        return "Amazon"
+
+    # HBO/Max
+    if "hbo" in s or "max" in s or "warner bros" in s or "wbd" in s:
+        return "Warner Brothers HBO"
+
+    # Peacock / NBCU
+    if "peacock" in s or "nbc" in s or "comcast" in s:
+        return "Comcast (NBCUniversal)"
+
+    # Paramount
+    if "paramount" in s or "showtime" in s:
+        return "Paramount Global"
+
+    # Disney / Hulu
+    if "disney" in s or "hulu" in s or "star+" in s:
         return "Disney"
-    if " hulu " in t:
-        return "Hulu"
-    return ""
+
+    # Netflix
+    if "netflix" in s:
+        return "Netflix"
+
+    # Sony (rare in streaming labels, but keep)
+    if "sony" in s:
+        return "Sony"
+
+    return None
 
 def buyer_target_options(fr: pd.DataFrame) -> list[str]:
     """Combine our default brand list with any discovered `original_brand` values."""
@@ -343,22 +393,51 @@ def brand_regex(brand: str) -> str:
     pats = BRAND_PATTERNS.get(brand, [brand])
     return r"(?i)(" + "|".join(pats) + r")"
 
-def filter_for_buyer_target(df, buyer: str, target: str):
-    """Return only rows that look tied to buyer OR target
-       (by platform or origin label). Fallback to a small slice if empty."""
-    brx = brand_regex(buyer)
-    trx = brand_regex(target)
-    mask = (
-        df["current_platform"].fillna("").str.contains(brx, regex=True) |
-        df["origin_label"].fillna("").str.contains(brx, regex=True) |
-        df["current_platform"].fillna("").str.contains(trx, regex=True) |
-        df["origin_label"].fillna("").str.contains(trx, regex=True)
-    )
-    out = df.loc[mask].copy()
-    if out.empty:
-        # keep the app from looking broken if nothing matched
-        out = df.head(12).copy()
-    return out
+def filter_for_buyer_target(fr: pd.DataFrame, buyer: str, target: str) -> pd.DataFrame:
+    """
+    Return rows relevant to buyer or target based on platform or origin/brand hints.
+    - Looks in current_platform and origin_label/original_network
+    - Uses brand-specific regex patterns (expanded with Apple TV+ variants)
+    """
+    BRAND_PATTERNS = {
+        "Amazon": r"amazon|prime video|freevee",
+        "Warner Brothers HBO": r"hbo|max|warner bros|wbd",
+        "Comcast (NBCUniversal)": r"peacock|nbc|comcast|universal",
+        "Paramount Global": r"paramount\+|paramount plus|showtime",
+        "Disney": r"disney\+|hulu|star\+",
+        "Netflix": r"netflix",
+        "Apple": r"apple tv\+|apple tv plus|appletv\+|apple tv",
+        "Sony": r"\bsony\b",
+        "Hulu": r"\bhulu\b",
+        "Max": r"\bmax\b|hbo",
+        "Peacock": r"\bpeacock\b",
+    }
+
+    buy_pat = BRAND_PATTERNS.get(buyer, buyer.lower())
+    tgt_pat = BRAND_PATTERNS.get(target, target.lower())
+
+    def _text_cols(row) -> str:
+        return " | ".join([
+            str(row.get("current_platform", "")),
+            str(row.get("origin_label", "")),
+            str(row.get("original_network", "")),
+            str(row.get("original_brand", "")),
+        ]).lower()
+
+    df2 = fr.copy()
+    hay = df2.apply(_text_cols, axis=1)
+
+    buy_mask = hay.str.contains(buy_pat, regex=True, na=False)
+    tgt_mask = hay.str.contains(tgt_pat, regex=True, na=False)
+    out = df2.loc[buy_mask | tgt_mask].copy()
+
+    # As a last resort, infer from platform text if origin is missing
+    if "origin_label" in out.columns:
+        empty_origin = out["origin_label"].fillna("").eq("")
+        out.loc[empty_origin, "origin_label"] = out.loc[empty_origin, "current_platform"].apply(infer_brand_text)
+
+    return out.reset_index(drop=True)
+
 
 # ---------------- Toolbar: Buyer / Target ----------------
 st.markdown("<div class='toolbar'>", unsafe_allow_html=True)
