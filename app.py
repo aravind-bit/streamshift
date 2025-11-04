@@ -426,8 +426,8 @@ with right:
         hide_index=True,
         use_container_width=True
     )
-rng = np.ptp(x)  # not x.ptp()
-x = (x - np.min(x)) / (rng + 1e-9)
+    rng = np.ptp(x)  # not x.ptp()
+    x = (x - np.min(x)) / (rng + 1e-9)
 
     # --------- NEW MAP ENGINE: Embeddings → TF-IDF fallback ----------
     try:
