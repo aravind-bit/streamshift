@@ -324,6 +324,42 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# --- Brand matching helpers (place near imports / after reading CSV) ---
+BRAND_PATTERNS = {
+    "Amazon": ["Amazon", "Prime Video"],
+    "Warner Brothers HBO": ["HBO", r"\bMax\b", "Warner", "WBD", "Warner Bros"],
+    "Paramount Global": ["Paramount", "Showtime"],
+    "Comcast (NBCUniversal)": ["Peacock", "NBC", "NBCUniversal", "Comcast"],
+    "Disney": ["Disney", "Hotstar", r"Star\+"],
+    "Netflix": ["Netflix"],
+    "Apple": [r"Apple TV\+"],
+    "Sony": ["Sony", "Crunchyroll"],   # adjust if you don’t want Crunchyroll here
+    "Hulu": ["Hulu"],
+    "Max":  [r"\bMax\b", "HBO"],
+    "Peacock": ["Peacock"],
+}
+
+def brand_regex(brand: str) -> str:
+    pats = BRAND_PATTERNS.get(brand, [brand])
+    return r"(?i)(" + "|".join(pats) + r")"
+
+def filter_for_buyer_target(df, buyer: str, target: str):
+    """Return only rows that look tied to buyer OR target
+       (by platform or origin label). Fallback to a small slice if empty."""
+    brx = brand_regex(buyer)
+    trx = brand_regex(target)
+    mask = (
+        df["current_platform"].fillna("").str.contains(brx, regex=True) |
+        df["origin_label"].fillna("").str.contains(brx, regex=True) |
+        df["current_platform"].fillna("").str.contains(trx, regex=True) |
+        df["origin_label"].fillna("").str.contains(trx, regex=True)
+    )
+    out = df.loc[mask].copy()
+    if out.empty:
+        # keep the app from looking broken if nothing matched
+        out = df.head(12).copy()
+    return out
+
 # ---------------- Toolbar: Buyer / Target ----------------
 st.markdown("<div class='toolbar'>", unsafe_allow_html=True)
 c1, c2 = st.columns([1, 1])
@@ -353,21 +389,45 @@ st.session_state["target_label"] = target
 st.session_state["buyer_canon"] = buyer_c
 st.session_state["target_canon"] = target_c
 
+# --- Side-by-side: IP Similarity Map (left) and Rippleboard (right) ---
+left, right = st.columns([1, 1], vertical_alignment="top")
 
-# ---------------- Main: map + rippleboard ----------------
-L, R = st.columns([1.05, 1.6])
-
-with L:
-    st.markdown("<div class='section-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='section-title'>✣ IP Similarity Map</div>", unsafe_allow_html=True)
+with left:
+    st.subheader("✣ IP Similarity Map")
     st.markdown(
-       "<div class='section-blurb'>"
         "Turning titles into vectors (fancy math), squash to 2D, and color by cluster. "
-        "<b>Closer dots → similar audience DNA.</b> Use it like a cross-sell radar: "
-        "‘fans of this might follow that’."
-        "</div>",
-        unsafe_allow_html=True,
+        "Closer dots → **similar audience DNA**. Use it like a cross-sell radar."
     )
+    st.caption("Similarity engine: Embeddings · FAISS/ST")
+    # NOTE: ensure your plot function returns a figure and you set a modest height
+    fig = build_similarity_figure(df)  # <- use your existing function
+    try:
+        fig.update_layout(height=360, margin=dict(l=10, r=10, t=10, b=10))
+    except Exception:
+        pass
+    st.plotly_chart(fig, use_container_width=True, theme="streamlit")
+
+with right:
+    st.subheader("Rippleboard: The Future of Content")
+    st.markdown(
+        "What this is: a post-deal TV guide for suits (but in plain English). "
+        "Each title gets a status (stay/licensed/exclusive) and a 1-liner."
+    )
+
+    # Filter for buyer OR target using platforms and origin labels
+    rb = filter_for_buyer_target(df, buyer, target)
+
+    # Keep just the columns you show on the board (rename if needed)
+    rb_view = rb[["title", "predicted_policy", "notes", "current_platform"]].copy()
+    rb_view.columns = ["IP / Franchise", "Predicted Status", "Notes", "Current Platform"]
+
+    st.dataframe(
+        rb_view,
+        hide_index=True,
+        use_container_width=True
+    )
+rng = np.ptp(x)  # not x.ptp()
+x = (x - np.min(x)) / (rng + 1e-9)
 
     # --------- NEW MAP ENGINE: Embeddings → TF-IDF fallback ----------
     try:
