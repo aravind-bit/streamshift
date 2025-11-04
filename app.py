@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -85,8 +86,10 @@ def project_points(X):
             pts = __import__("numpy").random.RandomState(42).randn(n, 2)
 
     # Normalize to [0,1] for stable plotting bounds
-    x = (pts[:, 0] - pts[:, 0].min()) / (pts[:, 0].ptp() + 1e-9)
-    y = (pts[:, 1] - pts[:, 1].min()) / (pts[:, 1].ptp() + 1e-9)
+
+    x = (pts[:, 0] - pts[:, 0].min()) / (np.ptp(pts[:, 0]) + 1e-9)
+    y = (pts[:, 1] - pts[:, 1].min()) / (np.ptp(pts[:, 1]) + 1e-9)
+
     return x, y
 
 # ---------------- helpers ----------------
@@ -121,7 +124,7 @@ def apply_platform_aliases(text: str) -> str:
 # The order of default brands to show in the selectors
 DEFAULT_BRANDS = [
     "Amazon",
-    "Warner Brothers HBO",  # formerly shown as "Max/HBO Max"
+    "Warner Brothers HBO",   # canonical brand for HBO/HBO Max/Max
     "Paramount Global",
     "Comcast (NBCUniversal)",
     "Disney",
@@ -129,7 +132,10 @@ DEFAULT_BRANDS = [
     "Apple",
     "Sony",
     "Hulu",
+    "Max",                   # UI option (normalized to Warner Brothers HBO)
+    "Peacock",               # UI option (normalized to Comcast/NBCU below)
 ]
+
 
 # Map brand -> platforms consider "owned" (used for heuristics/originals)
 STREAMERS_BY_BRAND = {
@@ -313,8 +319,8 @@ label, .stSelectbox label { font-size: 1.06rem !important; font-weight: 800 !imp
 # ---------------- Hero ----------------
 st.markdown(
     "<div class='hero'><h1>Media Merger Analysis</h1>"
-    "<p>Not a ‘where to stream now’ tool — this is a quick <b>after-the-deal</b> view: "
-    "who keeps what, and why. Transparent, source-linked.</p></div>",
+    "<p>Pick a buyer and a target, and the app will sketch where big shows and films would likely live after a merger—who keeps what, what probably gets licensed and why.</b> view: "
+    "quick vibe check from recent headlines.</p></div>",
     unsafe_allow_html=True,
 )
 
@@ -329,9 +335,24 @@ with c2:
     target = st.selectbox("Target", opts, index=opts.index(target_default))
 st.markdown("</div>", unsafe_allow_html=True)
 
-# keep labels for optional sentiment section
+# Normalize display selections to canonical internal brand ids
+def _canonical(b: str) -> str:
+    b = (b or "").strip()
+    if b == "Max":                         # treat Max as the HBO brand
+        return "Warner Brothers HBO"
+    if b == "Peacock":                     # treat Peacock as Comcast (NBCU)
+        return "Comcast (NBCUniversal)"
+    return b
+
+buyer_c = _canonical(buyer)
+target_c = _canonical(target)
+
+# keep labels for optional sentiment; store canonical for logic
 st.session_state["buyer_label"] = buyer
 st.session_state["target_label"] = target
+st.session_state["buyer_canon"] = buyer_c
+st.session_state["target_canon"] = target_c
+
 
 # ---------------- Main: map + rippleboard ----------------
 L, R = st.columns([1.05, 1.6])
@@ -427,23 +448,40 @@ with R:
         unsafe_allow_html=True,
     )
 
-    rb = fr.copy()
-    # If you use origin_label as your status, reuse it; otherwise it falls back to "Stay"
-    rb["Predicted Status"] = rb["origin_label"].replace("", "Stay")
+# 1) Start from full set
+rb = fr.copy()
 
-    # Alias visible platform strings to "HBO"
-    rb["current_platform"] = rb["current_platform"].astype(str).apply(apply_platform_aliases)
+# 2) Derive a lightweight inferred brand from platform/network (used for filter)
+rb["brand_inferred"] = rb.apply(
+    lambda r: (r.get("original_brand")
+               or infer_brand_text(r.get("current_platform"))
+               or infer_brand_text(r.get("original_network"))
+               or ""),
+    axis=1,
+)
 
-    rb["Notes"] = [
-        (str(row.get("predicted_policy", "")).strip()
-         or synth_note(str(row.get("Predicted Status", "")), buyer, target))
-        for _, row in rb.iterrows()
-    ]
-    rb_view = (
-        rb[["title", "Predicted Status", "Notes", "current_platform"]]
-        .rename(columns={"title": "IP / Franchise", "current_platform": "Current Platform"})
-    )
-    st.dataframe(rb_view.head(20), use_container_width=True, hide_index=True)
+# 3) Filter to rows tied to Buyer or Target (canonical)
+mask_bt = rb["brand_inferred"].isin({buyer_c, target_c})
+rb = rb.loc[mask_bt].copy()
+
+# 4) Status + visible platform aliasing
+rb["Predicted Status"] = rb["origin_label"].replace("", "Stay")
+rb["current_platform"] = rb["current_platform"].astype(str).apply(apply_platform_aliases)
+
+# 5) Notes (use canonical brand names for a consistent voice)
+rb["Notes"] = [
+    (str(row.get("predicted_policy", "")).strip()
+     or synth_note(str(row.get("Predicted Status", "")), buyer_c, target_c))
+    for _, row in rb.iterrows()
+]
+
+# 6) Final view
+rb_view = (
+    rb[["title", "Predicted Status", "Notes", "current_platform"]]
+    .rename(columns={"title": "IP / Franchise", "current_platform": "Current Platform"})
+)
+st.dataframe(rb_view.head(20), use_container_width=True, hide_index=True)
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ---------------- Originals (expander) ----------------
@@ -457,15 +495,16 @@ with st.expander("Originals from the target"):
     )
     # strict originals first
     orig = fr[
-        (fr.get("original_flag", "").astype(str).str.upper() == "Y")
-        & (fr.get("original_brand", "").astype(str).str.lower() == target.lower())
+    (fr.get("original_flag", "").astype(str).str.upper() == "Y")
+    & (fr.get("original_brand", "").astype(str).str.lower() == target_c.lower())
     ][["title", "original_network", "producer_list", "current_platform", "source_urls"]].copy()
+
 
     # if empty, infer by platform/network brand
     if orig.empty:
         mask = fr.apply(
-            lambda r: infer_brand_text(r.get("current_platform", "")) == target
-            or infer_brand_text(r.get("original_network", "")) == target,
+            lambda r: infer_brand_text(r.get("current_platform", "")) == target_c
+            or infer_brand_text(r.get("original_network", "")) == target_c,
             axis=1,
         )
         orig = fr.loc[
@@ -547,7 +586,7 @@ def _score_texts(texts):
 
 try:
     h = load_headlines()
-    focus = {buyer, target}
+    focus = {buyer_c, target_c}
     hh = h[h["brand"].isin(focus)] if len(h) else h
 
     if _vader_ok and len(hh):
