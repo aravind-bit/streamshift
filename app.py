@@ -498,8 +498,8 @@ with L:
         "Positions are from a 2-D projection of text embeddings (UMAP/PCA)
 
         How to read the IP Similarity Map
-        "• Each dot = a show/film.
-        "• Closer dots = more similar audience DNA (genre/keywords/description).
+        • Each dot = a show/film.
+        • Closer dots = more similar audience DNA (genre/keywords/description).
         • Colors = rough clusters (e.g., prestige drama, sci-fi, comedy).
         • Use it to spot good fits for the buyer (dots near the buyer’s current slate) vs outliers (harder brand fit).
         • Caveat: it’s a content-text signal, not a rights contract—pair with the Rippleboard and sources.
