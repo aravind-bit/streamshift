@@ -493,22 +493,26 @@ L, R = st.columns([1, 1], vertical_alignment="top")
 with L:
     st.subheader("✣ IP Similarity Map")
     st.markdown(
-        "Turning titles into vectors (fancy math), squash to 2D, and color by cluster. "
-        "Closer dots → **similar audience DNA**. Use it like a cross-sell radar."
-        "Positions are from a 2-D projection of text embeddings (UMAP/PCA)
-
-        How to read the IP Similarity Map
-        • Each dot = a show/film.
-        • Closer dots = more similar audience DNA (genre/keywords/description).
-        • Colors = rough clusters (e.g., prestige drama, sci-fi, comedy).
-        • Use it to spot good fits for the buyer (dots near the buyer’s current slate) vs outliers (harder brand fit).
-        • Caveat: it’s a content-text signal, not a rights contract—pair with the Rippleboard and sources.
+    """
+        **What this shows**  
+        Turning titles into vectors (fancy math), squash to 2D, and color by cluster.  
+        Closer dots → **similar audience DNA**. Use it like a cross-sell radar.  
+        Positions are from a 2-D projection of text embeddings (UMAP/PCA).
         
-        Investor lens:
-        • Fit suggests cross-sell/retention upside if pulled exclusive.
-        • Outliers may be better left licensed out (cash engine) rather than pulled in.
-        • Combine with Stay/Licensed/Exclusive calls for a quick timing + exposure picture."
-    )
+        **How to read the IP Similarity Map**
+        - Each dot = a show/film.
+        - Closer dots = more similar audience DNA (genre/keywords/description).
+        - Colors = rough clusters (e.g., prestige drama, sci-fi, comedy).
+        - Use it to spot good fits for the buyer (dots near the buyer’s current slate) vs outliers (harder brand fit).
+        - **Caveat:** it’s a content-text signal, not a rights contract—pair with the Rippleboard and sources.
+        
+        **Investor lens**
+        - Fit suggests cross-sell/retention upside if pulled exclusive.
+        - Outliers may be better left licensed out (cash engine) rather than pulled in.
+        - Combine with Stay/Licensed/Exclusive calls for a quick timing + exposure picture.
+        """
+)
+
 
     # ---------------- Map engine: Embeddings → TF-IDF fallback ----------------
     try:
@@ -577,16 +581,20 @@ with L:
 with R:
     st.subheader("Rippleboard: The Future of Content")
     st.markdown(
-        "What this is: a post-deal TV guide for suits (but in plain English). "
-        "Each title gets a status (stay / licensed / exclusive) and a 1-liner. "
-        "Tweak the rule and watch the board shift."
+    """
+        **What this is**  
+        A post-deal TV guide for suits (but in plain English).  
+        Each title gets a status (**stay / licensed / exclusive**) and a one-liner.  
+        Tweak the rule and watch the board shift.
+        
+        **How to read this**
+        - **Stay** → Likely the contract/window keeps it where it is for now.
+        - **Licensed** → Shared/syndicated outcome likely (may move in parts or by region).
+        - **Exclusive** → If the buyer owns the IP, they’d likely pull it in-house at renewal.
+        - *Note:* Spin-offs depend on **derivative rights**, not just today’s streamer.
+        """
+)
 
-        "How to read this:
-        • Stay → Likely contract/window keeps it where it is for now.
-        • Licensed → Shared/syndicated outcome likely (may move in parts or by region).
-        • Exclusive → Buyer would likely pull it in-house at renewal if they own the IP.
-        Spin-offs depend on derivative rights, not just today’s streamer."        
-    )
 
     # Filter rows related to Buyer or Target (platform or origin label)
     rb = filter_for_buyer_target(fr, buyer, target)  # use FR, not df
