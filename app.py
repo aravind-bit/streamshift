@@ -380,7 +380,7 @@ with st.container():
 <div class="section-card">
   <div class="section-title">What this app does</div>
   <div class="section-blurb">
-    <b>Key Idea:</b>A show can be made by one company, owned as IP by another, and streamed on a platform under a contract.
+    <b>Key Idea:</b> A show can be made by one company, owned as IP by another, and streamed on a platform under a contract.
     <br><br>
     <b>Example:</b> If Apple bought Netflix, Apple would inherit Netflix’s shows—but what happens next depends on contracts:
     • If Netflix owns the IP (e.g., Stranger Things), Apple could ultimately keep it exclusive and even greenlight spin-offs (subject to existing talent deals).
