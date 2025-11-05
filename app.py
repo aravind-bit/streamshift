@@ -382,11 +382,14 @@ with st.container():
   <div class="section-blurb">
     <b>Key Idea:</b> A show can be made by one company, owned as IP by another, and streamed on a platform under a contract.
     <br><br>
-    <b>Example:</b> If Apple bought Netflix, Apple would inherit Netflix’s shows—but what happens next depends on contracts:
-    • If Netflix owns the IP (e.g., Stranger Things), Apple could ultimately keep it exclusive and even greenlight spin-offs (subject to existing talent deals).
-    • If Netflix only licenses the show (e.g., a Sony-produced title), it likely stays under the current license until expiry; no spin-offs without new rights.
-    The app makes these differences visible, shows likely outcomes (Stay/Licensed/Exclusive), and gives quick links to verify details—so fans know where their shows might live, and analysts can gauge timing and exposure.
-    <br><br>
+    <b>Example</b><br/>
+    If Apple bought Netflix, what happens next depends on contracts:
+    <ul style="margin-top:6px">
+      <li>If Netflix <b>owns the IP</b> (<i>Stranger Things</i>), Apple could eventually keep it exclusive and even green-light spin-offs (subject to existing talent deals).</li>
+      <li>If Netflix <b>only licenses</b> the show (e.g., a Sony-produced title), it likely stays under the current license until expiry; no spin-offs without new rights.</li>
+</ul>
+This app makes those differences visible, shows likely outcomes (<b>Stay / Licensed / Exclusive</b>), and gives quick links to verify details—so fans know where their shows might live, and analysts can gauge timing and exposure.
+<br/><br/>
     <i>Roadmap:</i> region-aware windows, “fit” scores, expiry maps, and deal-prep views (value at risk, churn lift).
   </div>
 </div>
