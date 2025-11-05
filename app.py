@@ -494,92 +494,121 @@ st.session_state["target_canon"] = target_c
 L, R = st.columns([1, 1], vertical_alignment="top")
 
 with L:
-    st.subheader("✣ IP Similarity Map")
+    st.subheader("✣ IP Similarity Map (filtered to Buyer/Target)")
     st.markdown(
-    """
-        **What this shows**  
-        Turning titles into vectors (fancy math), squash to 2D, and color by cluster.  
-        Closer dots → **similar audience DNA**. Use it like a cross-sell radar.  
-        Positions are from a 2-D projection of text embeddings (UMAP/PCA).
-        
-        **How to read the IP Similarity Map**
-        - Each dot = a show/film.
-        - Closer dots = more similar audience DNA (genre/keywords/description).
-        - Colors = rough clusters (e.g., prestige drama, sci-fi, comedy).
-        - Use it to spot good fits for the buyer (dots near the buyer’s current slate) vs outliers (harder brand fit).
-        - **Caveat:** it’s a content-text signal, not a rights contract—pair with the Rippleboard and sources.
-        
-        **Investor lens**
-        - Fit suggests cross-sell/retention upside if pulled exclusive.
-        - Outliers may be better left licensed out (cash engine) rather than pulled in.
-        - Combine with Stay/Licensed/Exclusive calls for a quick timing + exposure picture.
         """
-)
+            **What this shows**  
+            Turning titles into vectors (fancy math), squash to 2D, and color by cluster.  
+            Closer dots → **similar audience DNA**. Use it like a cross-sell radar.  
+            Positions are from a 2-D projection of text embeddings (UMAP/PCA).
+            
+            **How to read the IP Similarity Map**
+            - Each dot = a show/film.
+            - Closer dots = more similar audience DNA (genre/keywords/description).
+            - Colors = rough clusters (e.g., prestige drama, sci-fi, comedy).
+            - Use it to spot good fits for the buyer (dots near the buyer’s current slate) vs outliers (harder brand fit).
+            - **Caveat:** it’s a content-text signal, not a rights contract—pair with the Rippleboard and sources.
+            
+            **Investor lens**
+            - Fit suggests cross-sell/retention upside if pulled exclusive.
+            - Outliers may be better left licensed out (cash engine) rather than pulled in.
+            - Combine with Stay/Licensed/Exclusive calls for a quick timing + exposure picture.
+            """
+    )
 
 
-    # ---------------- Map engine: Embeddings → TF-IDF fallback ----------------
+# --- Filter to Buyer/Target first (same logic as Rippleboard) ---
+try:
+    # If you already have this helper in your file, it will be used.
+    df_map = filter_for_buyer_target(fr, buyer, target).copy()
+except NameError:
+    # Minimal fallback: match on platform/labels if helper isn’t present
+    import re
+    BRAND_PATTERNS = {
+        "Amazon": r"amazon|prime video|freevee",
+        "Warner Brothers HBO": r"hbo|max|warner bros|wbd",
+        "Comcast (NBCUniversal)": r"peacock|nbc|comcast|universal",
+        "Paramount Global": r"paramount\+|paramount plus|showtime",
+        "Disney": r"disney\+|hulu|star\+",
+        "Netflix": r"netflix",
+        "Apple": r"apple tv\+|apple tv plus|appletv\+|apple tv",
+        "Sony": r"\bsony\b",
+        "Hulu": r"\bhulu\b",
+        "Max": r"\bmax\b|hbo",
+        "Peacock": r"\bpeacock\b",
+    }
+    buy_pat = re.compile(BRAND_PATTERNS.get(buyer, buyer), flags=re.I)
+    tgt_pat = re.compile(BRAND_PATTERNS.get(target, target), flags=re.I)
+
+    def _hay(row):
+        return " | ".join([
+            str(row.get("current_platform","")),
+            str(row.get("origin_label","")),
+            str(row.get("original_network","")),
+            str(row.get("original_brand","")),
+            str(row.get("title","")),
+        ])
+    m = fr.apply(lambda r: bool(buy_pat.search(_hay(r)) or tgt_pat.search(_hay(r))), axis=1)
+    df_map = fr.loc[m].copy()
+
+# Graceful empty handling
+if df_map.empty or len(df_map) < 3:
+    st.caption("Not enough relevant titles to draw a map. Try another Buyer/Target or add more rows.")
+else:
+    # Build text corpus
+    if "genre_tags" not in df_map.columns:
+        df_map["genre_tags"] = ""
+    corpus = (df_map["title"].astype(str).str.strip() + " " +
+              df_map["genre_tags"].astype(str).str.strip()).str.strip()
+
+    X = None
+    engine_label = "Embeddings"
+    # 1) Try sentence-transformers
     try:
-        # Build corpus: title + optional tags
-        if "genre_tags" not in fr.columns:
-            fr["genre_tags"] = ""
-        corpus = (fr["title"].astype(str).str.strip() + " " +
-                  fr["genre_tags"].astype(str).str.strip()).str.strip()
-        mask = corpus.str.len() > 0
-        df_map = fr.loc[mask].reset_index(drop=True).copy()
-
-        X = None
-        used_embeddings = False
-
-        # 1) Try Sentence-Transformers
+        from sentence_transformers import SentenceTransformer  # type: ignore
+        model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+        X = model.encode(
+            (df_map["title"].astype(str) + " " + df_map["genre_tags"].astype(str)).tolist(),
+            batch_size=64, show_progress_bar=False, normalize_embeddings=True
+        ).astype("float32")
+        engine_label = "Embeddings (MiniLM)"
+    except Exception:
+        # 2) Fall back to TF-IDF
         try:
-            from sentence_transformers import SentenceTransformer  # type: ignore
-            model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-            X = model.encode(
-                df_map["title"].astype(str).str.cat(df_map["genre_tags"].astype(str), sep=" ").tolist(),
-                batch_size=64, show_progress_bar=False, normalize_embeddings=True
-            ).astype("float32")
-            used_embeddings = True
-        except Exception:
-            # 2) Fall back to TF-IDF if ST is unavailable (e.g., Streamlit Cloud)
-            try:
-                from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
-                tfidf = TfidfVectorizer(max_features=3000, ngram_range=(1, 2), min_df=1)
-                X = tfidf.fit_transform(corpus.tolist()).toarray().astype("float32")
-                used_embeddings = False
-            except Exception as e:
-                st.caption(f"Map unavailable (no embeddings, no scikit-learn): {e}")
-                X = None
+            from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
+            tfidf = TfidfVectorizer(max_features=3000, ngram_range=(1,2), min_df=1)
+            X = tfidf.fit_transform(corpus.tolist()).toarray().astype("float32")
+            engine_label = "TF-IDF fallback"
+        except Exception as e:
+            st.caption(f"Map unavailable (no embeddings/TF-IDF): {e}")
+            X = None
 
-        engine_label = "Embeddings • FAISS/ST" if used_embeddings else "Classic • TF-IDF"
-        st.caption(f"Similarity engine: {engine_label}")
+    st.caption(f"Similarity engine: {engine_label}")
 
-        if X is not None and len(df_map) >= 3:
-            mx, my = project_points(X)  # uses np.ptp internally (NumPy 2-safe)
-            dfp = pd.DataFrame({
-                "x": mx,
-                "y": my,
-                "brand": df_map.apply(
-                    lambda r: (r.get("original_brand")
-                               or infer_brand_text(r.get("current_platform"))
-                               or "Other"),
-                    axis=1,
-                ),
-            })
-            import plotly.express as px
-            fig = px.scatter(dfp, x="x", y="y", color="brand", height=360)
-            fig.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=10, r=10, t=10, b=10),
-                legend_title_text="",
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        elif X is None:
-            pass  # already messaged
-        else:
-            st.caption("Add more rows to see the map.")
-    except Exception as e:
-        st.caption(f"Map unavailable: {e}")
+    if X is not None and len(df_map) >= 3:
+        # Use your existing projector; it should already be NumPy 2.0-safe (np.ptp)
+        mx, my = project_points(X)
+
+        import plotly.express as px
+        # Label brand for coloring (owned/brand/platform best-effort)
+        def _brand(r):
+            return (r.get("original_brand")
+                    or r.get("origin_label")
+                    or infer_brand_text(r.get("current_platform"))
+                    or "Other")
+        brand_series = df_map.apply(_brand, axis=1)
+
+        fig_df = pd.DataFrame({"x": mx, "y": my, "brand": brand_series, "title": df_map["title"]})
+        fig = px.scatter(
+            fig_df, x="x", y="y", color="brand", hover_data=["title"], height=380
+        )
+        fig.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=10, r=10, t=10, b=10),
+            legend_title_text=""
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
 with R:
     st.subheader("Rippleboard: The Future of Content")
