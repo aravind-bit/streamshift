@@ -491,9 +491,9 @@ st.session_state["target_canon"] = target_c
 
 # --- Side-by-side: IP Similarity Map (left) and Rippleboard (right) ---
 # --- Side-by-side: IP Similarity Map (left) and Rippleboard (right) ---
-L, R = st.columns([1, 1], vertical_alignment="top")
+#L, R = st.columns([1, 1], vertical_alignment="top")
 
-with L:
+#with L:
 # ===============================
 # IP SIMILARITY MAP  ←→  RIPPLEBOARD (side-by-side)
 # Replace your current IP Similarity Map block AND Rippleboard block with this.
