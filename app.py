@@ -1,21 +1,292 @@
-# app.py
+# Media Merger Analysis — backup look, plus HBO alias + "Warner Brothers HBO" branding
+from __future__ import annotations
 import re
-import os
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import streamlit as st
 
-# Optional: plotly for nicer scatter (works well with Streamlit)
-import plotly.express as px
+# --- GA4 Measurement Protocol helper ---
+import uuid, requests
 
-# ------------------------
-# Config & CSS
-# ------------------------
+def send_ga_event(event_name: str, params: dict):
+    """Fire-and-forget GA4 event. No-op if secrets not configured."""
+    ga = st.secrets.get("ga4", {})
+    mid = ga.get("measurement_id")
+    sec = ga.get("api_secret")
+    if not (mid and sec):
+        return  # GA not configured
+
+    payload = {
+        "client_id": str(uuid.uuid4()),  # anonymous session id
+        "events": [{
+            "name": event_name,
+            "params": params
+        }]
+    }
+    try:
+        requests.post(
+            f"https://www.google-analytics.com/mp/collect"
+            f"?measurement_id={mid}&api_secret={sec}",
+            json=payload,
+            timeout=4
+        )
+    except Exception:
+        # never break the app if GA is down
+        pass
+
+
+# Optional: lightweight clustering for other places (kept from your backup;
+# we will handle TF-IDF import again inside the map block to be robust)
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.decomposition import PCA
+    HAVE_SK = True
+except Exception:
+    HAVE_SK = False
+
+ROOT = Path(__file__).resolve().parent
+DATA = ROOT / "data"
+
+# ---------------- embeddings + projection helpers (NEW) ----------------
+def _load_embeddings():
+    """
+    Return (index, meta_df) if FAISS artifacts exist; else (None, None).
+    We still re-encode text with Sentence-Transformers to keep logic simple and portable.
+    """
+    idx_path = DATA / "embeddings.index"
+    meta_path = DATA / "embeddings_meta.parquet"
+    try:
+        if idx_path.exists() and meta_path.exists():
+            import faiss  # type: ignore
+            meta = pd.read_parquet(meta_path)
+            index = faiss.read_index(str(idx_path))
+            if index.ntotal == len(meta):
+                return index, meta
+    except Exception:
+        pass
+    return None, None
+
+def project_points(X):
+    """Project high-dimensional vectors to 2D with UMAP (preferred) or PCA fallback."""
+    import numpy as np
+    try:
+        import umap  # type: ignore
+        reducer = umap.UMAP(n_components=2, random_state=42, n_neighbors=10, min_dist=0.12)
+        pts = reducer.fit_transform(X)
+    except Exception:
+        # PCA fallback (works for dense arrays)
+        try:
+            from sklearn.decomposition import PCA  # type: ignore
+            pts = PCA(n_components=2, random_state=42).fit_transform(X)
+        except Exception:
+            # final fallback: make a tiny dummy projection if everything is missing
+            n = X.shape[0]
+            pts = __import__("numpy").random.RandomState(42).randn(n, 2)
+
+    # Normalize to [0,1] for stable plotting bounds
+
+    x = (pts[:, 0] - pts[:, 0].min()) / (np.ptp(pts[:, 0]) + 1e-9)
+    y = (pts[:, 1] - pts[:, 1].min()) / (np.ptp(pts[:, 1]) + 1e-9)
+
+    return x, y
+
+# ---------------- helpers ----------------
+def read_csv_safe(path: Path) -> pd.DataFrame:
+    for enc in ("utf-8", "utf-8-sig", "latin-1", "cp1252", "mac_roman"):
+        try:
+            return pd.read_csv(path, encoding=enc)
+        except Exception:
+            pass
+    return pd.DataFrame()
+
+def ensure_cols(df: pd.DataFrame, template: dict) -> pd.DataFrame:
+    for k, v in template.items():
+        if k not in df.columns:
+            df[k] = v
+        df[k] = df[k].fillna("")
+    return df
+
+# Display aliases (UI only)
+PLATFORM_ALIASES = {
+    "HBO Max": "HBO",
+    "Max": "HBO",
+}
+def apply_platform_aliases(txt: str) -> str:
+    """
+    Normalize platform names for display consistency.
+    Example: Max/HBO -> HBO; Apple TV variants -> Apple TV+; remove dupes, trim.
+    """
+    if not txt:
+        return txt
+    s = str(txt)
+
+    # HBO / Max
+    s = s.replace("HBO Max", "HBO")
+    s = s.replace("Max", "HBO")  # show as HBO for simplicity
+
+    # Apple TV+ variants
+    s = s.replace("Apple TV Plus", "Apple TV+")
+    s = s.replace("AppleTV+", "Apple TV+")
+    s = s.replace("Apple TV +", "Apple TV+")
+    s = s.replace("Apple Tv+", "Apple TV+")
+
+    # Paramount+ variants
+    s = s.replace("Paramount Plus", "Paramount+")
+    s = s.replace("Paramount Plus Apple TV Channel", "Paramount+ Apple TV Channel ")
+
+    # Remove accidental double spaces
+    s = " ".join(s.split())
+
+    # De-dupe comma-separated platforms while preserving order
+    parts = [p.strip() for p in s.split(",")]
+    seen, out = set(), []
+    for p in parts:
+        if p and p not in seen:
+            seen.add(p)
+            out.append(p)
+    return ", ".join(out)
+
+
+# The order of default brands to show in the selectors
+DEFAULT_BRANDS = [
+    "Amazon",
+    "Warner Brothers HBO",   # canonical brand for HBO/HBO Max/Max
+    "Paramount Global",
+    "Comcast (NBCUniversal)",
+    "Disney",
+    "Netflix",
+    "Apple",
+    "Sony",
+    "Hulu",
+    "Max",                   # UI option (normalized to Warner Brothers HBO)
+    "Peacock",               # UI option (normalized to Comcast/NBCU below)
+]
+
+
+# Map brand -> platforms consider "owned" (used for heuristics/originals)
+STREAMERS_BY_BRAND = {
+    "Amazon": ["Prime Video", "Amazon Prime Video"],
+    "Warner Brothers HBO": ["HBO", "HBO Max", "Max"],
+    "Paramount Global": ["Paramount+", "Paramount Plus"],
+    "Comcast (NBCUniversal)": ["Peacock"],
+    "Disney": ["Disney+"],
+    "Netflix": ["Netflix"],
+    "Apple": ["Apple TV+"],
+    "Sony": ["Crunchyroll", "SonyLIV"],
+    "Hulu": ["Hulu"],
+}
+
+def infer_brand_text(txt: str | None) -> str | None:
+    """
+    Best-effort brand inference from an arbitrary platform/network string.
+    Returns a canonical brand name or None.
+    """
+    if not txt:
+        return None
+    s = str(txt).lower()
+
+    # Apple — match first to avoid accidental hits
+    if "apple tv" in s or "appletv" in s or "apple tv+" in s or "apple tv plus" in s:
+        return "Apple"
+
+    # Amazon
+    if "prime video" in s or "amazon" in s or "freevee" in s:
+        return "Amazon"
+
+    # HBO/Max
+    if "hbo" in s or "max" in s or "warner bros" in s or "wbd" in s:
+        return "Warner Brothers HBO"
+
+    # Peacock / NBCU
+    if "peacock" in s or "nbc" in s or "comcast" in s:
+        return "Comcast (NBCUniversal)"
+
+    # Paramount
+    if "paramount" in s or "showtime" in s:
+        return "Paramount Global"
+
+    # Disney / Hulu
+    if "disney" in s or "hulu" in s or "star+" in s:
+        return "Disney"
+
+    # Netflix
+    if "netflix" in s:
+        return "Netflix"
+
+    # Sony (rare in streaming labels, but keep)
+    if "sony" in s:
+        return "Sony"
+
+    return None
+
+def buyer_target_options(fr: pd.DataFrame) -> list[str]:
+    """Combine our default brand list with any discovered `original_brand` values."""
+    discovered = sorted(set(x for x in fr.get("original_brand", []).tolist() if str(x).strip()))
+    out: list[str] = []
+    for b in DEFAULT_BRANDS + discovered:
+        if b and b not in out:
+            out.append(b)
+    return out or DEFAULT_BRANDS
+
+def tmdb_links(title: str, source_urls: str) -> list[str]:
+    """Prefer explicit URLs in CSV; otherwise provide a TMDB search to verify quickly."""
+    urls = [u.strip() for u in str(source_urls or "").split(";") if u.strip()]
+    if urls:
+        return urls
+    if title:
+        q = re.sub(r"\s+", "+", title.strip())
+        return [f"https://www.themoviedb.org/search?query={q}"]
+    return []
+
+def synth_note(status: str, buyer: str, target: str) -> str:
+    s = (status or "").lower()
+    if "exclusive" in s: return f"High-value IP → likely exclusive under {buyer}."
+    if "window" in s: return f"Window under {buyer}; long-tail remains with {target}."
+    if "shared" in s: return "Lower strategic value → shared licensing continues."
+    return "Not a flagship—probably stays put for now."
+
+def compact_table(df: pd.DataFrame, keep_order: list[str]) -> pd.DataFrame:
+    if df.empty:
+        return df
+    df = df.copy()
+    for c in df.columns:
+        df[c] = df[c].replace("", pd.NA)
+    usable = [c for c in df.columns if df[c].notna().any()]
+    df = df[usable]
+    ordered = [c for c in keep_order if c in df.columns] + [c for c in df.columns if c not in keep_order]
+    return df[ordered].fillna("—")
+
+# ---------------- load data ----------------
 st.set_page_config(page_title="Media Merger Analysis", layout="wide")
 
+fr = read_csv_safe(DATA / "franchises.csv")
+if fr.empty:
+    st.error("Could not read data/franchises.csv. Add your data and rerun.")
+    st.stop()
+
+fr = ensure_cols(
+    fr,
+    {
+        "title": "",
+        "origin_label": "",          # your status label/rule (e.g., Exclusive/Stay/Windowed)
+        "predicted_policy": "",      # free-text rationale if you saved one
+        "original_flag": "",         # Y/N
+        "original_brand": "",
+        "original_network": "",
+        "producer_list": "",
+        "current_platform": "",
+        "source_urls": "",
+        "genre_tags": "",
+    },
+)
+
+# ---------------- CSS (visual parity with your backup) ----------------
 st.markdown(
     """
 <style>
+/* ===== Global shell ===== */
 html, body, .main {
   background: radial-gradient(1200px 600px at 20% -10%, rgba(167,139,250,0.18), rgba(2,6,23,0.0)),
               radial-gradient(900px 480px at 80% -20%, rgba(59,130,246,0.18), rgba(2,6,23,0.0)),
@@ -24,22 +295,33 @@ html, body, .main {
 }
 .main .block-container { max-width: 1280px; padding-top: .6rem; }
 
-/* Hide any legacy pill chips if they exist */
-.pill, .helper-pill, .hint-pill,
-[data-testid="stBadges"], .st-emotion-cache-1r4qj8e { display: none !important; }
+/* ===== HARD HIDE ANY CHIP/BADGE/PILL VARIANTS (stronger than before) ===== */
+[data-baseweb="tag"],
+[data-baseweb="badge"] { display: none !important; }
 
-/* Make blurbs more readable */
+[data-testid="stBadge"],
+.st-badge, .stBadge, .st-badge-container { display: none !important; }
+
+/* Any element whose class suggests a pill/chip */
+[class*="pill"], [class*="Pill"], [class*="chip"], [class*="Chip"] { display: none !important; }
+
+/* Stray helper spans that render like pills */
+div[role="note"], div[role="status"] span, .st-emotion-cache-badge { display: none !important; }
+
+/* If a horizontal block injected BaseWeb tags, kill those rows */
+section [data-testid="stHorizontalBlock"] > div > div:has([data-baseweb="tag"]),
+section [data-testid="stHorizontalBlock"] > div > [data-baseweb="tag"] { display:none !important; }
+
+/* ===== Typography tweaks ===== */
 .section-blurb { font-size: 1.02rem !important; line-height: 1.45rem !important; color:#d9dce3 !important; }
-
-/* Slightly larger Buyer/Target labels */
 label, .stSelectbox label { font-size: 1.06rem !important; font-weight: 800 !important; color:#e7e9ee !important; }
 
-/* Hero */
+/* ===== Hero ===== */
 .hero { text-align:center; margin: 0 0 .8rem 0; }
 .hero h1 { font-size: 2.6rem; font-weight: 800; color:#C7A6FF; letter-spacing:.2px; margin:0; }
 .hero p  { color:#A1A8B3; margin:.4rem 0 0 0; font-size:1.06rem; }
 
-/* Toolbar */
+/* ===== Toolbar ===== */
 .toolbar {
   background: rgba(17,24,39,0.55);
   border: 1px solid rgba(148,163,184,0.18);
@@ -50,7 +332,7 @@ label, .stSelectbox label { font-size: 1.06rem !important; font-weight: 800 !imp
 }
 .toolbar label { font-size: 1.06rem; color:#E7E9EE; font-weight: 800; }
 
-/* Section shells */
+/* ===== Section shells ===== */
 .section-card {
   background: rgba(17,24,39,0.55);
   border: 1px solid rgba(148,163,184,0.18);
@@ -60,7 +342,7 @@ label, .stSelectbox label { font-size: 1.06rem !important; font-weight: 800 !imp
 }
 .section-title { font-size: 1.18rem; font-weight: 900; color:#E7E9EE; margin: 0 0 .35rem 0; }
 
-/* Louder blurbs */
+/* ===== Louder blurbs ===== */
 .section-blurb {
   color:#D1D5DB;
   font-size: .98rem;
@@ -68,13 +350,13 @@ label, .stSelectbox label { font-size: 1.06rem !important; font-weight: 800 !imp
   margin: 2px 0 10px 0;
 }
 
-/* Dataframes */
+/* ===== Dataframes ===== */
 [data-testid="stDataFrame"] {
   border: 1px solid rgba(148,163,184,0.18) !important;
   border-radius: 12px !important;
 }
 
-/* Inputs */
+/* ===== Inputs ===== */
 .stSelectbox [data-baseweb="select"] > div {
   background: rgba(17,24,39,0.55);
   border: 1px solid rgba(148,163,184,0.25);
@@ -84,308 +366,477 @@ label, .stSelectbox label { font-size: 1.06rem !important; font-weight: 800 !imp
     unsafe_allow_html=True,
 )
 
-# ------------------------
-# Data helpers
-# ------------------------
-DATA_PATH = "data/franchises.csv"
+# ---------------- Hero ----------------
+st.markdown(
+    "<div class='hero'><h1>Media Merger Analysis</h1>"
+    "<p>Pick a buyer and a target, and the app will sketch where big shows and films would likely live after a merger—who keeps what, what probably gets licensed and why.</b> view: "
+    "quick vibe check from recent headlines.</p></div>",
+    unsafe_allow_html=True,
+)
 
-def load_franchises(path: str) -> pd.DataFrame:
-    if not os.path.exists(path):
-        st.error(f"Data not found: {path}")
-        return pd.DataFrame(columns=["title", "current_platform"])
-    df = pd.read_csv(path, dtype=str).fillna("")
-    # standardize expected columns
-    if "title" not in df.columns:
-        # Try to infer title column
-        guess = [c for c in df.columns if "title" in c.lower() or "ip" in c.lower()]
-        if guess:
-            df = df.rename(columns={guess[0]: "title"})
-        else:
-            df["title"] = ""
-    if "current_platform" not in df.columns:
-        # Try to infer
-        guess = [c for c in df.columns if "platform" in c.lower()]
-        if guess:
-            df = df.rename(columns={guess[0]: "current_platform"})
-        else:
-            df["current_platform"] = ""
-    return df
+# --- Why this matters (Investors & Newcomers) ---
+with st.container():
+    st.markdown("""
+<div class="section-card">
+  <div class="section-title">What this app does</div>
+  <div class="section-blurb">
+    <b>Key Idea:</b> A show can be made by one company, owned as IP by another, and streamed on a platform under a contract.
+    <br><br>
+    <b>Example</b><br/>
+    If Apple bought Netflix, what happens next depends on contracts:
+    <ul style="margin-top:6px">
+      <li>If Netflix <b>owns the IP</b> (e.g., <i>Stranger Things</i>), Apple could eventually keep it exclusive and even green-light spin-offs (subject to existing talent deals).</li>
+      <li>If Netflix <b>only licenses</b> the show (e.g., <i>Cobra Kai a Sony-produced title</i>), it likely stays under the current license until expiry; no spin-offs without new rights.</li>
+</ul>
+This app makes those differences visible, shows likely outcomes (<b>Stay / Licensed / Exclusive</b>), and gives quick links to verify details—so fans know where their shows might live, and analysts can gauge timing and exposure.
+<br/><br/>
+    <i>Roadmap:</i> region-aware windows, “fit” scores, expiry maps, and deal-prep views (value at risk, churn lift).
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
-def normalize_brand_name(brand: str) -> str:
-    """Create a lenient regex for brand matching."""
-    brand = brand.strip()
-    # special handling for Warner/Max/HBO cluster
-    if brand.lower() in ["warner brothers hbo", "warner bros hbo", "warner", "wbd", "hbo", "max"]:
-        return r"(warner|wbd|hbo|max)"
-    # peacock
-    if brand.lower() in ["peacock", "nbc", "comcast (nbcuniversal)", "comcast", "nbcuniversal"]:
-        return r"(peacock|nbc|nbcuniversal|comcast)"
-    # amazon
-    if brand.lower() in ["amazon"]:
-        return r"(amazon|prime\s*video)"
-    # apple
-    if brand.lower() in ["apple"]:
-        return r"(apple\s*tv\+|apple)"
-    # netflix
-    if brand.lower() in ["netflix"]:
-        return r"(netflix)"
-    # hulu
-    if brand.lower() in ["hulu"]:
-        return r"(hulu)"
-    # disney
-    if brand.lower() in ["disney"]:
-        return r"(disney|disney\+)"
-    # paramount
-    if brand.lower() in ["paramount global", "paramount"]:
-        return r"(paramount\+|paramount)"
-    # sony
-    if brand.lower() in ["sony"]:
-        return r"(sony)"
-    return re.escape(brand)
-
-SEARCH_COLUMNS = [
-    "current_platform", "origin_label", "origin_brand",
-    "platform", "producer_list", "distributor_list", "tags"
-]
-
-def row_matches_brand(row: pd.Series, brand_regex: str) -> bool:
-    for col in SEARCH_COLUMNS:
-        if col in row.index:
-            val = str(row[col])
-            if val and re.search(brand_regex, val, flags=re.IGNORECASE):
-                return True
-    return False
-
-def filter_for_buyer_target(df: pd.DataFrame, buyer: str, target: str) -> pd.DataFrame:
-    buyer_re = normalize_brand_name(buyer)
-    target_re = normalize_brand_name(target)
-    mask = df.apply(lambda r: row_matches_brand(r, buyer_re) or row_matches_brand(r, target_re), axis=1)
-    sub = df.loc[mask].copy()
-    if sub.empty:
-        st.info("No direct matches for Buyer/Target in metadata—showing all titles as a fallback.")
-        sub = df.copy()
-    return sub
-
-# ------------------------
-# Projection for the map
-# ------------------------
-def ensure_xy_projection(df: pd.DataFrame) -> pd.DataFrame:
-    """Ensure df has 'x','y' numeric columns for the scatter. If missing, make a simple pseudo-projection."""
-    if "x" in df.columns and "y" in df.columns:
-        # clean numeric
-        df["x"] = pd.to_numeric(df["x"], errors="coerce").fillna(0.0)
-        df["y"] = pd.to_numeric(df["y"], errors="coerce").fillna(0.0)
-        return df
-
-    # Simple deterministic pseudo-projection if no embeddings are present:
-    # hash title into 2 floats in [0,1]
-    def hash_to_unit(s: str, seed: int) -> float:
-        h = abs(hash((s, seed))) % 10_000_000
-        return (h / 10_000_000.0)
-
-    df = df.copy()
-    df["x"] = df["title"].astype(str).apply(lambda s: hash_to_unit(s, 1))
-    df["y"] = df["title"].astype(str).apply(lambda s: hash_to_unit(s, 2))
-    return df
-
-# ------------------------
-# Color / legend mapping
-# ------------------------
-def platform_bucket(row: pd.Series) -> str:
-    text = " ".join([str(row.get(c, "")) for c in ["current_platform", "origin_label", "origin_brand"]]).lower()
-    if re.search(r"netflix", text): return "Netflix"
-    if re.search(r"\bmax\b|\bhbo\b", text): return "Max"
-    if re.search(r"peacock|nbc", text): return "Peacock"
-    if re.search(r"prime\s*video|amazon", text): return "Amazon"
-    if re.search(r"apple", text): return "Apple"
-    return "Other"
-
-COLOR_MAP = {
-    "Netflix": "#60a5fa",
-    "Max": "#a78bfa",
-    "Peacock": "#f87171",
-    "Amazon": "#22d3ee",
-    "Apple": "#34d399",
-    "Other": "#94a3b8",
+# --- Brand matching helpers (place near imports / after reading CSV) ---
+BRAND_PATTERNS = {
+    "Amazon": ["Amazon", "Prime Video"],
+    "Warner Brothers HBO": ["HBO", r"\bMax\b", "Warner", "WBD", "Warner Bros"],
+    "Paramount Global": ["Paramount", "Showtime"],
+    "Comcast (NBCUniversal)": ["Peacock", "NBC", "NBCUniversal", "Comcast"],
+    "Disney": ["Disney", "Hotstar", r"Star\+"],
+    "Netflix": ["Netflix"],
+    "Apple": [r"Apple TV\+"],
+    "Sony": ["Sony", "Crunchyroll"],   # adjust if you don’t want Crunchyroll here
+    "Hulu": ["Hulu"],
+    "Max":  [r"\bMax\b", "HBO"],
+    "Peacock": ["Peacock"],
 }
 
-# ------------------------
-# Rippleboard helper (very simple baseline)
-# ------------------------
-def compute_rippleboard(df: pd.DataFrame, buyer: str, target: str) -> pd.DataFrame:
-    # Keep whatever your previous logic was; here we just pass through and ensure columns exist
-    out = df.copy()
-    if "predicted_policy" not in out.columns:
-        out["predicted_policy"] = np.where(
-            out["current_platform"].str.contains("amazon|prime", case=False, na=False),
-            "Exclusive Distribution",
-            "Licensed"
-        )
-    if "notes" not in out.columns:
-        out["notes"] = np.where(
-            out["predicted_policy"].str.contains("Exclusive", na=False),
-            "High-value IP → likely exclusive under buyer.",
-            "Not a flagship—probably stays put for now."
-        )
-    return out
+def brand_regex(brand: str) -> str:
+    pats = BRAND_PATTERNS.get(brand, [brand])
+    return r"(?i)(" + "|".join(pats) + r")"
 
-# ------------------------
-# UI
-# ------------------------
-st.markdown(
-    '<div class="hero"><h1>Media Merger Analysis</h1>'
-    '<p>Visualize what happens to movies & series after hypothetical media mergers. '
-    'Who streams what after the deal.</p></div>',
-    unsafe_allow_html=True,
-)
-
-with st.container():
-    st.write("")  # small breathing room
-    buyer, target = st.columns(2)
-    BUYERS = [
-        "Amazon",
-        "Warner Brothers HBO",
-        "Paramount Global",
-        "Comcast (NBCUniversal)",
-        "Disney",
-        "Netflix",
-        "Apple",
-        "Sony",
-        "Hulu",
-        "Max",
-        "Peacock",
-    ]
-    with buyer:
-        buyer_choice = st.selectbox("Buyer", BUYERS, index=0)
-    with target:
-        target_choice = st.selectbox("Target", BUYERS, index=1)
-
-# ------------------------
-# Load + filter data
-# ------------------------
-df_raw = load_franchises(DATA_PATH)
-if df_raw.empty:
-    st.stop()
-
-# Filter strictly to Buyer/Target for the map & board
-df_bt = filter_for_buyer_target(df_raw, buyer_choice, target_choice)
-
-# Section: IP Similarity Map (filtered)
-st.markdown("### ✣ IP Similarity Map (filtered to Buyer/Target)")
-st.markdown(
+def filter_for_buyer_target(fr: pd.DataFrame, buyer: str, target: str) -> pd.DataFrame:
     """
-**What this shows**  
-Turning titles into vectors (fancy math), squash to 2D, and color by cluster. Closer dots → **similar audience DNA**.  
-Positions are from a 2-D projection of text embeddings (or a stable fallback), just to give a vibe-level neighborhood.
+    Return rows relevant to buyer or target based on platform or origin/brand hints.
+    - Looks in current_platform and origin_label/original_network
+    - Uses brand-specific regex patterns (expanded with Apple TV+ variants)
+    """
+    BRAND_PATTERNS = {
+        "Amazon": r"amazon|prime video|freevee",
+        "Warner Brothers HBO": r"hbo|max|warner bros|wbd",
+        "Comcast (NBCUniversal)": r"peacock|nbc|comcast|universal",
+        "Paramount Global": r"paramount\+|paramount plus|showtime",
+        "Disney": r"disney\+|hulu|star\+",
+        "Netflix": r"netflix",
+        "Apple": r"apple tv\+|apple tv plus|appletv\+|apple tv",
+        "Sony": r"\bsony\b",
+        "Hulu": r"\bhulu\b",
+        "Max": r"\bmax\b|hbo",
+        "Peacock": r"\bpeacock\b",
+    }
 
-**How to read the map**
-- **Each dot** = a show/film.  
-- **Closer dots** = similar audience DNA (genre/keywords/description).  
-- **Colors** = rough clusters by platform family (e.g., Netflix, Max, Apple).  
-- Use it to spot quick “this fits the buyer” vs. “this is an outlier” reads.  
-""",
-    unsafe_allow_html=True,
-)
+    buy_pat = BRAND_PATTERNS.get(buyer, buyer.lower())
+    tgt_pat = BRAND_PATTERNS.get(target, target.lower())
 
-# Grid for map (left) + Rippleboard (right)
-left, right = st.columns([0.54, 0.46], gap="large")
+    def _text_cols(row) -> str:
+        return " | ".join([
+            str(row.get("current_platform", "")),
+            str(row.get("origin_label", "")),
+            str(row.get("original_network", "")),
+            str(row.get("original_brand", "")),
+        ]).lower()
 
-# ---- Map on left
-with left:
-    df_map = ensure_xy_projection(df_bt.copy())
-    df_map["cluster_name"] = df_map.apply(platform_bucket, axis=1)
+    df2 = fr.copy()
+    hay = df2.apply(_text_cols, axis=1)
 
-    if df_map.empty or df_map["title"].eq("").all():
-        st.info("No titles available after filtering.")
-    else:
-        fig = px.scatter(
-            df_map,
-            x="x", y="y",
-            color="cluster_name",
-            color_discrete_map=COLOR_MAP,
-            hover_data={"title": True, "current_platform": True, "x": False, "y": False},
-            height=420,
-        )
-        fig.update_layout(
-            margin=dict(l=10, r=10, t=10, b=10),
-            legend_title_text="cluster_name",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#E7E9EE"),
-        )
-        st.plotly_chart(fig, use_container_width=True, theme="streamlit")
+    buy_mask = hay.str.contains(buy_pat, regex=True, na=False)
+    tgt_mask = hay.str.contains(tgt_pat, regex=True, na=False)
+    out = df2.loc[buy_mask | tgt_mask].copy()
 
-# ---- Rippleboard on right
-with right:
-    st.markdown("### Rippleboard: The Future of Content")
+    # As a last resort, infer from platform text if origin is missing
+    if "origin_label" in out.columns:
+        empty_origin = out["origin_label"].fillna("").eq("")
+        out.loc[empty_origin, "origin_label"] = out.loc[empty_origin, "current_platform"].apply(infer_brand_text)
+
+    return out.reset_index(drop=True)
+
+
+# ---------------- Toolbar: Buyer / Target ----------------
+st.markdown("<div class='toolbar'>", unsafe_allow_html=True)
+c1, c2 = st.columns([1, 1])
+opts = buyer_target_options(fr)
+with c1:
+    buyer = st.selectbox("Buyer", opts, index=opts.index("Amazon") if "Amazon" in opts else 0)
+with c2:
+    target_default = "Warner Brothers HBO" if "Warner Brothers HBO" in opts else (opts[1] if len(opts) > 1 else opts[0])
+    target = st.selectbox("Target", opts, index=opts.index(target_default))
+st.markdown("</div>", unsafe_allow_html=True)
+
+# Normalize display selections to canonical internal brand ids
+def _canonical(b: str) -> str:
+    b = (b or "").strip()
+    if b == "Max":                         # treat Max as the HBO brand
+        return "Warner Brothers HBO"
+    if b == "Peacock":                     # treat Peacock as Comcast (NBCU)
+        return "Comcast (NBCUniversal)"
+    return b
+
+buyer_c = _canonical(buyer)
+target_c = _canonical(target)
+
+# keep labels for optional sentiment; store canonical for logic
+st.session_state["buyer_label"] = buyer
+st.session_state["target_label"] = target
+st.session_state["buyer_canon"] = buyer_c
+st.session_state["target_canon"] = target_c
+
+# --- Side-by-side: IP Similarity Map (left) and Rippleboard (right) ---
+# --- Side-by-side: IP Similarity Map (left) and Rippleboard (right) ---
+L, R = st.columns([1, 1], vertical_alignment="top")
+
+with L:
+# ===============================
+# IP SIMILARITY MAP  ←→  RIPPLEBOARD (side-by-side)
+# Replace your current IP Similarity Map block AND Rippleboard block with this.
+# ===============================
+
+left_col, right_col = st.columns([0.55, 0.45], gap="large")
+
+# ------------------ LEFT: IP Similarity Map (filtered) ------------------
+with left_col:
+    st.subheader("✣ IP Similarity Map (filtered to Buyer/Target)")
+
     st.markdown(
+    """
+        **What this shows**  
+        Turning titles into vectors (fancy math), squash to 2D, and color by cluster.  
+        Closer dots → **similar audience DNA**. Use it like a cross-sell radar.  
+        Positions are from a 2-D projection of text embeddings (UMAP/PCA).
+        
+        **How to read the IP Similarity Map**
+        - Each dot = a show/film.
+        - Closer dots = more similar audience DNA (genre/keywords/description).
+        - Colors = rough clusters (e.g., prestige drama, sci-fi, comedy).
+        - Use it to spot good fits for the buyer (dots near the buyer’s current slate) vs outliers (harder brand fit).
+        - **Caveat:** it’s a content-text signal, not a rights contract—pair with the Rippleboard and sources.
+        
+        **Investor lens**
+        - Fit suggests cross-sell/retention upside if pulled exclusive.
+        - Outliers may be better left licensed out (cash engine) rather than pulled in.
+        - Combine with Stay/Licensed/Exclusive calls for a quick timing + exposure picture.
         """
-**What this is**  
-A post-deal TV guide for suits (but in plain English). Each title gets a status (**stay / licensed / exclusive**) and a 1-liner.  
-**How to read this**
-- **Stay** → Likely the contract/window keeps it where it is for now.  
-- **Licensed** → Shared/syndicated outcome likely (may move in parts or by region).  
-- **Exclusive** → If the buyer owns the IP, they’d likely pull it in-house at renewal.  
-*Note:* spin-offs depend on **derivative rights**, not just today’s streamer.
-""",
+)
+    # --- Filter to Buyer/Target (same logic you use for Rippleboard) ---
+    try:
+        df_map = filter_for_buyer_target(fr, buyer, target).copy()
+    except NameError:
+        # Fallback brand regex (just in case)
+        import re
+        BRAND_PATTERNS = {
+            "Amazon": r"amazon|prime video|freevee",
+            "Warner Brothers HBO": r"hbo|max|warner bros|wbd",
+            "Comcast (NBCUniversal)": r"peacock|nbc|comcast|universal",
+            "Paramount Global": r"paramount\+|paramount plus|showtime",
+            "Disney": r"disney\+|hulu|star\+",
+            "Netflix": r"netflix",
+            "Apple": r"apple tv\+|apple tv plus|appletv\+|apple tv",
+            "Sony": r"\bsony\b",
+            "Hulu": r"\bhulu\b",
+            "Max": r"\bmax\b|hbo",
+            "Peacock": r"\bpeacock\b",
+        }
+        def _brand_pat(x): return re.compile(BRAND_PATTERNS.get(x, x), flags=re.I)
+        buy_pat, tgt_pat = _brand_pat(buyer), _brand_pat(target)
+
+        def _hay(r):
+            return " | ".join([
+                str(r.get("current_platform","")),
+                str(r.get("origin_label","")),
+                str(r.get("original_network","")),
+                str(r.get("original_brand","")),
+                str(r.get("title","")),
+            ])
+        mask = fr.apply(lambda r: bool(buy_pat.search(_hay(r)) or tgt_pat.search(_hay(r))), axis=1)
+        df_map = fr.loc[mask].copy()
+
+    if df_map.empty or len(df_map) < 3:
+        st.caption("Not enough relevant titles to draw a map. Try another Buyer/Target or add more rows.")
+    else:
+        # Text corpus
+        if "genre_tags" not in df_map.columns:
+            df_map["genre_tags"] = ""
+        corpus = (df_map["title"].astype(str).str.strip() + " " +
+                  df_map["genre_tags"].astype(str).str.strip()).str.strip()
+
+        X = None
+        engine_label = "Embeddings"
+
+        # 1) Embeddings if available
+        try:
+            from sentence_transformers import SentenceTransformer  # type: ignore
+            model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+            X = model.encode(
+                (df_map["title"].astype(str) + " " + df_map["genre_tags"].astype(str)).tolist(),
+                batch_size=64, show_progress_bar=False, normalize_embeddings=True
+            ).astype("float32")
+            engine_label = "Embeddings (MiniLM)"
+        except Exception:
+            # 2) TF-IDF fallback
+            try:
+                from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
+                tfidf = TfidfVectorizer(max_features=3000, ngram_range=(1,2), min_df=1)
+                X = tfidf.fit_transform(corpus.tolist()).toarray().astype("float32")
+                engine_label = "TF-IDF fallback"
+            except Exception as e:
+                st.caption(f"Map unavailable (no embeddings/TF-IDF): {e}")
+                X = None
+
+        st.caption(f"Similarity engine: {engine_label}")
+
+        if X is not None and len(df_map) >= 3:
+            # Your projector should already be NumPy 2.0-safe (uses np.ptp internally)
+            mx, my = project_points(X)
+
+            import plotly.express as px
+
+            def _brand(r):
+                return (r.get("original_brand")
+                        or r.get("origin_label")
+                        or infer_brand_text(r.get("current_platform"))
+                        or "Other")
+
+            fig_df = pd.DataFrame({
+                "x": mx, "y": my,
+                "brand": df_map.apply(_brand, axis=1),
+                "title": df_map["title"]
+            })
+
+            fig = px.scatter(fig_df, x="x", y="y", color="brand",
+                             hover_data=["title"], height=320)  # <<< smaller height
+            fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                margin=dict(l=6, r=6, t=6, b=6),
+                legend_title_text=""
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+# ------------------ RIGHT: Rippleboard ------------------
+with right_col:
+    st.subheader("Rippleboard: The Future of Content")
+    st.markdown(
+        "**What this is**  \n"
+        "A post-deal TV guide (but in plain English). Each title gets a status "
+        "(**stay / licensed / exclusive**) and a one-liner. Tweak a rule and watch the board shift."
+    )
+    st.markdown(
+        "**How to read this**  \n"
+        "• **Stay** → Likely the contract/window keeps it where it is for now.  \n"
+        "• **Licensed** → Shared/syndicated outcome likely (may move in parts or by region).  \n"
+        "• **Exclusive** → If the buyer owns the IP, they’ll likely pull it in-house at renewal.  \n"
+        "*Note*: Spin-offs depend on **derivative rights**, not just today’s streamer."
+    )
+
+    # Render the same Rippleboard table you already build.
+    # If you have a function like compute_rippleboard(...), call it here.
+    try:
+        rb_df = compute_rippleboard(fr, buyer, target)
+    except NameError:
+        # quick very-light fallback: show filtered titles with existing columns
+        rb_df = df_map.copy()
+
+    # keep your existing styling/columns if you had them:
+    st.dataframe(
+        rb_df[["title", "predicted_policy", "notes", "current_platform"]]
+        if set(["predicted_policy","notes","current_platform"]).issubset(rb_df.columns)
+        else rb_df,
+        use_container_width=True, height=520
+    )
+
+
+st.caption("Investor lens: ‘Stay’ often = locked windows/contracts; ‘Exclusive’ = potential near-term pull-in.")
+
+# ---------------- Originals (expander) ----------------
+with st.expander("Originals from the target"):
+    st.markdown(
+        "<div class='section-blurb'>"
+        "First-party stuff that defines the brand. If this table is loud, "
+        "the brand will fight to keep these <b>home</b>."
+        "</div>",
         unsafe_allow_html=True,
     )
+    # strict originals first
+    orig = fr[
+    (fr.get("original_flag", "").astype(str).str.upper() == "Y")
+    & (fr.get("original_brand", "").astype(str).str.lower() == target_c.lower())
+    ][["title", "original_network", "producer_list", "current_platform", "source_urls"]].copy()
 
-    # Compute rippleboard (you can keep your original logic here)
-    rb_df = compute_rippleboard(df_bt, buyer_choice, target_choice)
 
-    # Robust view
-    rb_view = rb_df.copy()
-    wanted = ["title", "predicted_policy", "notes", "current_platform"]
-    have = [c for c in wanted if c in rb_view.columns]
-    if have:
-        rb_view = rb_view[have].rename(columns={
-            "title": "IP / Franchise",
-            "predicted_policy": "Predicted Status",
-            "current_platform": "Current Platform",
-            "notes": "Notes",
-        })
-        st.dataframe(rb_view.head(20), use_container_width=True, height=520)
-    else:
-        st.dataframe(rb_view.head(20), use_container_width=True, height=520)
+    # if empty, infer by platform/network brand
+    if orig.empty:
+        mask = fr.apply(
+            lambda r: infer_brand_text(r.get("current_platform", "")) == target_c
+            or infer_brand_text(r.get("original_network", "")) == target_c,
+            axis=1,
+        )
+        orig = fr.loc[
+            mask, ["title", "original_network", "producer_list", "current_platform", "source_urls"]
+        ].head(20).copy()
 
-# ------------------------
-# Originals from the target (optional table)
-# ------------------------
-st.markdown("### Originals from the target")
-st.markdown(
-    "Target-brand originals inferred from platform/network/labels. "
-    "If your CSV is thin, this heuristic helps avoid an empty table."
-)
-orig_cols = [c for c in ["title", "origin_brand", "origin_label", "producer_list", "current_platform", "predicted_policy"] if c in df_bt.columns]
-if orig_cols:
-    st.dataframe(df_bt[orig_cols].head(50), use_container_width=True)
-else:
-    st.info("No original metadata fields were found to display here.")
+    # UI alias for platforms
+    orig["current_platform"] = orig["current_platform"].astype(str).apply(apply_platform_aliases)
 
-# ------------------------
-# Sources / Traceability (quick links)
-# ------------------------
-st.markdown("### Sources / Traceability (for titles shown)")
-def tmdb_link(title: str) -> str:
-    q = re.sub(r"\s+", "+", str(title).strip())
-    return f"[search TMDB](https://www.themoviedb.org/search?query={q})"
-
-trace = pd.DataFrame({
-    "title": df_bt["title"].head(10),
-    "link": [tmdb_link(t) for t in df_bt["title"].head(10)]
-})
-st.dataframe(trace, use_container_width=True)
-
-# ------------------------
-# Footer / tech stack card (short)
-# ------------------------
-with st.expander("Tech Stack (peek)"):
-    st.markdown(
-        """
-- **Streamlit** for the app shell & UI  
-- **Pandas / Plotly** for data + visuals  
-- **Embeddings → 2D projection** (UMAP/PCA or fallback)  
-- **Regex/heuristics** for Buyer/Target filtering across platform/brand fields  
-"""
+    orig = compact_table(
+        orig, ["title", "original_network", "producer_list", "current_platform", "source_urls"]
     )
+    if not orig.empty:
+        st.dataframe(
+            orig.rename(columns={"current_platform": "platform"}),
+            use_container_width=True,
+            hide_index=True,
+        )
+    else:
+        st.caption("No clear originals visible yet—add a few and rerun enrichment.")
+
+# ---------------- Sources / Traceability ----------------
+with st.expander("Sources / Traceability (for titles shown)"):
+    st.markdown(
+        "<div class='section-blurb'>"
+        "Predictions need receipts. official pages; if missing, a TMDB search link. "
+        "<i>Not gospel — just a transparent starting point.</i>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    shown = pd.concat(
+        [
+            rb_view.head(20)[["IP / Franchise"]].rename(columns={"IP / Franchise": "title"}),
+            orig[["title"]] if 'orig' in locals() and not orig.empty else pd.DataFrame(columns=["title"]),
+        ],
+        ignore_index=True,
+    ).drop_duplicates()
+
+    if shown.empty:
+        st.caption("No titles in view yet.")
+    else:
+        joined = shown.merge(fr[["title", "source_urls"]], on="title", how="left")
+        for _, r in joined.iterrows():
+            t = str(r["title"]).strip()
+            links = tmdb_links(t, r.get("source_urls", ""))
+            st.markdown(f"**{t}**")
+            for u in links:
+                st.write(f"- {u}")
+
+# ---------- Headline Mood (quick check) ----------
+st.markdown("### Headline Mood (quick check)")
+st.markdown(
+    "<div class='section-blurb'>"
+    "Tiny news pulse for your selected brands. It’s vibes, not valuation — "
+    "skim the bars, click through to read, decide for yourself."
+    "</div>",
+    unsafe_allow_html=True,
+)
+
+try:
+    from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    _vader_ok = True
+except Exception:
+    _vader_ok = False
+
+@st.cache_data(show_spinner=False)
+def load_headlines(path="data/headlines.csv"):
+    df = pd.read_csv(path)
+    for col in ["brand", "headline", "link", "date"]:
+        if col not in df.columns:
+            raise ValueError("headlines.csv must have columns: brand, headline, link, date")
+    return df
+
+def _score_texts(texts):
+    if not _vader_ok:
+        return [float("nan")] * len(texts)
+    analyzer = SentimentIntensityAnalyzer()
+    return [analyzer.polarity_scores(t)["compound"] for t in texts]
+
+try:
+    h = load_headlines()
+    focus = {buyer_c, target_c}
+    hh = h[h["brand"].isin(focus)] if len(h) else h
+
+    if _vader_ok and len(hh):
+        hh = hh.copy()
+        hh["sentiment"] = _score_texts(hh["headline"].fillna(""))
+
+        col1, col2 = st.columns((2, 3))
+        with col1:
+            s = hh.groupby("brand")["sentiment"].mean().reset_index()
+            s["sentiment"] = s["sentiment"].round(3)
+            st.dataframe(s, use_container_width=True, hide_index=True)
+        with col2:
+            chart_df = hh.groupby("brand")["sentiment"].mean().to_frame()
+            chart_df.columns = ["Mood"]
+            st.bar_chart(chart_df, height=180)
+
+        st.write("**Recent headlines**")
+        for _, row in hh.sort_values("date", ascending=False).head(6).iterrows():
+            st.write(f"- **{row['brand']}** — [{row['headline']}]({row['link']})  \n  _{row['date']}_")
+    else:
+        st.info(
+            "Optional: add `data/headlines.csv` and install `vaderSentiment` "
+            "for a tiny mood check (columns: brand, headline, link, date)."
+        )
+except FileNotFoundError:
+    st.info("Optional: add `data/headlines.csv` for mood check (columns: brand, headline, link, date).")
+
+# --- Tech Stack card (spicy but honest)
+with st.expander("Tech stack (what’s under the hood) • click to peek", expanded=True):
+    content = None
+    try:
+        content = Path("docs/tech_stack_card.md").read_text(encoding="utf-8")
+    except Exception:
+        content = (
+            "**Under the hood (aka the fun parts):**  \n"
+            "Streamlit • Pandas • Plotly • **FAISS Vector Search** • **Sentence-Transformers embeddings** • "
+            "Zero-Shot labeling • Knowledge Graph • Declarative Rule Engine • Tiny LLM explanations\n\n"
+            "*Translation:* a small **agentic** pipeline that turns messy rights + headlines into explainable "
+            "“where it lands” calls."
+        )
+    st.markdown(content)
+
+# --- Quick feedback (lightweight, local only)
+
+st.markdown("### Is this useful?")
+c1, c2, c3 = st.columns(3)
+with c1:
+    f1 = st.checkbox("Post more scenarios like this", value=False)
+with c2:
+    f2 = st.checkbox("Cool idea, needs better data", value=False)
+with c3:
+    f3 = st.checkbox("I’m here for the pretty dots", value=False)
+if any([f1, f2, f3]):
+    st.success("Thanks for the signal — noted!")
+
+    # Send one GA4 event with useful context
+    send_ga_event("feedback_check", {
+        "buyer": buyer,
+        "target": target,
+        "more_scenarios": int(bool(f1)),
+        "better_data":   int(bool(f2)),
+        "pretty_dots":   int(bool(f3)),
+    })
+
+st.markdown("""
+<style>
+/* Late kill-switch for any stragglers created after first render */
+[data-baseweb="tag"],
+[data-baseweb="badge"],
+[data-testid="stBadge"],
+.st-badge, .stBadge, .st-badge-container,
+[class*="pill"], [class*="Pill"], [class*="chip"], [class*="Chip"],
+div[role="note"], div[role="status"] span, .st-emotion-cache-badge {
+  display: none !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------- footer ----------------
+st.caption(
+    "Hobby demo for media M&A what-ifs. Data: TMDB where available; status/notes are testing for illustration."
+)
