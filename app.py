@@ -385,8 +385,8 @@ with st.container():
     <b>Example</b><br/>
     If Apple bought Netflix, what happens next depends on contracts:
     <ul style="margin-top:6px">
-      <li>If Netflix <b>owns the IP</b> (<i>Stranger Things</i>), Apple could eventually keep it exclusive and even green-light spin-offs (subject to existing talent deals).</li>
-      <li>If Netflix <b>only licenses</b> the show (e.g., a Sony-produced title), it likely stays under the current license until expiry; no spin-offs without new rights.</li>
+      <li>If Netflix <b>owns the IP</b> (e.g., <i>Stranger Things</i>), Apple could eventually keep it exclusive and even green-light spin-offs (subject to existing talent deals).</li>
+      <li>If Netflix <b>only licenses</b> the show (e.g., <i>Kobra Kai a Sony-produced title</i>), it likely stays under the current license until expiry; no spin-offs without new rights.</li>
 </ul>
 This app makes those differences visible, shows likely outcomes (<b>Stay / Licensed / Exclusive</b>), and gives quick links to verify details—so fans know where their shows might live, and analysts can gauge timing and exposure.
 <br/><br/>
