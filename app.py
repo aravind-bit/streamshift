@@ -380,16 +380,13 @@ with st.container():
 <div class="section-card">
   <div class="section-title">What this app does</div>
   <div class="section-blurb">
-    <b>Key Idea:</b> A show can be made by one company, owned as IP by another, and streamed on a platform under a contract.
+    <b>Key Idea:</b> PA show can be made by one company, owned as IP by another, and streamed on a platform under a contract.
     <br><br>
-    <b>Example</b><br/>
-    If Apple bought Netflix, what happens next depends on contracts:
-    <ul style="margin-top:6px">
-      <li>If Netflix <b>owns the IP</b> (e.g., <i>Stranger Things</i>), Apple could eventually keep it exclusive and even green-light spin-offs (subject to existing talent deals).</li>
-      <li>If Netflix <b>only licenses</b> the show (e.g., <i>Cobra Kai a Sony-produced title</i>), it likely stays under the current license until expiry; no spin-offs without new rights.</li>
-</ul>
-This app makes those differences visible, shows likely outcomes (<b>Stay / Licensed / Exclusive</b>), and gives quick links to verify details—so fans know where their shows might live, and analysts can gauge timing and exposure.
-<br/><br/>
+    <b>Example:</b> If Apple bought Netflix, Apple would inherit Netflix’s shows—but what happens next depends on contracts:
+    • If Netflix owns the IP (e.g., Stranger Things), Apple could ultimately keep it exclusive and even greenlight spin-offs (subject to existing talent deals).
+    • If Netflix only licenses the show (e.g., a Sony-produced title), it likely stays under the current license until expiry; no spin-offs without new rights.
+    The app makes these differences visible, shows likely outcomes (Stay/Licensed/Exclusive), and gives quick links to verify details—so fans know where their shows might live, and analysts can gauge timing and exposure.
+    <br><br>
     <i>Roadmap:</i> region-aware windows, “fit” scores, expiry maps, and deal-prep views (value at risk, churn lift).
   </div>
 </div>
@@ -494,164 +491,129 @@ st.session_state["target_canon"] = target_c
 L, R = st.columns([1, 1], vertical_alignment="top")
 
 with L:
-# ===============================
-# IP SIMILARITY MAP  ←→  RIPPLEBOARD (side-by-side)
-# Replace your current IP Similarity Map block AND Rippleboard block with this.
-# ===============================
-
-left_col, right_col = st.columns([0.55, 0.45], gap="large")
-
-# ------------------ LEFT: IP Similarity Map (filtered) ------------------
-with left_col:
-    st.subheader("✣ IP Similarity Map (filtered to Buyer/Target)")
-
+    st.subheader("✣ IP Similarity Map")
     st.markdown(
-    """
-        **What this shows**  
-        Turning titles into vectors (fancy math), squash to 2D, and color by cluster.  
-        Closer dots → **similar audience DNA**. Use it like a cross-sell radar.  
-        Positions are from a 2-D projection of text embeddings (UMAP/PCA).
+        "Turning titles into vectors (fancy math), squash to 2D, and color by cluster. "
+        "Closer dots → **similar audience DNA**. Use it like a cross-sell radar."
+        Positions are from a 2-D projection of text embeddings (UMAP/PCA)
+
+        How to read the IP Similarity Map
+        • Each dot = a show/film.
+        • Closer dots = more similar audience DNA (genre/keywords/description).
+        • Colors = rough clusters (e.g., prestige drama, sci-fi, comedy).
+        • Use it to spot good fits for the buyer (dots near the buyer’s current slate) vs outliers (harder brand fit).
+        • Caveat: it’s a content-text signal, not a rights contract—pair with the Rippleboard and sources.
         
-        **How to read the IP Similarity Map**
-        - Each dot = a show/film.
-        - Closer dots = more similar audience DNA (genre/keywords/description).
-        - Colors = rough clusters (e.g., prestige drama, sci-fi, comedy).
-        - Use it to spot good fits for the buyer (dots near the buyer’s current slate) vs outliers (harder brand fit).
-        - **Caveat:** it’s a content-text signal, not a rights contract—pair with the Rippleboard and sources.
-        
-        **Investor lens**
-        - Fit suggests cross-sell/retention upside if pulled exclusive.
-        - Outliers may be better left licensed out (cash engine) rather than pulled in.
-        - Combine with Stay/Licensed/Exclusive calls for a quick timing + exposure picture.
-        """
-)
-    # --- Filter to Buyer/Target (same logic you use for Rippleboard) ---
+        Investor lens:
+        • Fit suggests cross-sell/retention upside if pulled exclusive.
+        • Outliers may be better left licensed out (cash engine) rather than pulled in.
+        • Combine with Stay/Licensed/Exclusive calls for a quick timing + exposure picture.
+    )
+
+    # ---------------- Map engine: Embeddings → TF-IDF fallback ----------------
     try:
-        df_map = filter_for_buyer_target(fr, buyer, target).copy()
-    except NameError:
-        # Fallback brand regex (just in case)
-        import re
-        BRAND_PATTERNS = {
-            "Amazon": r"amazon|prime video|freevee",
-            "Warner Brothers HBO": r"hbo|max|warner bros|wbd",
-            "Comcast (NBCUniversal)": r"peacock|nbc|comcast|universal",
-            "Paramount Global": r"paramount\+|paramount plus|showtime",
-            "Disney": r"disney\+|hulu|star\+",
-            "Netflix": r"netflix",
-            "Apple": r"apple tv\+|apple tv plus|appletv\+|apple tv",
-            "Sony": r"\bsony\b",
-            "Hulu": r"\bhulu\b",
-            "Max": r"\bmax\b|hbo",
-            "Peacock": r"\bpeacock\b",
-        }
-        def _brand_pat(x): return re.compile(BRAND_PATTERNS.get(x, x), flags=re.I)
-        buy_pat, tgt_pat = _brand_pat(buyer), _brand_pat(target)
-
-        def _hay(r):
-            return " | ".join([
-                str(r.get("current_platform","")),
-                str(r.get("origin_label","")),
-                str(r.get("original_network","")),
-                str(r.get("original_brand","")),
-                str(r.get("title","")),
-            ])
-        mask = fr.apply(lambda r: bool(buy_pat.search(_hay(r)) or tgt_pat.search(_hay(r))), axis=1)
-        df_map = fr.loc[mask].copy()
-
-    if df_map.empty or len(df_map) < 3:
-        st.caption("Not enough relevant titles to draw a map. Try another Buyer/Target or add more rows.")
-    else:
-        # Text corpus
-        if "genre_tags" not in df_map.columns:
-            df_map["genre_tags"] = ""
-        corpus = (df_map["title"].astype(str).str.strip() + " " +
-                  df_map["genre_tags"].astype(str).str.strip()).str.strip()
+        # Build corpus: title + optional tags
+        if "genre_tags" not in fr.columns:
+            fr["genre_tags"] = ""
+        corpus = (fr["title"].astype(str).str.strip() + " " +
+                  fr["genre_tags"].astype(str).str.strip()).str.strip()
+        mask = corpus.str.len() > 0
+        df_map = fr.loc[mask].reset_index(drop=True).copy()
 
         X = None
-        engine_label = "Embeddings"
+        used_embeddings = False
 
-        # 1) Embeddings if available
+        # 1) Try Sentence-Transformers
         try:
             from sentence_transformers import SentenceTransformer  # type: ignore
             model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
             X = model.encode(
-                (df_map["title"].astype(str) + " " + df_map["genre_tags"].astype(str)).tolist(),
+                df_map["title"].astype(str).str.cat(df_map["genre_tags"].astype(str), sep=" ").tolist(),
                 batch_size=64, show_progress_bar=False, normalize_embeddings=True
             ).astype("float32")
-            engine_label = "Embeddings (MiniLM)"
+            used_embeddings = True
         except Exception:
-            # 2) TF-IDF fallback
+            # 2) Fall back to TF-IDF if ST is unavailable (e.g., Streamlit Cloud)
             try:
                 from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
-                tfidf = TfidfVectorizer(max_features=3000, ngram_range=(1,2), min_df=1)
+                tfidf = TfidfVectorizer(max_features=3000, ngram_range=(1, 2), min_df=1)
                 X = tfidf.fit_transform(corpus.tolist()).toarray().astype("float32")
-                engine_label = "TF-IDF fallback"
+                used_embeddings = False
             except Exception as e:
-                st.caption(f"Map unavailable (no embeddings/TF-IDF): {e}")
+                st.caption(f"Map unavailable (no embeddings, no scikit-learn): {e}")
                 X = None
 
+        engine_label = "Embeddings • FAISS/ST" if used_embeddings else "Classic • TF-IDF"
         st.caption(f"Similarity engine: {engine_label}")
 
         if X is not None and len(df_map) >= 3:
-            # Your projector should already be NumPy 2.0-safe (uses np.ptp internally)
-            mx, my = project_points(X)
-
-            import plotly.express as px
-
-            def _brand(r):
-                return (r.get("original_brand")
-                        or r.get("origin_label")
-                        or infer_brand_text(r.get("current_platform"))
-                        or "Other")
-
-            fig_df = pd.DataFrame({
-                "x": mx, "y": my,
-                "brand": df_map.apply(_brand, axis=1),
-                "title": df_map["title"]
+            mx, my = project_points(X)  # uses np.ptp internally (NumPy 2-safe)
+            dfp = pd.DataFrame({
+                "x": mx,
+                "y": my,
+                "brand": df_map.apply(
+                    lambda r: (r.get("original_brand")
+                               or infer_brand_text(r.get("current_platform"))
+                               or "Other"),
+                    axis=1,
+                ),
             })
-
-            fig = px.scatter(fig_df, x="x", y="y", color="brand",
-                             hover_data=["title"], height=320)  # <<< smaller height
+            import plotly.express as px
+            fig = px.scatter(dfp, x="x", y="y", color="brand", height=360)
             fig.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=6, r=6, t=6, b=6),
-                legend_title_text=""
+                margin=dict(l=10, r=10, t=10, b=10),
+                legend_title_text="",
             )
             st.plotly_chart(fig, use_container_width=True)
+        elif X is None:
+            pass  # already messaged
+        else:
+            st.caption("Add more rows to see the map.")
+    except Exception as e:
+        st.caption(f"Map unavailable: {e}")
 
-# ------------------ RIGHT: Rippleboard ------------------
-with right_col:
+with R:
     st.subheader("Rippleboard: The Future of Content")
     st.markdown(
-        "**What this is**  \n"
-        "A post-deal TV guide (but in plain English). Each title gets a status "
-        "(**stay / licensed / exclusive**) and a one-liner. Tweak a rule and watch the board shift."
-    )
-    st.markdown(
-        "**How to read this**  \n"
-        "• **Stay** → Likely the contract/window keeps it where it is for now.  \n"
-        "• **Licensed** → Shared/syndicated outcome likely (may move in parts or by region).  \n"
-        "• **Exclusive** → If the buyer owns the IP, they’ll likely pull it in-house at renewal.  \n"
-        "*Note*: Spin-offs depend on **derivative rights**, not just today’s streamer."
-    )
+        "What this is: a post-deal TV guide for suits (but in plain English). "
+        "Each title gets a status (stay / licensed / exclusive) and a 1-liner. "
+        "Tweak the rule and watch the board shift."
 
-    # Render the same Rippleboard table you already build.
-    # If you have a function like compute_rippleboard(...), call it here.
-    try:
-        rb_df = compute_rippleboard(fr, buyer, target)
-    except NameError:
-        # quick very-light fallback: show filtered titles with existing columns
-        rb_df = df_map.copy()
-
-    # keep your existing styling/columns if you had them:
-    st.dataframe(
-        rb_df[["title", "predicted_policy", "notes", "current_platform"]]
-        if set(["predicted_policy","notes","current_platform"]).issubset(rb_df.columns)
-        else rb_df,
-        use_container_width=True, height=520
+        How to read this:
+        • Stay → Likely contract/window keeps it where it is for now.
+        • Licensed → Shared/syndicated outcome likely (may move in parts or by region).
+        • Exclusive → Buyer would likely pull it in-house at renewal if they own the IP.
+        Spin-offs depend on derivative rights, not just today’s streamer.
+        
     )
 
+    # Filter rows related to Buyer or Target (platform or origin label)
+    rb = filter_for_buyer_target(fr, buyer, target)  # use FR, not df
+
+    # Visible columns
+    rb_view = rb[["title", "predicted_policy", "current_platform"]].copy()
+    rb_view.rename(columns={
+        "title": "IP / Franchise",
+        "predicted_policy": "Predicted Status",
+        "current_platform": "Current Platform"
+    }, inplace=True)
+
+    # Synthesize notes when missing
+    if "Notes" not in rb.columns:
+        rb_view["Notes"] = rb.apply(
+            lambda r: (str(r.get("predicted_policy", "")).strip()
+                       or synth_note(str(r.get("origin_label", "")), buyer, target)),
+            axis=1,
+        )
+        # Reorder
+        rb_view = rb_view[["IP / Franchise", "Predicted Status", "Notes", "Current Platform"]]
+
+    # Alias HBO/Max for consistency
+    rb_view["Current Platform"] = rb_view["Current Platform"].astype(str).apply(apply_platform_aliases)
+
+    st.dataframe(rb_view, hide_index=True, use_container_width=True)
 
 st.caption("Investor lens: ‘Stay’ often = locked windows/contracts; ‘Exclusive’ = potential near-term pull-in.")
 
