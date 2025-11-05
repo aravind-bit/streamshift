@@ -1,3 +1,4 @@
+
 # Media Merger Analysis — backup look, plus HBO alias + "Warner Brothers HBO" branding
 from __future__ import annotations
 import re
@@ -378,14 +379,14 @@ st.markdown(
 with st.container():
     st.markdown("""
 <div class="section-card">
-  <div class="section-title">What this app does</div>
+  <div class="section-title">Why this is useful</div>
   <div class="section-blurb">
-    <b>Key Idea:</b> PA show can be made by one company, owned as IP by another, and streamed on a platform under a contract.
+    <b>For investors:</b> Rights timing = cash timing. The app flags which titles likely stay put (contracts/windows)
+    versus those that could move near-term, highlights portfolio fit via audience embeddings, and shows licensing exposure
+    (value at risk) with traceable sources for quick DD.
     <br><br>
-    <b>Example:</b> If Apple bought Netflix, Apple would inherit Netflix’s shows—but what happens next depends on contracts:
-    • If Netflix owns the IP (e.g., Stranger Things), Apple could ultimately keep it exclusive and even greenlight spin-offs (subject to existing talent deals).
-    • If Netflix only licenses the show (e.g., a Sony-produced title), it likely stays under the current license until expiry; no spin-offs without new rights.
-    The app makes these differences visible, shows likely outcomes (Stay/Licensed/Exclusive), and gives quick links to verify details—so fans know where their shows might live, and analysts can gauge timing and exposure.
+    <b>For newcomers:</b> One screen answers “who keeps what” after a merger, in plain English—with receipts and a tiny
+    headlines mood pulse.
     <br><br>
     <i>Roadmap:</i> region-aware windows, “fit” scores, expiry maps, and deal-prep views (value at risk, churn lift).
   </div>
@@ -495,19 +496,6 @@ with L:
     st.markdown(
         "Turning titles into vectors (fancy math), squash to 2D, and color by cluster. "
         "Closer dots → **similar audience DNA**. Use it like a cross-sell radar."
-        Positions are from a 2-D projection of text embeddings (UMAP/PCA)
-
-        How to read the IP Similarity Map
-        • Each dot = a show/film.
-        • Closer dots = more similar audience DNA (genre/keywords/description).
-        • Colors = rough clusters (e.g., prestige drama, sci-fi, comedy).
-        • Use it to spot good fits for the buyer (dots near the buyer’s current slate) vs outliers (harder brand fit).
-        • Caveat: it’s a content-text signal, not a rights contract—pair with the Rippleboard and sources.
-        
-        Investor lens:
-        • Fit suggests cross-sell/retention upside if pulled exclusive.
-        • Outliers may be better left licensed out (cash engine) rather than pulled in.
-        • Combine with Stay/Licensed/Exclusive calls for a quick timing + exposure picture.
     )
 
     # ---------------- Map engine: Embeddings → TF-IDF fallback ----------------
@@ -580,13 +568,6 @@ with R:
         "What this is: a post-deal TV guide for suits (but in plain English). "
         "Each title gets a status (stay / licensed / exclusive) and a 1-liner. "
         "Tweak the rule and watch the board shift."
-
-        How to read this:
-        • Stay → Likely contract/window keeps it where it is for now.
-        • Licensed → Shared/syndicated outcome likely (may move in parts or by region).
-        • Exclusive → Buyer would likely pull it in-house at renewal if they own the IP.
-        Spin-offs depend on derivative rights, not just today’s streamer.
-        
     )
 
     # Filter rows related to Buyer or Target (platform or origin label)
