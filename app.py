@@ -1471,11 +1471,6 @@ The analytics on this page are meant to *complement*, not replace, these sources
 
 - AP News — *Notable early reaction to Netflix’s deal to acquire Warner Bros*  
   – [Industry & political reaction](https://apnews.com/article/netflix-warner-bros-deal-reaction-3acea5d81e630d20560299764bf4c37c) :contentReference[oaicite:6]{index=6}  
-
-This dashboard **sits on top of** that reporting:
-
-- It uses these pieces to define the **scope** of the deal (what’s included / excluded).  
-- Then it layers in **catalog data + simple rules** to visualize **who keeps what, who loses leverage, and which IP is most valuable** under different scenarios.
 """
 )
 
