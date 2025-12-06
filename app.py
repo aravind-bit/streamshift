@@ -515,7 +515,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown(
-    "<div class='hero-link'><a href='#target-audiance'> THIS DASHBOARD IS BUILT FOR →</a></div>",
+    "<div class='hero-link'><a href='#target-audiance'> This Dashboard Is Built For: →</a></div>",
     unsafe_allow_html=True,
 )
 
