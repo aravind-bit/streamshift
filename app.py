@@ -4,7 +4,15 @@ import re
 from pathlib import Path
 from openai import OpenAI
 import json
-client = OpenAI()
+#client = OpenAI()
+# --- Optional OpenAI client (for AI Deal Analyst) ---
+try:
+    from openai import OpenAI
+    _openai_ok = True
+    client = OpenAI()
+except Exception:
+    _openai_ok = False
+    client = None
 
 
 import numpy as np
@@ -1051,18 +1059,21 @@ if buyer == "Netflix" and "Warner" in str(target):
             unsafe_allow_html=True,
         )
 
-        st.markdown(
-            "scenario impacts, or how to use this dashboard for reporting and notes."
-        )
+        st.markdown("scenario impacts, or how to use this dashboard for reporting and notes.")
 
         user_q = st.text_input(
             "Your question",
             placeholder="e.g., Which platforms lose the most leverage if Netflix consolidates the top WB franchises?",
         )
-        log_usage("ai_question_sent")
 
+        # Only log when user types something
+        if user_q:
+            log_usage("ai_question_typed")
+            log_ai_question(user_q, scenario)
+
+
+        # Helper to build structured context for the LLM
         def build_context():
-            """Prepare context from your real data."""
             ctx = {
                 "deal_summary": deal_summary_text,
                 "scenario": scenario,
@@ -1072,12 +1083,19 @@ if buyer == "Netflix" and "Warner" in str(target):
             }
             return json.dumps(ctx, indent=2)
 
+
+        # ---- Handle AI Response ----
         if user_q:
-            log_ai_question(user_q, scenario)
-            log_usage("ai_question_sent")
-            with st.spinner("Analyzing with your scenario, exposure scores, and franchise data..."):
-                try:
-                    sys_prompt = f"""
+            # If OpenAI is not available, show graceful fallback
+            if not _openai_ok:
+                st.warning(
+                    "⚠️ The AI Deal Analyst is temporarily unavailable on this deployment "
+                    "(OpenAI client is not installed or configured). The rest of the dashboard works normally."
+                )
+            else:
+                with st.spinner("Analyzing with your scenario, exposure scores, and franchise data..."):
+                    try:
+                        sys_prompt = f"""
         You are an elite senior media strategy analyst specializing in mergers, content economics,
         and platform exposure. You answer concisely, using evidence from the provided structured data only.
 
@@ -1091,20 +1109,24 @@ if buyer == "Netflix" and "Warner" in str(target):
         - No more than 8 sentences unless asked.
         """
 
-                    completion = client.chat.completions.create(
-                        model="gpt-4o-mini",   # Low-cost, high-quality model
-                        messages=[
-                            {"role": "system", "content": sys_prompt},
-                            {"role": "user", "content": user_q},
-                        ],
-                        max_tokens=350,
-                    )
+                        completion = client.chat.completions.create(
+                            model="gpt-4o-mini",
+                            messages=[
+                                {"role": "system", "content": sys_prompt},
+                                {"role": "user", "content": user_q},
+                            ],
+                            max_tokens=350,
+                        )
 
-                    answer = completion.choices[0].message["content"]
-                    st.markdown(f"### AI Analyst Response\n{answer}")
+                        answer = completion.choices[0].message["content"]
+                        st.markdown(f"### AI Analyst Response\n{answer}")
 
-                except Exception as e:
-                    st.error(f"AI unavailable. Falling back to basic answers.\n\nError: {e}")
+                    except Exception as e:
+                        st.error(
+                            "AI unavailable. Falling back to basic answers.\n\n"
+                            f"Error: {e}"
+                        )
+
 
 
 
