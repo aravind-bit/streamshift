@@ -1,0 +1,95 @@
+timestamp_utc,buyer,target,scenario
+2025-12-05T17:44:35.357543,Netflix,Warner Brothers HBO,manual_selection
+2025-12-05T20:40:29.667316,Disney,Warner Brothers HBO,manual_selection
+2025-12-05T20:40:37.383069,Disney,Paramount Global,manual_selection
+2025-12-05T20:40:44.215386,Disney,Paramount Global,manual_selection
+2025-12-05T20:40:45.233949,Disney,Paramount Global,manual_selection
+2025-12-05T23:09:23.244491,Netflix,Warner Brothers HBO,manual_selection
+2025-12-05T23:09:55.798850,Disney,Warner Brothers HBO,manual_selection
+2025-12-05T23:09:58.599336,Disney,Hulu,manual_selection
+2025-12-05T23:11:26.828929,Netflix,Warner Brothers HBO,manual_selection
+2025-12-05T23:11:51.551217,Apple,Warner Brothers HBO,manual_selection
+2025-12-05T23:11:53.862420,Apple,Sony,manual_selection
+2025-12-05T23:11:58.098615,Max,Sony,manual_selection
+2025-12-05T23:12:00.997289,Max,Peacock,manual_selection
+2025-12-06T00:55:40.618900,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:14:38.638003,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:19:55.454232,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:23:41.156119,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:24:14.039144,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:27:05.735137,Paramount Global,Warner Brothers HBO,manual_selection
+2025-12-06T01:27:10.489073,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:27:16.615492,Disney,Warner Brothers HBO,manual_selection
+2025-12-06T01:27:20.730804,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:30:03.678605,Comcast (NBCUniversal),Warner Brothers HBO,manual_selection
+2025-12-06T01:30:10.767416,Disney,Warner Brothers HBO,manual_selection
+2025-12-06T01:41:31.653908,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:45:27.027090,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:47:04.737796,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:47:34.138500,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:51:09.327557,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:51:56.846545,Apple,Warner Brothers HBO,manual_selection
+2025-12-06T01:52:06.419975,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T01:54:54.747971,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T02:38:50.207426,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T02:39:59.002917,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T02:40:23.563481,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T02:42:15.817354,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T02:44:04.597540,Netflix,Warner Brothers HBO,manual_selection
+2025-12-06T02:48:10.989223,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T02:49:09.322666,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T02:53:42.505295,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T03:02:08.538738,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T03:03:56.815253,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T03:50:12.510310,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:02:28.100935,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:04:54.873062,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:06:18.812683,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:13:45.771672,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:22:25.368646,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:23:40.309620,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:32:56.159463,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:38:08.789412,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:45:14.700951,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:45:52.052359,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:46:56.461764,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:53:59.866815,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T04:57:50.933547,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:00:20.366612,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:00:26.043627,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:00:27.322818,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:00:28.124175,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:09:21.553514,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:20:17.636783,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:21:17.801151,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:37:41.551310,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:43:18.476837,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:46:46.968779,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:47:12.757993,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:47:51.747599,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:48:56.424202,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:52:12.641358,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:53:54.377083,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T05:58:18.824758,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T06:17:38.138647,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T06:19:14.873648,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T06:20:33.776202,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T06:31:20.632580,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T06:52:15.723956,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T06:59:26.540148,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:02:53.001295,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:04:56.547161,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:08:23.447664,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:10:50.826852,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:11:04.161091,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:23:46.213003,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:25:24.374524,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:26:32.311270,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:27:32.881998,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:28:25.536371,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:28:33.206312,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:31:34.951955,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:32:34.670566,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:34:12.405120,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:34:34.907458,Netflix,Warner Brothers HBO,netflix_wbd_fixed
+2025-12-06T07:38:17.878890,Netflix,Warner Brothers HBO,netflix_wbd_fixed
