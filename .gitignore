@@ -14,3 +14,15 @@ data/tmp/
 # local virtual envs
 .venv*/
 secrets.toml
+
+# Python venv and cache
+venv/
+__pycache__/
+*.pyc
+
+# Local environment / secrets
+.env
+secrets.toml
+
+# Local runtime analytics logs
+analytics/*.csv
