@@ -1466,19 +1466,17 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-scenario = st.radio(
-    "Select a fallout mode:",
-    options=["Conservative", "Base case", "Aggressive"],
-    index=1,
-    horizontal=True,
-)
+# scenario = st.radio(
+#     "Select a fallout mode:",
+#     options=["Conservative", "Base case", "Aggressive"],
+#     index=1,
+#     horizontal=True,
+# )
 
-
-
-st.caption(
-    "This setting scales how much WB content you assume Netflix ultimately consolidates. "
-    "It only affects the exposure views below — not the raw catalog numbers above."
-)
+# st.caption(
+#     "This setting scales how much WB content you assume Netflix ultimately consolidates. "
+#     "It only affects the exposure views below — not the raw catalog numbers above."
+# )
 
 scenario_multiplier = {
     "Conservative": 0.6,
@@ -1504,9 +1502,13 @@ def compute_risk_score(row: pd.Series) -> float:
         return value * 0.4  # medium exposure
     return value * 1.0      # highest exposure for third-party platforms
 
+# ----------------------------------------
+# CLEAN & DEDUP TITLES BEFORE RISK MODEL
+# ----------------------------------------
+titles_unique = titles_df.drop_duplicates(subset=["title"]).copy()
 
 # Build a scenario-adjusted risk view per title
-risk_df = titles_df.copy()
+risk_df = titles_unique.copy()
 risk_df["current_platform"] = risk_df["current_platform"].astype(str)
 
 risk_df["risk_score_base"] = risk_df.apply(compute_risk_score, axis=1)
