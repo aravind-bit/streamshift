@@ -1,29 +1,262 @@
-title,type,franchise_group,owner,current_platform,tmdb_id,tmdb_popularity,tmdb_vote_count,tmdb_vote_average,tmdb_poster_path,tmdb_original_title,value_score_raw,value_score_norm
-Harry Potter and the Sorcerer's Stone,film,Harry Potter,Warner Bros,Max,671,24.1523,28855,7.899,/wuMc08IPKEatf9rnMNXvIDxqP4W.jpg,Harry Potter and the Philosopher's Stone,248.04588949380047,21.66642658226556
-Harry Potter and the Chamber of Secrets,film,Harry Potter,Warner Bros,Max,672,18.5437,23019,7.705,/sdEOH0992YZ0QSxgXNIGLq1ToUi.jpg,Harry Potter and the Chamber of Secrets,186.25512360851914,14.617878891503228
-Harry Potter and the Prisoner of Azkaban,film,Harry Potter,Warner Bros,Max,673,17.0764,22584,8.011,/aWxwnYoe8p2d2fcxOqtvAtJ72Rw.jpg,Harry Potter and the Prisoner of Azkaban,171.19161436886196,12.899566102451782
-Harry Potter and the Goblet of Fire,film,Harry Potter,Warner Bros,Max,674,19.178,21629,7.8,/fECBtHlr0RB3foNHDiCBXeg9Bv9.jpg,Harry Potter and the Goblet of Fire,191.4316607603676,15.20837276975597
-Harry Potter and the Order of the Phoenix,film,Harry Potter,Warner Bros,Max,675,18.7487,20316,7.7,/5aOyriWkPec0zUDxmHFP9qMmBaj.jpg,Harry Potter and the Order of the Phoenix,185.97235351647632,14.585622963765006
-Harry Potter and the Half-Blood Prince,film,Harry Potter,Warner Bros,Max,767,16.3546,20286,7.682,/z7uo9zmQdQwU5ZJHFpv2Upl30i1.jpg,Harry Potter and the Half-Blood Prince,162.20059808445444,11.873949958014853
-Harry Potter and the Deathly Hallows: Part 1,film,Harry Potter,Warner Bros,Max,12444,17.9327,19887,7.739,/iGoXIpQb7Pot00EEdwpwPajheZ5.jpg,Harry Potter and the Deathly Hallows: Part 1,177.49556587444349,13.618665504939178
-Harry Potter and the Deathly Hallows: Part 2,film,Harry Potter,Warner Bros,Max,12445,15.7066,21456,8.083,/c54HpQmuwXjHq2C9wmoACjxoom3.jpg,Harry Potter and the Deathly Hallows: Part 2,156.6545846406833,11.241309470525096
-Fantastic Beasts and Where to Find Them,film,Harry Potter,Warner Bros,Max,259316,6.8862,19351,7.3,/fLsaFKExQt05yqjoAvKsmOMYvJR.jpg,Fantastic Beasts and Where to Find Them,67.97058865627845,1.1250183686478274
-Game of Thrones,series,Game of Thrones,Warner Bros,Max,1399,91.9964,25867,8.46,/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg,Game of Thrones,934.7535218130513,100.0
-House of the Dragon,series,Game of Thrones,Warner Bros,Max,94997,30.5246,5590,8.307,/oxmdHR5Ka28HAJuMmS2hk5K6QQY.jpg,House of the Dragon,263.3941312219619,23.417219152002325
-The Dark Knight,film,DC Universe,Warner Bros,Max,155,30.7333,34782,8.524,/qJ2tW6WMUDux911r6m7haRef0WH.jpg,The Dark Knight,321.37455428674326,30.031116410719353
-The Batman,film,DC Universe,Warner Bros,Max,414906,12.0399,11401,7.7,/74xTEgt7R36Fpooo50r9T25onhq.jpg,The Batman,112.47125629899622,6.2012635592771295
-Man of Steel,film,DC Universe,Warner Bros,Max,49521,10.2174,15790,6.6,/dksTL9NXc3GqPBRHYHcy1aIwjS.jpg,Man of Steel,98.77360265255429,4.638755576162962
-Wonder Woman,film,DC Universe,Warner Bros,Max,297762,12.1125,20551,7.2,/v4ncgZjG2Zu8ZW5al1vIZTsSjqX.jpg,Wonder Woman,120.28576773859048,7.092674367556304
-Aquaman,film,DC Universe,Warner Bros,Max,297802,11.0685,14595,6.872,/ufl63EFcc5XpByEV2Ecdw6WJZAI.jpg,Aquaman,106.13034321475233,5.477947904633039
-Justice League,film,DC Universe,Warner Bros,Max,141052,6.115,13393,6.1,/eifGNCSDuxJeS1loAXil5bIGgvC.jpg,Justice League,58.10816739113403,0.0
-Dune,film,Dune,Warner Bros,Max,438631,20.4328,14162,7.8,/d5NXSklXo0qyIYkgV94XAgMIckC.jpg,Dune,195.3046346012359,15.650167598341154
-Dune: Part Two,film,Dune,Warner Bros,Max,693134,12.8855,7246,8.132,/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg,Dune: Part Two,114.53074203990765,6.436191598366494
-Friends,series,Friends,Warner Bros,Netflix/Max,1668,65.0924,8705,8.4,/f496cm9enuEsZkSPzCwnTESEK5s.jpg,Friends,590.503133274819,60.730940191288646
-The Big Bang Theory,series,The Big Bang Theory,Warner Bros,Max,1418,26.5497,12072,7.912,/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg,The Big Bang Theory,249.5333778069249,21.836106180249093
-Six Feet Under,series,Six Feet Under,Warner Bros,Max,1431,52.3072,1326,7.6,/i5hmoRjHNWady4AtAGICTUXknKH.jpg,CSI: Crime Scene Investigation,376.12412946302163,36.27646692790559
-Westworld,series,Westworld,Warner Bros,Max,63247,19.4118,5917,8.029,/8MfgyFHf7XEboZJPZXCIDqqiz6e.jpg,Westworld,168.60611625465592,12.604635193257495
-Succession,series,Succession,Warner Bros,Max,76331,17.7214,1457,8.3,/z0XiwdrCQ9yVIr4O0pxzaAYRxdW.jpg,Succession,129.09722531999324,8.097808032721652
-True Detective,series,True Detective,Warner Bros,Max,46648,32.6853,3857,8.3,/cuV2O5ZyDLHSOWzg3nLVljp1ubw.jpg,True Detective,269.91207593468357,24.160729019458334
-The Lord of the Rings: The Fellowship of the Ring,film,LOTR,Warner Bros,Netflix/Max,120,21.2441,26659,8.426,/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg,The Lord of the Rings: The Fellowship of the Ring,216.49691494121683,18.06759674834853
-The Lord of the Rings: The Two Towers,film,LOTR,Warner Bros,Netflix/Max,121,14.459,23146,8.411,/5VTN0pR8gcqV3EPUHHfMGnJYN9L.jpg,The Lord of the Rings: The Two Towers,145.30746225259844,9.946929442062222
-The Lord of the Rings: The Return of the King,film,LOTR,Warner Bros,Netflix/Max,122,18.2199,25713,8.5,/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg,The Lord of the Rings: The Return of the King,185.01927416583024,14.476904045009704
+title,franchise_group,owner,current_platform,tmdb_id,tmdb_media_type,tmdb_popularity,tmdb_vote_count,tmdb_vote_average,tmdb_poster_path,tmdb_original_title,value_score_raw,value_score_norm
+Game of Thrones,Game of Thrones,Warner Bros Discovery,Max,1399,tv,93.8238,25873,8.46,/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg,Game of Thrones,115.15666357381284,0.014893770216292918
+House of the Dragon,Game of Thrones,Warner Bros Discovery,Max,94997,tv,29.9175,5595,8.307,/oxmdHR5Ka28HAJuMmS2hk5K6QQY.jpg,House of the Dragon,50.27937770581979,0.006502875951148804
+Harry Potter and the Philosopher's Stone,Harry Potter,Warner Bros Discovery,Max,671,movie,25.4119,28860,7.899,/wuMc08IPKEatf9rnMNXvIDxqP4W.jpg,Harry Potter and the Philosopher's Stone,45.670211374815615,0.005906750098834158
+Harry Potter and the Chamber of Secrets,Harry Potter,Warner Bros Discovery,Max,672,movie,20.0707,23025,7.704,/sdEOH0992YZ0QSxgXNIGLq1ToUi.jpg,Harry Potter and the Chamber of Secrets,39.84091850032605,0.005152819358730078
+The Dark Knight,DC,Warner Bros Discovery,Max,155,movie,25.0893,34791,8.524,/qJ2tW6WMUDux911r6m7haRef0WH.jpg,The Dark Knight,46.678779394657276,0.006037193095955162
+The Batman,DC,Warner Bros Discovery,Max,414906,movie,12.4972,11407,7.659,/74xTEgt7R36Fpooo50r9T25onhq.jpg,The Batman,31.872409512507787,0.004122213415940166
+Friends,Friends,Warner Bros Discovery,Max,1668,tv,64.6416,8707,8.424,/f496cm9enuEsZkSPzCwnTESEK5s.jpg,Friends,85.42951842036905,0.011049014252014872
+The Big Bang Theory,The Big Bang Theory,Warner Bros Discovery,Max,1418,tv,26.5673,12074,7.913,/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg,The Big Bang Theory,46.47518713942355,0.006010861521444717
+Dune,Dune,Warner Bros Discovery,Max,438631,movie,20.1377,14171,7.777,/d5NXSklXo0qyIYkgV94XAgMIckC.jpg,Dune,39.84313114366114,0.005153105530631736
+Dune: Part Two,Dune,Warner Bros Discovery,Max,693134,movie,15.8729,7250,8.133,/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg,Dune: Part Two,35.999297905127314,0.004655963921733208
+The Conjuring,The Conjuring Universe,Warner Bros Discovery,Max,138843,movie,11.5077,12361,7.541,/wVYREutTvI2tmxr6ujrHT704wGF.jpg,The Conjuring,30.681788739255808,0.003968224652622154
+The Dark Knight,The Dark Knight Trilogy / Batman,Warner Bros Discovery,Max,155,movie,25.0893,34791,8.524,/qJ2tW6WMUDux911r6m7haRef0WH.jpg,The Dark Knight,46.678779394657276,0.006037193095955162
+Harry Potter and the Philosopher's Stone,Wizarding World / Harry Potter,Warner Bros Discovery,Max,671,movie,25.4119,28860,7.899,/wuMc08IPKEatf9rnMNXvIDxqP4W.jpg,Harry Potter and the Philosopher's Stone,45.670211374815615,0.005906750098834158
+The Lord of the Rings: The Fellowship of the Ring,The Lord of the Rings / Middle-earth,Warner Bros Discovery,Max,120,movie,20.9517,26662,8.4,/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg,The Lord of the Rings: The Fellowship of the Ring,42.177609012675205,0.005455034883889096
+GoodFellas,Standalone,Warner Bros Discovery,Rent/Buy,769,movie,15.3891,13819,8.454,/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg,GoodFellas,36.43760804303818,0.004712652699220511
+Pulp Fiction,Standalone,Warner Bros Discovery,Netflix,680,movie,18.0496,29345,8.488,/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg,Pulp Fiction,39.49314891320492,0.005107840630117668
+The Matrix,The Matrix,Warner Bros Discovery,Rent/Buy,603,movie,18.4064,27052,8.236,/qK76PKQLd6zlMn0u83Ej9YQOqPL.jpg,The Matrix,39.31061543251846,0.005084232689128811
+Inception,Standalone,Warner Bros Discovery,Max,27205,movie,23.7669,38307,8.371,/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg,Inception,45.09218947874796,0.005831991721569264
+Joker,DC Universe / Joker,Warner Bros Discovery,Max,475557,movie,12.1861,27030,8.131,/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg,Joker,32.87996211252997,0.004252525083887546
+Wonder Woman,DC Extended Universe (DCEU),Warner Bros Discovery,Max,297762,movie,11.7742,20551,7.214,/v4ncgZjG2Zu8ZW5al1vIZTsSjqX.jpg,Wonder Woman,30.515054091258293,0.003946660051345061
+Creed II,Remake/Adaptation,Warner Bros Discovery,Peacock,480530,movie,4.5411,5638,7.033,/v3QyboWRoA4O9RbcsqH8tJMe8EB.jpg,Creed II,22.358302094588357,0.0028917077265773203
+Fantasia,Standalone,Warner Bros Discovery,Rent/Buy,756,movie,3.6814,3219,7.3,/5m9njnidjR0syG2gpVPVgcEMB2X.jpg,Fantasia,21.78925587169583,0.002818110216687862
+The Big Lebowski,Standalone,Warner Bros Discovery,Rent/Buy,115,movie,8.7165,11798,7.8,/9mprbw31MGdd66LR0AQKoDMoFRv.jpg,The Big Lebowski,28.388345201129408,0.003671602468539841
+Full Metal Jacket,Standalone,Warner Bros Discovery,Rent/Buy,600,movie,6.718,11094,8.124,/kMKyx1k8hWWscYFnPbnxxN4Eqo4.jpg,Full Metal Jacket,27.011127306568028,0.0034934801938682047
+2001: A Space Odyssey,2001: A Space Odyssey,Warner Bros Discovery,Max,62,movie,8.989,12179,8.063,/ve72VxNqjGM69Uky4WTo2bK6rfq.jpg,2001: A Space Odyssey,29.200647288296857,0.003776661440005547
+The Shawshank Redemption,Standalone,Warner Bros Discovery,Rent/Buy,278,movie,25.7489,29318,8.7,/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg,The Shawshank Redemption,47.61604915348995,0.006158414742931643
+Forrest Gump,Standalone,Warner Bros Discovery,Netflix,13,movie,16.4452,28908,8.463,/saHP97rTPS5eLmrLQEcANmKrsFl.jpg,Forrest Gump,37.832233069118146,0.004893026322697476
+Casablanca,Standalone,Warner Bros Discovery,Max,289,movie,4.1686,5819,8.1,/lGCEKlJo2CnWydQj7aamY7s1S7Q.jpg,Casablanca,24.13352298464989,0.003121305660376368
+The Shining,The Shining / Overlook Hotel,Warner Bros Discovery,Rent/Buy,694,movie,11.6801,18372,8.207,/uAR0AWqhQL1hQa69UDEbb2rE5Wx.jpg,The Shining,32.35828007503583,0.004185053413979145
+The Exorcist,The Exorcist,Warner Bros Discovery,Rent/Buy,9552,movie,8.2005,8366,7.74,/5x0CeVHJI8tcDx8tUUwYHQSNILq.jpg,The Exorcist,27.603069768985716,0.003570038985543031
+Blade Runner,Blade Runner,Warner Bros Discovery,Rent/Buy,78,movie,8.94,14516,7.943,/63N9uy8nd9j7Eog2axPQ8lbr3Wj.jpg,Blade Runner,28.987876876828288,0.0037491428100027966
+Deuce Bigalow: European Gigolo,Caddyshack,Warner Bros Discovery,Rent/Buy,11453,movie,3.4757,982,5.304,/yXdQ4UGDFCsPrynJOdIk20AYLus.jpg,Deuce Bigalow: European Gigolo,17.076253517832136,0.0022085547475655695
+Chasing Ghosts: Beyond the Arcade,"Oh, God!",Warner Bros Discovery,Rent/Buy,15725,movie,0.3464,34,6.9,/rlmENYfSs1kXOcBYg9BFea7qT24.jpg,Chasing Ghosts,15.690468044350276,0.0020293243863291482
+Marine Boy,Standalone,Warner Bros Discovery,Rent/Buy,15286,movie,2.4063,24,5.6,/uNNh4OdS5b6tvWNm6QgghYGU7H5.jpg,마린보이,15.004240008672037,0.0019405711838467005
+Michael Collins,Standalone,Warner Bros Discovery,Rent/Buy,1770,movie,4.0625,501,6.9,/brIBbU6t9glEGAKRTJ4PMj9OiDC.jpg,Michael Collins,20.56320371714502,0.0026595389408592077
+Murder in the First,Standalone,Warner Bros Discovery,Prime Video,8438,movie,3.3077,591,7.1,/sU37ONoL9qUyYXUhubJSYH9tEoc.jpg,Murder in the First,20.28002170672292,0.0026229136370190076
+Godzilla,Standalone,Warner Bros Discovery,Netflix,929,movie,6.079,4089,5.645,/xJVl1I95StraYAwaNbBkVoWE2qA.jpg,Godzilla,20.98072330800734,0.0027135387759891845
+Young Adam,Standalone,Warner Bros Discovery,Prime Video,237,movie,3.7005,185,5.811,/rU5GJ5r4tQbSx9C2ENKbPkD6nr9.jpg,Young Adam,17.592012944217917,0.002275260417433759
+The Musketeer,Standalone,Warner Bros Discovery,Rent/Buy,11370,movie,2.6434,238,5.229,/oaKp6HZQDTtCOwn4JGi2Mh7Ep95.jpg,The Musketeer,15.479797900948137,0.002002077394189143
+La Chinoise,Remake,Warner Bros Discovery,Rent/Buy,1629,movie,3.9077,227,6.9,/hfGzYErvwi8hB38kCsSNy6OjdPv.jpg,La Chinoise,20.065634847000457,0.0025951859439181015
+Singles,Standalone,Warner Bros Discovery,Rent/Buy,11068,movie,4.2678,413,6.4,/4T7OKBdkNBorRKWw7VSeuA225z1.jpg,Singles,19.6848003411209,0.0025459307688810973
+Friends,Standalone / Classic Sitcom,Warner Bros Discovery,Max,1668,tv,64.6416,8707,8.424,/f496cm9enuEsZkSPzCwnTESEK5s.jpg,Friends,85.42951842036905,0.011049014252014872
+The Big Bang Theory,The Big Bang Theory Franchise,Warner Bros Discovery,Max,1418,tv,26.5673,12074,7.913,/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg,The Big Bang Theory,46.47518713942355,0.006010861521444717
+Game of Thrones,A Song of Ice and Fire / Westeros,Warner Bros Discovery,Max,1399,tv,93.8238,25873,8.46,/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg,Game of Thrones,115.15666357381284,0.014893770216292918
+Breaking Bad,The Sopranos Franchise,Warner Bros Discovery,Netflix,1396,tv,83.1388,16633,8.936,/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg,Breaking Bad,105.23179669714737,0.013610139012497198
+Boardwalk Empire,Standalone,Warner Bros Discovery,Max,1621,tv,11.4889,1192,8.011,/kL6SqlVPpfAof2nQbh1VxkUuXBQ.jpg,Boardwalk Empire,30.587540443670342,0.003956035063117179
+Supernatural,Supernatural,Warner Bros Discovery,Netflix,1622,tv,130.8798,8097,8.301,/u40gJarLPlIkwouKlzGdobQOV9k.jpg,Supernatural,151.3901777724324,0.019580026468039226
+Mister Ed,Gilmore Girls,Warner Bros Discovery,Rent/Buy,453,tv,6.5768,48,6.8,/ykGlIpjTiyd4wYk617X73TL5FTS.jpg,Mister Ed,21.866996080028514,0.0028281647351459417
+The Flash,Arrowverse / DC,Warner Bros Discovery,Netflix,60735,tv,53.0304,11433,7.77,/yZevl2vHQgmosfwUdVNzviIfaWS.jpg,The Flash,72.62859818787825,0.009393409108699758
+Arrow,Arrowverse / DC,Warner Bros Discovery,Netflix,1412,tv,37.2154,6177,6.829,/u8ZHFj1jC384JEkTt3vNg1DfWEb.jpg,Arrow,54.66424790396543,0.007069992495972904
+Riverdale,Archie Comics Universe,Warner Bros Discovery,Netflix,69050,tv,20.8028,13631,8.419,/d8mmn9thQ5dBk2qbv6BCqGUXWK3.jpg,Riverdale,41.77535957742262,0.0054030100120982805
+The Vampire Diaries,The Vampire Diaries Universe,Warner Bros Discovery,Max,18165,tv,51.7539,9382,8.309,/b3vl6wV1W8PBezFfntKTrhrehCY.jpg,The Vampire Diaries,72.34424171632574,0.009356631906101278
+The Steve Katsos Show,Pretty Little Liars Franchise,Warner Bros Discovery,Rent/Buy,31817,tv,0.0071,0,0.0,,The Steve Katsos Show,0.0071,9.182774600611719e-07
+The Good Doctor,The Big Bang Theory Franchise,Warner Bros Discovery,Hulu,71712,tv,44.8586,12668,8.467,/luhKkdD80qe62fwop6sdrXK9jUT.jpg,The Good Doctor,65.89534233614458,0.008522564449337501
+Castle,Standalone,Warner Bros Discovery,Hulu,1419,tv,48.4247,2004,7.979,/diXBeMzvfJb2iJg3G0kCUaMCzEc.jpg,Castle,67.6848143769562,0.00875400555363144
+#heuldoch - Therapie wie noch nie,Standalone,Warner Bros Discovery,Rent/Buy,115456,tv,0.2268,2,3.5,/s6m4jNRZq22bSB6kBzavY4zIHyB.jpg,#heuldoch - Therapie wie noch nie,7.7039212547196625,0.0009963855270838378
+Growing Up Hip Hop: New York,Standalone,Warner Bros Discovery,Rent/Buy,92950,tv,0.1328,2,10.0,/cQDXHnuNASvpZ4VEd0Bri6d2pfP.jpg,Growing Up Hip Hop: New York,20.609921254719662,0.0026655811467386947
+The Last of Us,The Last of Us Franchise,Warner Bros Discovery,Max,100088,tv,22.9468,6614,8.466,/dmo6TYuuJgaYinXBPjrgG9mB5od.jpg,The Last of Us,43.69932984852352,0.005651846425306695
+House of the Dragon,A Song of Ice and Fire / Westeros,Warner Bros Discovery,Max,94997,tv,29.9175,5595,8.307,/oxmdHR5Ka28HAJuMmS2hk5K6QQY.jpg,House of the Dragon,50.27937770581979,0.006502875951148804
+I Love Tokyo Legend - Kawaii Detective -,True Detective (Anthology),Warner Bros Discovery,Rent/Buy,48052,tv,1.2602,5,5.8,/WQEGJ79NkXAZ728sYPTrP2QVAE.jpg,都市伝説の女,13.638351250383643,0.0017639141613555493
+Westworld,Standalone,Warner Bros Discovery,Rent/Buy,63247,tv,19.5096,5921,8.029,/8MfgyFHf7XEboZJPZXCIDqqiz6e.jpg,Westworld,39.34006840305328,0.005088041984758948
+Barry,Standalone,Warner Bros Discovery,Max,73107,tv,8.3993,1055,7.898,/j1XpwD11f0BAEI7pX6UdMhUVX2F.jpg,Barry,27.218963918197794,0.0035203607115914582
+Annie MG,Standalone,Warner Bros Discovery,Rent/Buy,76097,tv,0.2444,2,7.5,/kwu3hBVq9h3oFOXo1VPOMEAEjUD.jpg,Annie MG,15.721521254719663,0.0020333406487439013
+Gordon Behind Bars,Standalone,Warner Bros Discovery,Peacock,54905,tv,0.459,20,5.7,/npHPfADDLy9duJ2LvgXhg318rGd.jpg,Gordon Behind Bars,13.18121929473392,0.0017047910668278275
+"Love, Death & Robots",DC / Watchmen,Warner Bros Discovery,Netflix,86831,tv,15.9109,3771,8.224,/asDqvkE66EegtKJJXIRhBJPxscr.jpg,"Love, Death & Robots",35.93547168406529,0.004647708966780794
+Declassified,DC Animated Universe (DCAU),Warner Bros Discovery,Rent/Buy,179,tv,0.0652,0,0.0,/rhnjmWpnEruEO9PuENcxn9JjqEh.jpg,Declassified,0.0652,8.432632450139211e-06
+The Millionaire Detective – Balance: UNLIMITED,Looney Tunes,Warner Bros Discovery,Rent/Buy,98491,tv,2.8953,63,6.9,/i9Xwd7mUxASxU8ofCQc77XLj1Ff.jpg,富豪刑事 Balance:UNLIMITED,18.501479973983887,0.0023928862025186706
+The Premiership,Looney Tunes / Tiny Toons,Warner Bros Discovery,Rent/Buy,1344,tv,0.0071,0,0.0,,The Premiership,0.0071,9.182774600611719e-07
+Shadow Raiders,Animaniacs,Warner Bros Discovery,Rent/Buy,464,tv,0.8664,17,8.7,/zQXauw9aUl9h4mYQp3i1sLcQpHK.jpg,Shadow Raiders,19.521672505103304,0.0025248326541031374
+ZeD,Animaniacs,Warner Bros Discovery,Rent/Buy,1353,tv,0.0429,0,0.0,,ZeD,0.0429,5.548465216425954e-06
+White Collar Blue,Scooby-Doo,Warner Bros Discovery,Rent/Buy,2154,tv,2.2564,3,8.3,/qUL4yY9W9gS3FgOkVTx1Td6e71Z.jpg,White Collar Blue,19.458459991327963,0.002516657072892757
+Sinchronicity,Full House,Warner Bros Discovery,Rent/Buy,260,tv,0.6721,5,4.6,/pV4ZG6lVjtx73y7dTLNiN5lT0Xi.jpg,Sinchronicity,10.650251250383644,0.0013774486855233257
+Atlantika,TGIF / Perfect Strangers,Warner Bros Discovery,Rent/Buy,247,tv,0.0214,0,0.0,,Atlantika,0.0214,2.7677658655364896e-06
+The Wallflower,The Fresh Prince of Bel-Air,Warner Bros Discovery,Rent/Buy,899,tv,1.8911,32,6.7,/zlcuBwbCHki0oWplNQhHhStYwFn.jpg,ヤマトナデシコ七変化♥,16.809613939877888,0.0021740689568056247
+Nathan Barley,Standalone,Warner Bros Discovery,Rent/Buy,114,tv,1.6644,40,7.2,/jAd2zeYyWv89L6VRMAtPsssAZ7r.jpg,Nathan Barley,17.677183856719736,0.002286275984927176
+Ricki Lake,Veronica Mars,Warner Bros Discovery,Rent/Buy,1587,tv,0.5412,7,4.1,/pBk68pgzHkmVkJ4DcwTN9P55tED.jpg,Ricki Lake,9.644289986991943,0.0012473428328659652
+Garfield and Friends,Gossip Girl,Warner Bros Discovery,Peacock,4606,tv,8.455,380,7.3,/pE6l6I1ICKOu4pDUXxkl87TTLZx.jpg,Garfield and Friends,25.635924975675618,0.003315618601828474
+Mighty Max,DC / Superman,Warner Bros Discovery,Rent/Buy,1708,tv,2.2639,18,6.1,/eKx1OhfVf1Z8CsI1FB1qU4R56Ti.jpg,Mighty Max,15.742653600952828,0.0020360737976487077
+Lucifer,DC / Sandman,Warner Bros Discovery,Netflix,63174,tv,56.8973,15198,8.44,/ekZobS8isE6mA53RAiGDG93hBxL.jpg,Lucifer,77.95911501499947,0.010082830721773307
+Chuck,Standalone,Warner Bros Discovery,Prime Video,1404,tv,17.7289,1133,7.726,/vEZvGVVMjk1TRs59nfypTI5lAXj.jpg,Chuck,36.23551305455689,0.004686514773486188
+Life Is Wild,Standalone,Warner Bros Discovery,Rent/Buy,1381,tv,0.9047,5,6.0,/abhYpSj609l3SEDYd9dcSXngQUA.jpg,Life Is Wild,13.682851250383644,0.0017696695623376228
+120 Minutes,Standalone,Warner Bros Discovery,Rent/Buy,30973,tv,0.0826,1,7.0,,120 Minutes,14.38362999566398,0.001860304678715212
+Your Face Sounds Familiar,Standalone,Warner Bros Discovery,Rent/Buy,58345,tv,0.1888,0,0.0,,Your Face Sounds Familiar,0.1888,2.4418420346415386e-05
+Rome,Standalone,Warner Bros Discovery,Max,1891,tv,11.2693,1407,8.25,/xLy4fhXUPocgMyFNPFac3tY4jwY.jpg,Rome,30.917902654806095,0.003998762411306184
+Leap Year,DC,Warner Bros Discovery,Rent/Buy,79777,tv,0.5991,2,9.0,/4bKiXZ3KRBG53jFnMPtXJSCvUpv.jpg,Leap Year,19.076221254719663,0.0024672202818801286
+Titans,DC,Warner Bros Discovery,Max,75450,tv,15.2046,2771,7.889,/8e6QiSexmYKaiHGPvbhaFMmQEhc.jpg,Titans,34.425393225939764,0.00445240319058071
+Alice in Borderland,DC Extended Universe (DCEU),Warner Bros Discovery,Netflix,110316,tv,26.2611,2534,8.129,/Ac8ruycRXzgcsndTZFK6ouGA0FA.jpg,今際の国のアリス,45.92307796366935,0.005939454562066121
+The North Pole,DC,Warner Bros Discovery,Rent/Buy,85502,tv,0.1647,0,0.0,/aBx1cda2yDfUy9j88MP6aNGnUOJ.jpg,The North Pole,0.1647,2.1301450376348596e-05
+Dragon Tales,Standalone,Warner Bros Discovery,Rent/Buy,1585,tv,1.9037,55,7.4,/pwAe79bXMfzjD4l4s2k1ZFXq8T2.jpg,Dragon Tales,18.451888027006202,0.002386472235320057
+Dark Skies,Standalone,Warner Bros Discovery,Rent/Buy,164,tv,2.3762,49,7.2,/dtWcxTw4VGRyR7qNDlYFCdl5Q9.jpg,Dark Skies,18.475170004336018,0.0023894834064478914
+American Dad!,Standalone,Warner Bros Discovery,Hulu,1433,tv,49.5217,2272,6.998,/aC1q422YhQR7k82GB8gW4KoD91p.jpg,American Dad!,66.87429943572498,0.008649177722423632
+A Clockwork Orange,Standalone,Warner Bros Discovery,Rent/Buy,185,movie,6.7841,13469,8.181,/4sHeTAp65WrSSuc05nRBKddhBxO.jpg,A Clockwork Orange,27.275467595722983,0.0035276686064480704
+Creed II,Standalone,Warner Bros Discovery,Peacock,480530,movie,4.5411,5638,7.033,/v3QyboWRoA4O9RbcsqH8tJMe8EB.jpg,Creed II,22.358302094588357,0.0028917077265773203
+Pretty Woman,Standalone,Warner Bros Discovery,Hulu,114,movie,10.0186,8704,7.461,/hVHUfT801LQATGd26VPzhorIYza.jpg,Pretty Woman,28.88036877545335,0.003735238265458208
+Dragon: The Bruce Lee Story,Standalone,Warner Bros Discovery,Rent/Buy,10423,movie,1.7824,772,6.9,/lxhsdC8wuGgQf0gKCt8wyHHxGcQ.jpg,Dragon: The Bruce Lee Story,18.470579493918326,0.0023888896934553924
+The Return of the Pink Panther,Standalone,Warner Bros Discovery,Prime Video,11843,movie,1.8768,647,6.8,/rfuqs7qnYc2SkB2FSxeWH7qDAMP.jpg,The Return of the Pink Panther,18.28837500587059,0.002365324302681277
+Aquaman,DC Extended Universe (DCEU),Warner Bros Discovery,Max,297802,movie,8.8244,14596,6.872,/ufl63EFcc5XpByEV2Ecdw6WJZAI.jpg,Aquaman,26.732663608022662,0.0034574651322034893
+Edo Porn,Standalone,Warner Bros Discovery,Rent/Buy,77467,movie,4.024,37,5.9,/vbVoGIa7wEqQ5gOdUZjqFzKxUs2.jpg,北斎漫画,17.40378359661681,0.002250915802331771
+Batman,Batman,Warner Bros Discovery,Max,268,movie,6.4765,8286,7.237,/cij4dd21v2Rk2YtUQbV5kW69WB2.jpg,Batman,24.8688973388437,0.0032164151947655533
+Cars,Beetlejuice,Warner Bros Discovery,Rent/Buy,920,movie,8.6301,14713,7.016,/2Touk3m5gzsqr1VsvxypdyHY5ci.jpg,Cars,26.82983075170648,0.0034700322304997396
+Blade Runner,Blade Runner,Warner Bros Discovery,Rent/Buy,78,movie,8.94,14516,7.943,/63N9uy8nd9j7Eog2axPQ8lbr3Wj.jpg,Blade Runner,28.987876876828288,0.0037491428100027966
+Blade Runner 2049,Blade Runner,Warner Bros Discovery,Rent/Buy,335984,movie,13.2993,14573,7.586,/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg,Blade Runner 2049,32.63487876518877,0.004220827265056595
+3rd & Bird,Standalone,Warner Bros Discovery,Rent/Buy,17565,tv,0.4908,0,0.0,/3LRaetxV5q7ls2aSpZ2xC3eS3ow.jpg,3rd & Bird,0.4908,6.347754611239763e-05
+People on Sunday,Standalone,Warner Bros Discovery,Max,347,movie,1.5105,107,7.2,/gWIkCmYaRDlA78WMIfRUlURuLCZ.jpg,Menschen am Sonntag,17.94392375548695,0.002320774750664772
+Deuce Bigalow: European Gigolo,Standalone,Warner Bros Discovery,Rent/Buy,11453,movie,3.4757,982,5.304,/yXdQ4UGDFCsPrynJOdIk20AYLus.jpg,Deuce Bigalow: European Gigolo,17.076253517832136,0.0022085547475655695
+Casablanca,Standalone,Warner Bros Discovery,Max,289,movie,4.1686,5819,8.1,/lGCEKlJo2CnWydQj7aamY7s1S7Q.jpg,Casablanca,24.13352298464989,0.003121305660376368
+Singles,Standalone,Warner Bros Discovery,Rent/Buy,11068,movie,4.2678,413,6.4,/4T7OKBdkNBorRKWw7VSeuA225z1.jpg,Singles,19.6848003411209,0.0025459307688810973
+Shakespeare in Love,Standalone,Warner Bros Discovery,Rent/Buy,1934,movie,4.0424,3118,6.843,/zdW7jdzPi4J9KZR3TyY2jn3Xh5e.jpg,Shakespeare in Love,21.222415374757144,0.002744797984041571
+Las plumas del vuelo del águila,Standalone,Warner Bros Discovery,Rent/Buy,425310,movie,0.0,0,0.0,,Las plumas del vuelo del águila,0.0,0.0
+Planet of the Apes,Standalone,Warner Bros Discovery,Rent/Buy,871,movie,6.7143,3796,7.643,/2r9iKnlSYEk4daQadsXfcjHfIjQ.jpg,Planet of the Apes,25.579740597139796,0.003308352003459884
+The Musketeer,Standalone,Warner Bros Discovery,Rent/Buy,11370,movie,2.6434,238,5.229,/oaKp6HZQDTtCOwn4JGi2Mh7Ep95.jpg,The Musketeer,15.479797900948137,0.002002077394189143
+Ruck Zuck,Dirty Harry,Warner Bros Discovery,Rent/Buy,10815,tv,0.1264,0,0.0,,Ruck Zuck,0.1264,1.6347925486159457e-05
+Dune,Dune,Warner Bros Discovery,Max,438631,movie,20.1377,14171,7.777,/d5NXSklXo0qyIYkgV94XAgMIckC.jpg,Dune,39.84313114366114,0.005153105530631736
+Dune: Part Two,Dune,Warner Bros Discovery,Max,693134,movie,15.8729,7250,8.133,/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg,Dune: Part Two,35.999297905127314,0.004655963921733208
+Certain Women,Standalone,Warner Bros Discovery,Rent/Buy,340487,movie,0.7091,370,6.0,/1A5cWPvPnw7vY1Dfg3DSyLG0k96.jpg,Certain Women,15.278473909615045,0.0019760391852580543
+Adelaide Tonight,Standalone,Warner Bros Discovery,Rent/Buy,1582,tv,0.0143,0,0.0,,Adelaide Tonight,0.0143,1.849488405475318e-06
+Hell or High Water,Wizarding World,Warner Bros Discovery,Rent/Buy,338766,movie,4.4992,4697,7.302,/ljRRxqy2aXIkIBXLmOVifcOR021.jpg,Hell or High Water,22.775113012441587,0.0029456159055874656
+Forrest Gump,Standalone,Warner Bros Discovery,Netflix,13,movie,16.4452,28908,8.463,/saHP97rTPS5eLmrLQEcANmKrsFl.jpg,Forrest Gump,37.832233069118146,0.004893026322697476
+Full Metal Jacket,Standalone,Warner Bros Discovery,Rent/Buy,600,movie,6.718,11094,8.124,/kMKyx1k8hWWscYFnPbnxxN4Eqo4.jpg,Full Metal Jacket,27.011127306568028,0.0034934801938682047
+Good Will Hunting,Standalone,Warner Bros Discovery,Prime Video,489,movie,10.303,13292,8.157,/z2FnLKpFi1HPO7BEJxdkv6hpJSU.jpg,Good Will Hunting,30.740623004751274,0.00397583397373254
+GoodFellas,Standalone,Warner Bros Discovery,Rent/Buy,769,movie,15.3891,13819,8.454,/aKuFiU82s5ISJpGZp7YkIr3kCUd.jpg,GoodFellas,36.43760804303818,0.004712652699220511
+Gravity,Standalone,Warner Bros Discovery,Rent/Buy,49047,movie,4.2486,15945,7.165,/kZ2nZw8D681aphje8NJi8EfbL1U.jpg,Gravity,22.78125175975734,0.0029464098595724047
+Freejack,Gremlins,Warner Bros Discovery,Prime Video,9278,movie,2.8994,342,5.456,/lSN8lIX90Az0t1qvIXC4MlCvd9a.jpg,Freejack,16.34669412004277,0.002114197289711235
+Harry Potter and the Chamber of Secrets,Harry Potter,Warner Bros Discovery,Max,672,movie,20.0707,23025,7.704,/sdEOH0992YZ0QSxgXNIGLq1ToUi.jpg,Harry Potter and the Chamber of Secrets,39.84091850032605,0.005152819358730078
+Harry Potter and the Philosopher's Stone,Wizarding World / Harry Potter,Warner Bros Discovery,Max,671,movie,25.4119,28860,7.899,/wuMc08IPKEatf9rnMNXvIDxqP4W.jpg,Harry Potter and the Philosopher's Stone,45.670211374815615,0.005906750098834158
+Inception,Standalone,Warner Bros Discovery,Max,27205,movie,23.7669,38307,8.371,/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg,Inception,45.09218947874796,0.005831991721569264
+Interstellar,Standalone,Warner Bros Discovery,Rent/Buy,157336,movie,36.1779,38345,8.463,/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg,Interstellar,57.687620067932194,0.007461019891965445
+Joker,DC Universe / Joker,Warner Bros Discovery,Max,475557,movie,12.1861,27030,8.131,/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg,Joker,32.87996211252997,0.004252525083887546
+A Trip to the Moon,Standalone,Warner Bros Discovery,Max,775,movie,2.496,1911,7.901,/9o0v5LLFk51nyTBHZSre6OB37n2.jpg,Le Voyage dans la Lune,21.57948788794008,0.002790979905233583
+Spartacus,Standalone,Warner Bros Discovery,Rent/Buy,967,movie,5.4968,2288,7.533,/r0Fgg1GyZgzokaiw2HFQv3oPaL2.jpg,Spartacus,23.922445792674544,0.0030940060226687673
+Mad Max: Fury Road,Mad Max,Warner Bros Discovery,Netflix,76341,movie,12.3213,23546,7.6,/hA2ple9q4qnwxp3hKVNhroipsir.jpg,Mad Max: Fury Road,31.893235583802962,0.004124906952820728
+Michael Collins,Standalone,Warner Bros Discovery,Rent/Buy,1770,movie,4.0625,501,6.9,/brIBbU6t9glEGAKRTJ4PMj9OiDC.jpg,Michael Collins,20.56320371714502,0.0026595389408592077
+Million Dollar Baby,Standalone,Warner Bros Discovery,Rent/Buy,70,movie,6.296,10075,7.954,/jcfEqKdWF1zeyvECPqp3mkWLct2.jpg,Million Dollar Baby,26.207288158826074,0.0033895157754335256
+Murder in the First,Standalone,Warner Bros Discovery,Prime Video,8438,movie,3.3077,591,7.1,/sU37ONoL9qUyYXUhubJSYH9tEoc.jpg,Murder in the First,20.28002170672292,0.0026229136370190076
+La Chinoise,Standalone,Warner Bros Discovery,Rent/Buy,1629,movie,3.9077,227,6.9,/hfGzYErvwi8hB38kCsSNy6OjdPv.jpg,La Chinoise,20.065634847000457,0.0025951859439181015
+Skate,Standalone,Warner Bros Discovery,Rent/Buy,1805,tv,0.3029,0,0.0,,Skate,0.3029,3.917552713415901e-05
+Camera Cafe,Standalone,Warner Bros Discovery,Rent/Buy,84931,tv,0.9037,5,7.6,/9z7FjBRB6SKiQ64H1A26waIZizx.jpg,Camera Cafe,16.881851250383644,0.002183411758779269
+Pulp Fiction,Standalone,Warner Bros Discovery,Netflix,680,movie,18.0496,29345,8.488,/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg,Pulp Fiction,39.49314891320492,0.005107840630117668
+The Trap Door,Standalone,Warner Bros Discovery,Rent/Buy,357,tv,0.7557,19,7.6,/jFDfQo3RjG3IZ4bLZeATLXBbo9g.jpg,The Trap Door,17.25672999566398,0.002231896646391515
+Se7en,Standalone,Warner Bros Discovery,Rent/Buy,807,movie,15.9542,22338,8.378,/191nKfP0ehp3uIvWqgPbFmI4lv9.jpg,Se7en,37.05926372812595,0.004793054446197269
+Shazam!,DC Extended Universe (DCEU),Warner Bros Discovery,Max,287947,movie,5.3793,9960,7.0,/xnopI5Xtky18MPhK40cZAGAOVeV.jpg,Shazam!,23.37760294009854,0.003023538852134123
+Itty Bitty Titty Committee,Sherlock Holmes,Warner Bros Discovery,Rent/Buy,10520,movie,1.8735,52,5.462,/xWJMF9xb4OfWRU7QcOxOosgIElE.jpg,Itty Bitty Titty Committee,14.521775869600788,0.0018781717550865672
+Cool Runnings,Standalone,Warner Bros Discovery,Rent/Buy,864,movie,5.2767,2172,7.01,/6fXuGEb7EqGmAeUodxm7l5ELPZ.jpg,Cool Runnings,22.633759726320527,0.0029273339990310504
+Yella,Looney Tunes,Warner Bros Discovery,Rent/Buy,3037,movie,3.9769,104,6.2,/axC6pBrFc7Y2I6pFzvvte9uRf9x.jpg,Yella,18.398089299069937,0.0023795141847223335
+Superman,Superman,Warner Bros Discovery,Max,1924,movie,5.1245,4113,7.152,/d7px1FQxW4tngdACVRsCSaZq0Xl.jpg,Superman,23.042764287358704,0.0029802325440259196
+Tenet,Standalone,Warner Bros Discovery,Netflix,577922,movie,6.0247,10639,7.178,/aCIFMriQh8rvhxpN1IWGgvH0Tlg.jpg,Tenet,24.40764162795903,0.0031567587549585275
+The Big Lebowski,Standalone,Warner Bros Discovery,Rent/Buy,115,movie,8.7165,11798,7.8,/9mprbw31MGdd66LR0AQKoDMoFRv.jpg,The Big Lebowski,28.388345201129408,0.003671602468539841
+The Conjuring,The Conjuring Universe,Warner Bros Discovery,Max,138843,movie,11.5077,12361,7.541,/wVYREutTvI2tmxr6ujrHT704wGF.jpg,The Conjuring,30.681788739255808,0.003968224652622154
+"Sex, Chips & Rock n' Roll",The Conjuring Universe,Warner Bros Discovery,Rent/Buy,370604,movie,1.6639,0,0.0,,"Sex, Chips & Rock n' Roll",1.6639,0.00021520026278813858
+The Dark Knight,DC,Warner Bros Discovery,Max,155,movie,25.0893,34791,8.524,/qJ2tW6WMUDux911r6m7haRef0WH.jpg,The Dark Knight,46.678779394657276,0.006037193095955162
+Fantasia,Standalone,Warner Bros Discovery,Rent/Buy,756,movie,3.6814,3219,7.3,/5m9njnidjR0syG2gpVPVgcEMB2X.jpg,Fantasia,21.78925587169583,0.002818110216687862
+The Exorcist,The Exorcist,Warner Bros Discovery,Rent/Buy,9552,movie,8.2005,8366,7.74,/5x0CeVHJI8tcDx8tUUwYHQSNILq.jpg,The Exorcist,27.603069768985716,0.003570038985543031
+Ocean's Twelve,The Fugitive,Warner Bros Discovery,Rent/Buy,163,movie,5.0593,7631,6.563,/pE5anFf7nf6ah7V3VRezQ1KSovi.jpg,Ocean's Twelve,22.067938361696037,0.0028541535757133428
+The Goonies,Standalone,Warner Bros Discovery,Netflix + Max,9340,movie,7.3955,6006,7.5,/eBU7gCjTCj9n2LTxvCSIXXOvHkD.jpg,The Goonies,26.174157631947352,0.003385230843592303
+The Diary of a Big Man,Standalone,Warner Bros Discovery,Rent/Buy,157200,movie,2.6916,16,6.2,/zR7be5DAVdo5xcCb7emDGMEGhRj.jpg,大丈夫日記,16.322048921378272,0.002111009806551751
+Standard Operating Procedure,Standalone,Warner Bros Discovery,Rent/Buy,8847,movie,1.3373,63,6.762,/v2QCXsisMLYsozC2qJtYGa3Rvsi.jpg,Standard Operating Procedure,16.667479973983887,0.0021556860811451227
+The Lord of the Rings: The Fellowship of the Ring,The Lord of the Rings / Middle-earth,Warner Bros Discovery,Max,120,movie,20.9517,26662,8.4,/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg,The Lord of the Rings: The Fellowship of the Ring,42.177609012675205,0.005455034883889096
+The Matrix,The Matrix,Warner Bros Discovery,Rent/Buy,603,movie,18.4064,27052,8.236,/qK76PKQLd6zlMn0u83Ej9YQOqPL.jpg,The Matrix,39.31061543251846,0.005084232689128811
+Godzilla,Standalone,Warner Bros Discovery,Netflix,929,movie,6.079,4089,5.645,/xJVl1I95StraYAwaNbBkVoWE2qA.jpg,Godzilla,20.98072330800734,0.0027135387759891845
+Storybook Squares,Standalone,Warner Bros Discovery,Rent/Buy,1345,tv,0.146,0,0.0,,Storybook Squares,0.146,1.8882888615342408e-05
+The Shawshank Redemption,Standalone,Warner Bros Discovery,Rent/Buy,278,movie,25.7489,29318,8.7,/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg,The Shawshank Redemption,47.61604915348995,0.006158414742931643
+The Shining,Standalone,Warner Bros Discovery,Rent/Buy,694,movie,11.6801,18372,8.207,/uAR0AWqhQL1hQa69UDEbb2rE5Wx.jpg,The Shining,32.35828007503583,0.004185053413979145
+Kein Pardon,Standalone,Warner Bros Discovery,Rent/Buy,10807,movie,5.1309,50,6.9,/sCNEO1m302XZTvLCMWcJ9TQOKGa.jpg,Kein Pardon,20.638470176097936,0.002669273517303586
+Marine Boy,Standalone,Warner Bros Discovery,Rent/Buy,15286,movie,2.4063,24,5.6,/uNNh4OdS5b6tvWNm6QgghYGU7H5.jpg,마린보이,15.004240008672037,0.0019405711838467005
+Ghostbusters,Standalone,Warner Bros Discovery,Rent/Buy,620,movie,5.8506,9438,7.5,/7E8nLijS9AwwUEPu2oFYOVKhdFA.jpg,Ghostbusters,24.82552598608976,0.003210805767209736
+Young Adam,Standalone,Warner Bros Discovery,Prime Video,237,movie,3.7005,185,5.811,/rU5GJ5r4tQbSx9C2ENKbPkD6nr9.jpg,Young Adam,17.592012944217917,0.002275260417433759
+Little Armadillos,Standalone,Warner Bros Discovery,Rent/Buy,9245,tv,0.0071,1,6.0,,Little Armadillos,12.30812999566398,0.0015918701902142313
+The Kite Runner,Standalone,Warner Bros Discovery,Rent/Buy,7979,movie,2.8581,1212,7.323,/dom2esWWW8C9jS2v7dOhW48LwHh.jpg,The Kite Runner,20.587960800866576,0.002662740894656159
+Breathless,Standalone,Warner Bros Discovery,Max,269,movie,3.4736,1935,7.499,/9Wx0Wdn2EOqeCZU4SP6tlS3LOml.jpg,À bout de souffle,21.758505352972374,0.0028141331028528004
+Weird Travels,Standalone,Warner Bros Discovery,Rent/Buy,1357,tv,0.0612,0,0.0,/AsY7ddD45U1Dj9NIA3pXJQhpJAR.jpg,Weird Travels,0.0612,7.915293036020242e-06
+Wonder Woman,DC Extended Universe (DCEU),Warner Bros Discovery,Max,297762,movie,11.7742,20551,7.214,/v4ncgZjG2Zu8ZW5al1vIZTsSjqX.jpg,Wonder Woman,30.515054091258293,0.003946660051345061
+2001: A Space Odyssey,Standalone,Warner Bros Discovery,Max,62,movie,8.989,12179,8.063,/ve72VxNqjGM69Uky4WTo2bK6rfq.jpg,2001: A Space Odyssey,29.200647288296857,0.003776661440005547
+#heuldoch - Therapie wie noch nie,Standalone,Warner Bros Discovery,Rent/Buy,115456,tv,0.2268,2,3.5,/s6m4jNRZq22bSB6kBzavY4zIHyB.jpg,#heuldoch - Therapie wie noch nie,7.7039212547196625,0.0009963855270838378
+Shadow Raiders,Animaniacs,Warner Bros Discovery,Rent/Buy,464,tv,0.8664,17,8.7,/zQXauw9aUl9h4mYQp3i1sLcQpHK.jpg,Shadow Raiders,19.521672505103304,0.0025248326541031374
+Arrow,Arrowverse / DC,Warner Bros Discovery,Netflix,1412,tv,37.2154,6177,6.829,/u8ZHFj1jC384JEkTt3vNg1DfWEb.jpg,Arrow,54.66424790396543,0.007069992495972904
+Luther,Standalone,Warner Bros Discovery,Hulu,1426,tv,9.0117,1137,7.857,/hDxOMX8zzH1FiqKWVBzNaYGBkle.jpg,Luther,27.78184226205905,0.003593160499749818
+Barry,Standalone,Warner Bros Discovery,Max,73107,tv,8.3993,1055,7.898,/j1XpwD11f0BAEI7pX6UdMhUVX2F.jpg,Barry,27.218963918197794,0.0035203607115914582
+Declassified,DC Animated Universe (DCAU),Warner Bros Discovery,Rent/Buy,179,tv,0.0652,0,0.0,/rhnjmWpnEruEO9PuENcxn9JjqEh.jpg,Declassified,0.0652,8.432632450139211e-06
+Ceo zivot za godinu dana,Arrowverse / DC,Warner Bros Discovery,Rent/Buy,89369,tv,0.0327,0,0.0,/lCrqcnXRGBpZDxIco8nBzAhAL3a.jpg,Ceo zivot za godinu dana,0.0327,4.229249710422581e-06
+Freedom on the 6th of June,Standalone,Warner Bros Discovery,Rent/Buy,62002,movie,0.0,0,0.0,,Freedom on the 6th of June,0.0,0.0
+Handyman Superstar Challenge,Standalone,Warner Bros Discovery,Rent/Buy,1361,tv,0.0327,0,0.0,,Handyman Superstar Challenge,0.0327,4.229249710422581e-06
+Threshold,Standalone,Warner Bros Discovery,Rent/Buy,1441,tv,3.3314,81,7.012,/y9e96lS10N5tbg6Yg3VI063pJry.jpg,Threshold,19.269213852383714,0.0024921809512313334
+Roxy,Clone High,Warner Bros Discovery,Rent/Buy,212503,tv,0.688,0,0.0,/5TX373BXei0WZ5Yk7V3YbgbVHl8.jpg,Roxy,0.688,8.898237922846285e-05
+Rome,Standalone,Warner Bros Discovery,Max,1891,tv,11.2693,1407,8.25,/xLy4fhXUPocgMyFNPFac3tY4jwY.jpg,Rome,30.917902654806095,0.003998762411306184
+Narcos,Arrowverse / DC,Warner Bros Discovery,Netflix,63351,tv,19.7156,3105,8.06,/rTmal9fDbwh5F0waol2hq35U4ah.jpg,Narcos,39.32780145139254,0.005086455440362649
+Four Tank-Men and a Dog,Standalone,Warner Bros Discovery,Rent/Buy,1574,tv,2.6888,49,7.8,/5S3nokzCXfB1E6thWQRGEZx1O8J.jpg,Czterej pancerni i pies,19.987770004336017,0.00258511530589698
+Leap Year,DC,Warner Bros Discovery,Rent/Buy,79777,tv,0.5991,2,9.0,/4bKiXZ3KRBG53jFnMPtXJSCvUpv.jpg,Leap Year,19.076221254719663,0.0024672202818801286
+Dark Skies,Standalone,Warner Bros Discovery,Rent/Buy,164,tv,2.3762,49,7.2,/dtWcxTw4VGRyR7qNDlYFCdl5Q9.jpg,Dark Skies,18.475170004336018,0.0023894834064478914
+Attack on Titan,Standalone,Warner Bros Discovery,Hulu,1429,tv,15.6733,7098,8.7,/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg,進撃の巨人,36.92449717617416,0.004775624433939876
+USA High,Standalone,Warner Bros Discovery,Rent/Buy,1792,tv,1.4973,7,8.1,/it9TFva1WQIBZzMawgWYi92bBiK.jpg,USA High,18.600389986991942,0.002405678714563692
+Atlantika,TGIF / Perfect Strangers,Warner Bros Discovery,Rent/Buy,247,tv,0.0214,0,0.0,,Atlantika,0.0214,2.7677658655364896e-06
+Phineas and Ferb,Standalone,Warner Bros Discovery,Hulu,1877,tv,23.8098,959,7.896,/g6TidT7be954rrzPPBTIXkSmfXj.jpg,Phineas and Ferb,42.584071233039566,0.005507604615625294
+Life Is Wild,Standalone,Warner Bros Discovery,Rent/Buy,1381,tv,0.9047,5,6.0,/abhYpSj609l3SEDYd9dcSXngQUA.jpg,Life Is Wild,13.682851250383644,0.0017696695623376228
+Friends,Friends,Warner Bros Discovery,Max,1668,tv,64.6416,8707,8.424,/f496cm9enuEsZkSPzCwnTESEK5s.jpg,Friends,85.42951842036905,0.011049014252014872
+Sinchronicity,Full House,Warner Bros Discovery,Rent/Buy,260,tv,0.6721,5,4.6,/pV4ZG6lVjtx73y7dTLNiN5lT0Xi.jpg,Sinchronicity,10.650251250383644,0.0013774486855233257
+Game of Thrones,Game of Thrones,Warner Bros Discovery,Max,1399,tv,93.8238,25873,8.46,/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg,Game of Thrones,115.15666357381284,0.014893770216292918
+Seven Knights Revolution: Hero Successor,Standalone,Warner Bros Discovery,Rent/Buy,118151,tv,1.5972,10,6.4,/dg5uxhusJlfJSq9ZtiPi4FRj0Gn.jpg,セブンナイツ レボリューション -英雄の継承者-,15.438592685158227,0.0019967481236402933
+Mister Ed,Standalone,Warner Bros Discovery,Rent/Buy,453,tv,6.5768,48,6.8,/ykGlIpjTiyd4wYk617X73TL5FTS.jpg,Mister Ed,21.866996080028514,0.0028281647351459417
+Garfield and Friends,Gossip Girl,Warner Bros Discovery,Peacock,4606,tv,8.455,380,7.3,/pE6l6I1ICKOu4pDUXxkl87TTLZx.jpg,Garfield and Friends,25.635924975675618,0.003315618601828474
+Gotham,DC / Batman,Warner Bros Discovery,Rent/Buy,60708,tv,24.6326,3587,7.6,/4XddcRDtnNjYmLRMYpbrhFxsbuq.jpg,Gotham,43.38745243437205,0.005611509805628179
+澳门十年,Standalone,Warner Bros Discovery,Rent/Buy,117604,tv,0.0,0,0.0,/32R2gi7uRcm9IyWhoronpcDMgqZ.jpg,澳门十年,0.0,0.0
+The North Pole,DC,Warner Bros Discovery,Rent/Buy,85502,tv,0.1647,0,0.0,/aBx1cda2yDfUy9j88MP6aNGnUOJ.jpg,The North Pole,0.1647,2.1301450376348596e-05
+House of the Dragon,A Song of Ice and Fire / Westeros,Warner Bros Discovery,Max,94997,tv,29.9175,5595,8.307,/oxmdHR5Ka28HAJuMmS2hk5K6QQY.jpg,House of the Dragon,50.27937770581979,0.006502875951148804
+Jamai Raja,Standalone,Warner Bros Discovery,Rent/Buy,100780,tv,2.5346,4,5.5,/7TDfSot51AFRK8aFs2kO3snM4um.jpg,Jamai Raja,14.23357000433602,0.0018408966917161358
+Family Guy,DC Animated,Warner Bros Discovery,Hulu,1434,tv,69.9289,4725,7.387,/8o8kiBkWFK3gVytHdyzEWUBXVfK.jpg,Family Guy,88.37739371729634,0.011430277271766908
+End of the String,Standalone,Warner Bros Discovery,Rent/Buy,61081,tv,0.2677,2,6.5,/6dYTe62WUXyWtr4UWcIX1Z4NNTA.jpg,สุดสายป่าน,13.744821254719662,0.0017776844437716593
+The Strange Case of Howard Phillips Lovecraft,Lethal Weapon,Warner Bros Discovery,Rent/Buy,68480,movie,0.0759,5,7.8,/1RZobIJBo0GrS5VzSAvyP5jpUfB.jpg,Le cas Howard Phillips Lovecraft,16.454051250383642,0.002128082308439245
+The Millionaire Detective – Balance: UNLIMITED,Looney Tunes,Warner Bros Discovery,Rent/Buy,98491,tv,2.8953,63,6.9,/i9Xwd7mUxASxU8ofCQc77XLj1Ff.jpg,富豪刑事 Balance:UNLIMITED,18.501479973983887,0.0023928862025186706
+Lucifer,DC / Sandman,Warner Bros Discovery,Netflix,63174,tv,56.8973,15198,8.44,/ekZobS8isE6mA53RAiGDG93hBxL.jpg,Lucifer,77.95911501499947,0.010082830721773307
+Work Out,Standalone,Warner Bros Discovery,Rent/Buy,1858,tv,0.2143,1,8.0,/vVhO1BsFXOdQl22H0xCynUzJ8kH.jpg,Work Out,16.515329995663983,0.0021360077859845644
+120 Minutes,Standalone,Warner Bros Discovery,Rent/Buy,30973,tv,0.0826,1,7.0,,120 Minutes,14.38362999566398,0.001860304678715212
+Your Face Sounds Familiar,Standalone,Warner Bros Discovery,Rent/Buy,58345,tv,0.1888,0,0.0,,Your Face Sounds Familiar,0.1888,2.4418420346415386e-05
+DD Fist of the North Star,Standalone,Warner Bros Discovery,Rent/Buy,130728,tv,1.3829,2,5.5,/8Lv6YKpP12AUalXkBzJb7Mg2sRd.jpg,DD北斗の拳,12.860021254719662,0.0016632489653685431
+Nathan Barley,Standalone,Warner Bros Discovery,Rent/Buy,114,tv,1.6644,40,7.2,/jAd2zeYyWv89L6VRMAtPsssAZ7r.jpg,Nathan Barley,17.677183856719736,0.002286275984927176
+Alice in Borderland,DC Extended Universe (DCEU),Warner Bros Discovery,Netflix,110316,tv,26.2611,2534,8.129,/Ac8ruycRXzgcsndTZFK6ouGA0FA.jpg,今際の国のアリス,45.92307796366935,0.005939454562066121
+Seven Senses of the Re'Union,DC / Batman,Warner Bros Discovery,Rent/Buy,80562,tv,2.0739,21,6.3,/t0fq29g3hFitgoq15aXbLH4FVOf.jpg,七星のスバル,16.016322680822206,0.002071468748009233
+Popworld,Standalone,Warner Bros Discovery,Rent/Buy,1383,tv,0.0398,0,0.0,,Popworld,0.0398,5.147527170483753e-06
+ZeD,Animaniacs,Warner Bros Discovery,Rent/Buy,1353,tv,0.0429,0,0.0,,ZeD,0.0429,5.548465216425954e-06
+The Steve Katsos Show,Standalone,Warner Bros Discovery,Rent/Buy,31817,tv,0.0071,0,0.0,,The Steve Katsos Show,0.0071,9.182774600611719e-07
+Riverdale,Standalone,Warner Bros Discovery,Netflix,69050,tv,20.8028,13631,8.419,/d8mmn9thQ5dBk2qbv6BCqGUXWK3.jpg,Riverdale,41.77535957742262,0.0054030100120982805
+The Hot List,Saved by the Bell,Warner Bros Discovery,Rent/Buy,412,tv,0.0143,0,0.0,,The Hot List,0.0143,1.849488405475318e-06
+American Dad!,Standalone,Warner Bros Discovery,Hulu,1433,tv,49.5217,2272,6.998,/aC1q422YhQR7k82GB8gW4KoD91p.jpg,American Dad!,66.87429943572498,0.008649177722423632
+Silicon Valley,Standalone,Warner Bros Discovery,Max,60573,tv,11.4824,1808,8.138,/4ptpmWBVD9HY9hMh8Cbs6SMiy7p.jpg,Silicon Valley,31.015838566859816,0.004011428938146953
+Glee,Standalone,Warner Bros Discovery,Hulu,1417,tv,18.2169,903,6.767,/62T2vsZYTje3KhdCsiLR1K1RFJW.jpg,Glee,34.70706843047537,0.0044888336119022825
+Mighty Max,DC / Superman,Warner Bros Discovery,Rent/Buy,1708,tv,2.2639,18,6.1,/eKx1OhfVf1Z8CsI1FB1qU4R56Ti.jpg,Mighty Max,15.742653600952828,0.0020360737976487077
+Broadchurch,Standalone,Warner Bros Discovery,Netflix,1427,tv,10.5023,919,7.918,/2NhBFUTg5KVBmGwafxtLwVdsqrr.jpg,Broadchurch,29.302087827345556,0.0037897812372653886
+Annie MG,Standalone,Warner Bros Discovery,Rent/Buy,76097,tv,0.2444,2,7.5,/kwu3hBVq9h3oFOXo1VPOMEAEjUD.jpg,Annie MG,15.721521254719663,0.0020333406487439013
+Supergirl,Arrowverse / DC,Warner Bros Discovery,Netflix,62688,tv,20.0394,4297,7.291,/cFO65xb0xiXKqk5BmgHawCXB1i0.jpg,Supergirl,38.254666411155426,0.004947661677115948
+Supernatural,Standalone,Warner Bros Discovery,Netflix,1622,tv,130.8798,8097,8.301,/u40gJarLPlIkwouKlzGdobQOV9k.jpg,Supernatural,151.3901777724324,0.019580026468039226
+Growing Up Hip Hop: New York,Standalone,Warner Bros Discovery,Rent/Buy,92950,tv,0.1328,2,10.0,/cQDXHnuNASvpZ4VEd0Bri6d2pfP.jpg,Growing Up Hip Hop: New York,20.609921254719662,0.0026655811467386947
+CSI: Crime Scene Investigation,DC Animated,Warner Bros Discovery,Hulu,1431,tv,51.9845,1326,7.6,/i5hmoRjHNWady4AtAGICTUXknKH.jpg,CSI: Crime Scene Investigation,70.30737092286444,0.00909319352036995
+The Big Bang Theory,The Big Bang Theory,Warner Bros Discovery,Max,1418,tv,26.5673,12074,7.913,/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg,The Big Bang Theory,46.47518713942355,0.006010861521444717
+Ocean Girl,Standalone,Warner Bros Discovery,Rent/Buy,282,tv,3.4378,11,7.0,/d5QZqkMHlwaUFGNZkHaZiSZXeOd.jpg,Ocean Girl,18.516981246047624,0.0023948910572705586
+The Flash,Arrowverse / DC,Warner Bros Discovery,Netflix,60735,tv,53.0304,11433,7.77,/yZevl2vHQgmosfwUdVNzviIfaWS.jpg,The Flash,72.62859818787825,0.009393409108699758
+The Wallflower,The Fresh Prince of Bel-Air,Warner Bros Discovery,Rent/Buy,899,tv,1.8911,32,6.7,/zlcuBwbCHki0oWplNQhHhStYwFn.jpg,ヤマトナデシコ七変化♥,16.809613939877888,0.0021740689568056247
+The Last of Us,The Last of Us Franchise,Warner Bros Discovery,Max,100088,tv,22.9468,6614,8.466,/dmo6TYuuJgaYinXBPjrgG9mB5od.jpg,The Last of Us,43.69932984852352,0.005651846425306695
+Gordon Behind Bars,Standalone,Warner Bros Discovery,Peacock,54905,tv,0.459,20,5.7,/npHPfADDLy9duJ2LvgXhg318rGd.jpg,Gordon Behind Bars,13.18121929473392,0.0017047910668278275
+Chuck,Standalone,Warner Bros Discovery,Prime Video,1404,tv,17.7289,1133,7.726,/vEZvGVVMjk1TRs59nfypTI5lAXj.jpg,Chuck,36.23551305455689,0.004686514773486188
+American Horror Story,Standalone,Warner Bros Discovery,Hulu,1413,tv,28.7594,5887,8.1,/5LLG9bjq0i7V5N4UfRhnab8zHK4.jpg,American Horror Story,48.729367801329445,0.006302405647181895
+Deadwood,Standalone,Warner Bros Discovery,Max,1406,tv,9.7178,889,8.119,/fWwxYAuqY4Na7fKI3Qq2nFWCwG8.jpg,Deadwood,28.90519000664491,0.003738448515758797
+Dragon Tales,Standalone,Warner Bros Discovery,Rent/Buy,1585,tv,1.9037,55,7.4,/pwAe79bXMfzjD4l4s2k1ZFXq8T2.jpg,Dragon Tales,18.451888027006202,0.002386472235320057
+Shahr Zaman,DC / Batman,Warner Bros Discovery,Rent/Buy,227599,tv,0.1297,0,0.0,/fR6cLqjSKcOXP9RPF7nNb678qPs.jpg,Shahr Zaman,0.1297,1.6774730502807607e-05
+Hakata Mentai! Pirikarako-chan,DC / Sandman,Warner Bros Discovery,Rent/Buy,90847,tv,0.5096,4,5.5,/o9oxzAW7pJ6xfubSuCr6YDrw99n.jpg,博多明太！ぴりからこちゃん,12.20857000433602,0.001578993613318407
+Breaking Bad,Standalone,Warner Bros Discovery,Netflix,1396,tv,83.1388,16633,8.936,/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg,Breaking Bad,105.23179669714737,0.013610139012497198
+The Vampire Diaries,The Vampire Diaries Universe,Warner Bros Discovery,Max,18165,tv,51.7539,9382,8.309,/b3vl6wV1W8PBezFfntKTrhrehCY.jpg,The Vampire Diaries,72.34424171632574,0.009356631906101278
+Boardwalk Empire,Standalone,Warner Bros Discovery,Max,1621,tv,11.4889,1192,8.011,/kL6SqlVPpfAof2nQbh1VxkUuXBQ.jpg,Boardwalk Empire,30.587540443670342,0.003956035063117179
+#weetikveel,The White Lotus,Warner Bros Discovery,Rent/Buy,118434,tv,0.1956,1,7.0,/ypeoXjBORBk1svN1cd7jgd9PNyi.jpg,#weetikveel,14.496629995663982,0.0018749195171640731
+The Wire,Standalone,Warner Bros Discovery,Max,1438,tv,33.3025,2505,8.605,/4lbclFySvugI51fwsyxBTOm4DqK.jpg,The Wire,53.91148106665813,0.006972633507327717
+Out of This World,Standalone,Warner Bros Discovery,Rent/Buy,1578,tv,2.6142,23,7.3,/bUT4VPKzb6qddIN9sc5ewsREKyq.jpg,Out of This World,18.594411241711605,0.002404905454418568
+The Premiership,Looney Tunes / Tiny Toons,Warner Bros Discovery,Rent/Buy,1344,tv,0.0071,0,0.0,,The Premiership,0.0071,9.182774600611719e-07
+Titans,DC,Warner Bros Discovery,Max,75450,tv,15.2046,2771,7.889,/8e6QiSexmYKaiHGPvbhaFMmQEhc.jpg,Titans,34.425393225939764,0.00445240319058071
+Flinderella,Standalone,Warner Bros Discovery,Rent/Buy,1446,tv,6.0104,159,8.044,/jHpGf342KoTemqxiGCtZw0pejqm.jpg,Floricienta,24.302519982655927,0.003143162862360445
+I Love Tokyo Legend - Kawaii Detective -,True Detective (Anthology),Warner Bros Discovery,Rent/Buy,48052,tv,1.2602,5,5.8,/WQEGJ79NkXAZ728sYPTrP2QVAE.jpg,都市伝説の女,13.638351250383643,0.0017639141613555493
+Castle,Standalone,Warner Bros Discovery,Hulu,1419,tv,48.4247,2004,7.979,/diXBeMzvfJb2iJg3G0kCUaMCzEc.jpg,Castle,67.6848143769562,0.00875400555363144
+The Middle,Standalone,Warner Bros Discovery,Peacock,1422,tv,19.0867,709,7.58,/juK49EV9pFGVITn04A58rrqvLXq.jpg,The Middle,37.09795834871908,0.004798059009284071
+Ricki Lake,Standalone,Warner Bros Discovery,Rent/Buy,1587,tv,0.5412,7,4.1,/pBk68pgzHkmVkJ4DcwTN9P55tED.jpg,Ricki Lake,9.644289986991943,0.0012473428328659652
+Wild Scandinavia,Standalone,Warner Bros Discovery,Rent/Buy,70335,tv,0.4644,2,9.0,/3jvPawJzwkILvdWiUctvg6BRqfX.jpg,Wildes Skandinavien,18.941521254719664,0.0024497988771096726
+"Love, Death & Robots",DC / Watchmen,Warner Bros Discovery,Netflix,86831,tv,15.9109,3771,8.224,/asDqvkE66EegtKJJXIRhBJPxscr.jpg,"Love, Death & Robots",35.93547168406529,0.004647708966780794
+Westworld,Standalone,Warner Bros Discovery,Rent/Buy,63247,tv,19.5096,5921,8.029,/8MfgyFHf7XEboZJPZXCIDqqiz6e.jpg,Westworld,39.34006840305328,0.005088041984758948
+Hints,DC Animated,Warner Bros Discovery,Rent/Buy,37042,tv,0.0071,0,0.0,,Hints,0.0071,9.182774600611719e-07
+The Good Doctor,The Big Bang Theory Franchise,Warner Bros Discovery,Hulu,71712,tv,44.8586,12668,8.467,/luhKkdD80qe62fwop6sdrXK9jUT.jpg,The Good Doctor,65.89534233614458,0.008522564449337501

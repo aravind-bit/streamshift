@@ -1,29 +1,92 @@
-title,type,franchise_group,owner,current_platform,tmdb_id
-Harry Potter and the Sorcerer's Stone,film,Harry Potter,Warner Bros,Max,671
-Harry Potter and the Chamber of Secrets,film,Harry Potter,Warner Bros,Max,672
-Harry Potter and the Prisoner of Azkaban,film,Harry Potter,Warner Bros,Max,673
-Harry Potter and the Goblet of Fire,film,Harry Potter,Warner Bros,Max,674
-Harry Potter and the Order of the Phoenix,film,Harry Potter,Warner Bros,Max,675
-Harry Potter and the Half-Blood Prince,film,Harry Potter,Warner Bros,Max,767
-Harry Potter and the Deathly Hallows: Part 1,film,Harry Potter,Warner Bros,Max,12444
-Harry Potter and the Deathly Hallows: Part 2,film,Harry Potter,Warner Bros,Max,12445
-Fantastic Beasts and Where to Find Them,film,Harry Potter,Warner Bros,Max,259316
-Game of Thrones,series,Game of Thrones,Warner Bros,Max,1399
-House of the Dragon,series,Game of Thrones,Warner Bros,Max,94997
-The Dark Knight,film,DC Universe,Warner Bros,Max,155
-The Batman,film,DC Universe,Warner Bros,Max,414906
-Man of Steel,film,DC Universe,Warner Bros,Max,49521
-Wonder Woman,film,DC Universe,Warner Bros,Max,297762
-Aquaman,film,DC Universe,Warner Bros,Max,297802
-Justice League,film,DC Universe,Warner Bros,Max,141052
-Dune,film,Dune,Warner Bros,Max,438631
-Dune: Part Two,film,Dune,Warner Bros,Max,693134
-Friends,series,Friends,Warner Bros,Netflix/Max,1668
-The Big Bang Theory,series,The Big Bang Theory,Warner Bros,Max,1418
-Six Feet Under,series,Six Feet Under,Warner Bros,Max,1431
-Westworld,series,Westworld,Warner Bros,Max,63247
-Succession,series,Succession,Warner Bros,Max,76331
-True Detective,series,True Detective,Warner Bros,Max,46648
-The Lord of the Rings: The Fellowship of the Ring,film,LOTR,Warner Bros,Netflix/Max,120
-The Lord of the Rings: The Two Towers,film,LOTR,Warner Bros,Netflix/Max,121
-The Lord of the Rings: The Return of the King,film,LOTR,Warner Bros,Netflix/Max,122
+title,tmdb_id,tmdb_media_type,franchise_group
+Game of Thrones,1399,tv,Game of Thrones
+House of the Dragon,94997,tv,Game of Thrones
+Harry Potter and the Philosopher's Stone,671,movie,Harry Potter
+Harry Potter and the Chamber of Secrets,672,movie,Harry Potter
+The Dark Knight,155,movie,DC
+The Batman,414906,movie,DC
+Friends,1668,tv,Friends
+The Big Bang Theory,1418,tv,The Big Bang Theory
+Dune: Part One,438631,movie,Dune
+Dune: Part Two,693134,movie,Dune
+The Conjuring,138843,movie,The Conjuring Universe
+The Dark Knight,155,movie,The Dark Knight Trilogy / Batman
+Harry Potter and the Sorcerer's Stone,671,movie,Wizarding World / Harry Potter
+The Lord of the Rings: The Fellowship of the Ring,120,movie,The Lord of the Rings / Middle-earth
+Goodfellas,769,movie,Standalone
+Pulp Fiction,680,movie,Standalone
+The Matrix,603,movie,The Matrix
+Inception,27205,movie,Standalone
+Joker,475557,movie,DC Universe / Joker
+Wonder Woman,297762,movie,DC Extended Universe (DCEU)
+A Star Is Born (2018),480530,movie,Remake/Adaptation
+The Departed,756,movie,Standalone
+The Big Lebowski,115,movie,Standalone
+Full Metal Jacket,600,movie,Standalone
+2001: A Space Odyssey,62,movie,2001: A Space Odyssey
+The Shawshank Redemption,278,movie,Standalone
+Forrest Gump,13,movie,Standalone
+Casablanca,289,movie,Standalone
+The Shining,694,movie,The Shining / Overlook Hotel
+The Exorcist,9552,movie,The Exorcist
+Blade Runner,78,movie,Blade Runner
+Caddyshack,11453,movie,Caddyshack
+"Oh, God!",15725,movie,"Oh, God!"
+The Wind and the Lion,15286,movie,Standalone
+Michael Collins,1770,movie,Standalone
+Murder in the First,8438,movie,Standalone
+The Mission,929,movie,Standalone
+The Year of Living Dangerously,237,movie,Standalone
+Deathtrap,11370,movie,Standalone
+Mutiny on the Bounty (1962),1629,movie,Remake
+City Heat,11068,movie,Standalone
+Friends,1668,tv,Standalone / Classic Sitcom
+The Big Bang Theory,1418,tv,The Big Bang Theory Franchise
+Game of Thrones,1399,tv,A Song of Ice and Fire / Westeros
+The Sopranos,1396,tv,The Sopranos Franchise
+The West Wing,1621,tv,Standalone
+Supernatural,1622,tv,Supernatural
+Gilmore Girls,453,tv,Gilmore Girls
+The Flash (2014),60735,tv,Arrowverse / DC
+Arrow,1412,tv,Arrowverse / DC
+Riverdale,69050,tv,Archie Comics Universe
+The Vampire Diaries,18165,tv,The Vampire Diaries Universe
+Pretty Little Liars,31817,tv,Pretty Little Liars Franchise
+Young Sheldon,71712,tv,The Big Bang Theory Franchise
+Two and a Half Men,1419,tv,Standalone
+Abbott Elementary,115456,tv,Standalone
+Ted Lasso,92950,tv,Standalone
+The Last of Us,100088,tv,The Last of Us Franchise
+House of the Dragon,94997,tv,A Song of Ice and Fire / Westeros
+True Detective,48052,tv,True Detective (Anthology)
+Westworld,63247,tv,Standalone
+Barry,73107,tv,Standalone
+Succession,76097,tv,Standalone
+The Leftovers,54905,tv,Standalone
+Watchmen,86831,tv,DC / Watchmen
+Batman: The Animated Series,179,tv,DC Animated Universe (DCAU)
+Looney Tunes Cartoons (Web Series),98491,tv,Looney Tunes
+Tiny Toon Adventures,1344,tv,Looney Tunes / Tiny Toons
+Animaniacs (1993),464,tv,Animaniacs
+Pinky and the Brain,1353,tv,Animaniacs
+"Scooby-Doo, Where Are You!",2154,tv,Scooby-Doo
+Full House,260,tv,Full House
+Family Matters,247,tv,TGIF / Perfect Strangers
+The Fresh Prince of Bel-Air,899,tv,The Fresh Prince of Bel-Air
+One Tree Hill,114,tv,Standalone
+Veronica Mars,1587,tv,Veronica Mars
+Gossip Girl (2007),4606,tv,Gossip Girl
+Smallville,1708,tv,DC / Superman
+Lucifer,63174,tv,DC / Sandman
+The Mentalist,1404,tv,Standalone
+Fringe,1381,tv,Standalone
+Mike & Molly,30973,tv,Standalone
+Mom,58345,tv,Standalone
+Curb Your Enthusiasm,1891,tv,Standalone
+Doom Patrol,79777,tv,DC
+Titans,75450,tv,DC
+Peacemaker,110316,tv,DC Extended Universe (DCEU)
+Harley Quinn (Animated Series),85502,tv,DC
+The O.C.,1585,tv,Standalone
+ER,164,tv,Standalone
+Shameless (U.S.),1433,tv,Standalone

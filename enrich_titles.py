@@ -65,6 +65,7 @@ def fetch_tmdb_details(tmdb_id: str, content_type: str) -> Dict[str, Any]:
         "tmdb_vote_average": data.get("vote_average", 0.0),
         "tmdb_poster_path": data.get("poster_path") or "",
         "tmdb_original_title": data.get("original_title") or data.get("name") or "",
+        "tmbd_media_type": data.get("media_type") or "tv",
     }
 
 

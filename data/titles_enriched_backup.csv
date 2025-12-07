@@ -1,0 +1,29 @@
+title,type,franchise_group,owner,current_platform,tmdb_id,tmdb_popularity,tmdb_vote_count,tmdb_vote_average,tmdb_poster_path,tmdb_original_title,value_score_raw,value_score_norm
+Harry Potter and the Sorcerer's Stone,film,Harry Potter,Warner Bros,Max,671,24.4908,28858,7.9,/wuMc08IPKEatf9rnMNXvIDxqP4W.jpg,Harry Potter and the Philosopher's Stone,251.52485532140412,21.892772939026194
+Harry Potter and the Chamber of Secrets,film,Harry Potter,Warner Bros,Max,672,18.7309,23021,7.7,/sdEOH0992YZ0QSxgXNIGLq1ToUi.jpg,Harry Potter and the Chamber of Secrets,188.1370099139704,14.62070807497446
+Harry Potter and the Prisoner of Azkaban,film,Harry Potter,Warner Bros,Max,673,16.5916,22584,8.011,/aWxwnYoe8p2d2fcxOqtvAtJ72Rw.jpg,Harry Potter and the Prisoner of Azkaban,166.33147437178854,12.119104371001022
+Harry Potter and the Goblet of Fire,film,Harry Potter,Warner Bros,Max,674,19.6607,21629,7.801,/fECBtHlr0RB3foNHDiCBXeg9Bv9.jpg,Harry Potter and the Goblet of Fire,196.24989324806333,15.55144508710659
+Harry Potter and the Order of the Phoenix,film,Harry Potter,Warner Bros,Max,675,17.5659,20316,7.674,/5aOyriWkPec0zUDxmHFP9qMmBaj.jpg,Harry Potter and the Order of the Phoenix,174.23990808083073,13.02638624082245
+Harry Potter and the Half-Blood Prince,film,Harry Potter,Warner Bros,Max,767,16.3616,20286,7.682,/z7uo9zmQdQwU5ZJHFpv2Upl30i1.jpg,Harry Potter and the Half-Blood Prince,162.27002223341503,11.65316104696701
+Harry Potter and the Deathly Hallows: Part 1,film,Harry Potter,Warner Bros,Max,12444,16.8021,19888,7.738,/iGoXIpQb7Pot00EEdwpwPajheZ5.jpg,Harry Potter and the Deathly Hallows: Part 1,166.3058768166601,12.116167734173272
+Harry Potter and the Deathly Hallows: Part 2,film,Harry Potter,Warner Bros,Max,12445,16.183,21458,8.084,/c54HpQmuwXjHq2C9wmoACjxoom3.jpg,Harry Potter and the Deathly Hallows: Part 2,161.407614261694,11.554222730491354
+Fantastic Beasts and Where to Find Them,film,Harry Potter,Warner Bros,Max,259316,6.9025,19351,7.3,/fLsaFKExQt05yqjoAvKsmOMYvJR.jpg,Fantastic Beasts and Where to Find Them,68.13147863843078,0.8532736106635818
+Game of Thrones,series,Game of Thrones,Warner Bros,Max,1399,91.7601,25868,8.46,/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg,Game of Thrones,932.356080936433,100.0
+House of the Dragon,series,Game of Thrones,Warner Bros,Max,94997,29.672,5590,8.307,/oxmdHR5Ka28HAJuMmS2hk5K6QQY.jpg,House of the Dragon,256.0371196221426,22.41043493665054
+The Dark Knight,film,DC Universe,Warner Bros,Max,155,25.4638,34784,8.524,/qJ2tW6WMUDux911r6m7haRef0WH.jpg,The Dark Knight,266.27346794443383,23.584782928639537
+The Batman,film,DC Universe,Warner Bros,Max,414906,11.6879,11401,7.7,/74xTEgt7R36Fpooo50r9T25onhq.jpg,The Batman,109.18303279072401,5.562844706616924
+Man of Steel,film,DC Universe,Warner Bros,Max,49521,10.0032,15790,6.6,/dksTL9NXc3GqPBRHYHcy1aIwjS.jpg,Man of Steel,96.70288939006312,4.131081065828625
+Wonder Woman,film,DC Universe,Warner Bros,Max,297762,11.631,20551,7.2,/v4ncgZjG2Zu8ZW5al1vIZTsSjqX.jpg,Wonder Woman,115.50412916966323,6.288021948154428
+Aquaman,film,DC Universe,Warner Bros,Max,297802,9.0652,14595,6.872,/ufl63EFcc5XpByEV2Ecdw6WJZAI.jpg,Aquaman,86.92169556040771,3.0089499140293703
+Justice League,film,DC Universe,Warner Bros,Max,141052,6.3871,13393,6.074,/eifGNCSDuxJeS1loAXil5bIGgvC.jpg,Justice League,60.693814545202315,0.0
+Dune,film,Dune,Warner Bros,Max,438631,20.4472,14166,7.777,/d5NXSklXo0qyIYkgV94XAgMIckC.jpg,Dune,195.44804939784063,15.459454888478124
+Dune: Part Two,film,Dune,Warner Bros,Max,693134,15.4814,7246,8.132,/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg,Dune: Part Two,137.60399129382844,8.8233917784513
+Friends,series,Friends,Warner Bros,Netflix/Max,1668,63.5307,8705,8.4,/f496cm9enuEsZkSPzCwnTESEK5s.jpg,Friends,576.3357536231963,59.15616161897238
+The Big Bang Theory,series,The Big Bang Theory,Warner Bros,Max,1418,26.6465,12071,7.912,/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg,The Big Bang Theory,250.44096735792925,21.768425699818252
+Six Feet Under,series,Six Feet Under,Warner Bros,Max,1431,53.5104,1326,7.6,/i5hmoRjHNWady4AtAGICTUXknKH.jpg,CSI: Crime Scene Investigation,384.7759508675301,37.17978267707519
+Westworld,series,Westworld,Warner Bros,Max,63247,19.7982,5918,8.029,/8MfgyFHf7XEboZJPZXCIDqqiz6e.jpg,Westworld,171.96563667384592,12.765474246042576
+Succession,series,Succession,Warner Bros,Max,76331,17.7137,1457,8.3,/z0XiwdrCQ9yVIr4O0pxzaAYRxdW.jpg,Succession,129.04113219896647,7.841032047507219
+True Detective,series,True Detective,Warner Bros,Max,46648,31.946,3859,8.283,/cuV2O5ZyDLHSOWzg3nLVljp1ubw.jpg,True Detective,263.82356398571125,23.303721782231836
+The Lord of the Rings: The Fellowship of the Ring,film,LOTR,Warner Bros,Netflix/Max,120,20.4973,26660,8.426,/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg,The Lord of the Rings: The Fellowship of the Ring,208.88710501515848,17.001228134319874
+The Lord of the Rings: The Two Towers,film,LOTR,Warner Bros,Netflix/Max,121,15.9289,23147,8.411,/5VTN0pR8gcqV3EPUHHfMGnJYN9L.jpg,The Lord of the Rings: The Two Towers,160.08008751668217,11.401924438343418
+The Lord of the Rings: The Return of the King,film,LOTR,Warner Bros,Netflix/Max,122,18.8623,25714,8.491,/rCzpDGLbOoPwLjy3OAm5NUPOTrC.jpg,The Lord of the Rings: The Return of the King,191.54344534826595,15.011505699884683

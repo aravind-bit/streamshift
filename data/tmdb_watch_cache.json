@@ -1,0 +1,538 @@
+{
+  "tv:671": null,
+  "tv:672": null,
+  "tv:673": null,
+  "tv:674": null,
+  "tv:675": null,
+  "tv:767": null,
+  "tv:12444": null,
+  "tv:12445": null,
+  "tv:259316": null,
+  "tv:1399": {
+    "link": "https://www.themoviedb.org/tv/1399-game-of-thrones/watch?locale=US",
+    "buy": [
+      {
+        "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+        "provider_id": 10,
+        "provider_name": "Amazon Video",
+        "display_priority": 6
+      },
+      {
+        "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "display_priority": 7
+      },
+      {
+        "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+        "provider_id": 3,
+        "provider_name": "Google Play Movies",
+        "display_priority": 16
+      },
+      {
+        "logo_path": "/19fkcOz0xeUgCVW8tO85uOYnYK9.jpg",
+        "provider_id": 7,
+        "provider_name": "Fandango At Home",
+        "display_priority": 35
+      }
+    ],
+    "flatrate": [
+      {
+        "logo_path": "/jbe4gVSfRlbPTdESXhEKpornsfu.jpg",
+        "provider_id": 1899,
+        "provider_name": "HBO Max",
+        "display_priority": 11
+      },
+      {
+        "logo_path": "/5AkEgpCNaBP3Fbwd2m1GdQIk0vv.jpg",
+        "provider_id": 1825,
+        "provider_name": "HBO Max Amazon Channel",
+        "display_priority": 12
+      }
+    ]
+  },
+  "tv:94997": {
+    "link": "https://www.themoviedb.org/tv/94997-house-of-the-dragon/watch?locale=US",
+    "buy": [
+      {
+        "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+        "provider_id": 10,
+        "provider_name": "Amazon Video",
+        "display_priority": 6
+      },
+      {
+        "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "display_priority": 7
+      },
+      {
+        "logo_path": "/19fkcOz0xeUgCVW8tO85uOYnYK9.jpg",
+        "provider_id": 7,
+        "provider_name": "Fandango At Home",
+        "display_priority": 35
+      }
+    ],
+    "flatrate": [
+      {
+        "logo_path": "/jbe4gVSfRlbPTdESXhEKpornsfu.jpg",
+        "provider_id": 1899,
+        "provider_name": "HBO Max",
+        "display_priority": 11
+      },
+      {
+        "logo_path": "/5AkEgpCNaBP3Fbwd2m1GdQIk0vv.jpg",
+        "provider_id": 1825,
+        "provider_name": "HBO Max Amazon Channel",
+        "display_priority": 12
+      }
+    ]
+  },
+  "tv:155": {
+    "link": "https://www.themoviedb.org/tv/155-3rd-rock-from-the-sun/watch?locale=US",
+    "buy": [
+      {
+        "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+        "provider_id": 10,
+        "provider_name": "Amazon Video",
+        "display_priority": 6
+      },
+      {
+        "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "display_priority": 7
+      },
+      {
+        "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+        "provider_id": 3,
+        "provider_name": "Google Play Movies",
+        "display_priority": 16
+      }
+    ]
+  },
+  "tv:414906": null,
+  "tv:49521": null,
+  "tv:297762": null,
+  "tv:297802": {
+    "link": "https://www.themoviedb.org/tv/297802-the-road/watch?locale=US",
+    "free": [
+      {
+        "logo_path": "/tJqmTmQ8jp9WfyaZfApHK8lSywA.jpg",
+        "provider_id": 1853,
+        "provider_name": "Paramount Plus Apple TV Channel ",
+        "display_priority": 18
+      }
+    ],
+    "flatrate": [
+      {
+        "logo_path": "/9BgaNQRMDvVlji1JBZi6tcfxpKx.jpg",
+        "provider_id": 257,
+        "provider_name": "fuboTV",
+        "display_priority": 10
+      },
+      {
+        "logo_path": "/tJqmTmQ8jp9WfyaZfApHK8lSywA.jpg",
+        "provider_id": 1853,
+        "provider_name": "Paramount Plus Apple TV Channel ",
+        "display_priority": 18
+      },
+      {
+        "logo_path": "/hExO4PtimLIYn3kBOrzsejNv7cT.jpg",
+        "provider_id": 582,
+        "provider_name": "Paramount+ Amazon Channel",
+        "display_priority": 22
+      },
+      {
+        "logo_path": "/ywIoxSjoYJGUIbR6BfxUiCHdPi3.jpg",
+        "provider_id": 633,
+        "provider_name": "Paramount+ Roku Premium Channel",
+        "display_priority": 26
+      },
+      {
+        "logo_path": "/p0dh0SEsxoEPRB7Z4ZuUbqqLoHQ.jpg",
+        "provider_id": 2475,
+        "provider_name": "Paramount+ MTV Amazon Channel",
+        "display_priority": 326
+      },
+      {
+        "logo_path": "/5wym1C0jAvJeGirPdgVpcW0CCuy.jpg",
+        "provider_id": 2616,
+        "provider_name": "Paramount Plus Essential",
+        "display_priority": 366
+      },
+      {
+        "logo_path": "/fts6X10Jn4QT0X6ac3udKEn2tJA.jpg",
+        "provider_id": 2303,
+        "provider_name": "Paramount Plus Premium",
+        "display_priority": 367
+      }
+    ]
+  },
+  "tv:141052": null,
+  "tv:438631": null,
+  "tv:693134": null,
+  "tv:1668": {
+    "link": "https://www.themoviedb.org/tv/1668-friends/watch?locale=US",
+    "flatrate": [
+      {
+        "logo_path": "/jbe4gVSfRlbPTdESXhEKpornsfu.jpg",
+        "provider_id": 1899,
+        "provider_name": "HBO Max",
+        "display_priority": 11
+      },
+      {
+        "logo_path": "/5AkEgpCNaBP3Fbwd2m1GdQIk0vv.jpg",
+        "provider_id": 1825,
+        "provider_name": "HBO Max Amazon Channel",
+        "display_priority": 12
+      },
+      {
+        "logo_path": "/x9zOHTUkQzt3PgPVKbMH9CKBwLK.jpg",
+        "provider_id": 2528,
+        "provider_name": "YouTube TV",
+        "display_priority": 36
+      },
+      {
+        "logo_path": "/cZvP3XsDKlHFhNIyHYCVPStXT5l.jpg",
+        "provider_id": 506,
+        "provider_name": "TBS",
+        "display_priority": 117
+      }
+    ],
+    "buy": [
+      {
+        "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+        "provider_id": 10,
+        "provider_name": "Amazon Video",
+        "display_priority": 6
+      },
+      {
+        "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "display_priority": 7
+      },
+      {
+        "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+        "provider_id": 3,
+        "provider_name": "Google Play Movies",
+        "display_priority": 16
+      },
+      {
+        "logo_path": "/19fkcOz0xeUgCVW8tO85uOYnYK9.jpg",
+        "provider_id": 7,
+        "provider_name": "Fandango At Home",
+        "display_priority": 35
+      }
+    ]
+  },
+  "tv:1418": {
+    "link": "https://www.themoviedb.org/tv/1418-the-big-bang-theory/watch?locale=US",
+    "flatrate": [
+      {
+        "logo_path": "/jbe4gVSfRlbPTdESXhEKpornsfu.jpg",
+        "provider_id": 1899,
+        "provider_name": "HBO Max",
+        "display_priority": 11
+      },
+      {
+        "logo_path": "/5AkEgpCNaBP3Fbwd2m1GdQIk0vv.jpg",
+        "provider_id": 1825,
+        "provider_name": "HBO Max Amazon Channel",
+        "display_priority": 12
+      },
+      {
+        "logo_path": "/x9zOHTUkQzt3PgPVKbMH9CKBwLK.jpg",
+        "provider_id": 2528,
+        "provider_name": "YouTube TV",
+        "display_priority": 36
+      },
+      {
+        "logo_path": "/cZvP3XsDKlHFhNIyHYCVPStXT5l.jpg",
+        "provider_id": 506,
+        "provider_name": "TBS",
+        "display_priority": 117
+      }
+    ],
+    "buy": [
+      {
+        "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+        "provider_id": 10,
+        "provider_name": "Amazon Video",
+        "display_priority": 6
+      },
+      {
+        "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "display_priority": 7
+      },
+      {
+        "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+        "provider_id": 3,
+        "provider_name": "Google Play Movies",
+        "display_priority": 16
+      },
+      {
+        "logo_path": "/19fkcOz0xeUgCVW8tO85uOYnYK9.jpg",
+        "provider_id": 7,
+        "provider_name": "Fandango At Home",
+        "display_priority": 35
+      }
+    ]
+  },
+  "tv:1431": {
+    "link": "https://www.themoviedb.org/tv/1431-csi-crime-scene-investigation/watch?locale=US",
+    "flatrate": [
+      {
+        "logo_path": "/bxBlRPEPpMVDc4jMhSrTf2339DW.jpg",
+        "provider_id": 15,
+        "provider_name": "Hulu",
+        "display_priority": 8
+      },
+      {
+        "logo_path": "/tJqmTmQ8jp9WfyaZfApHK8lSywA.jpg",
+        "provider_id": 1853,
+        "provider_name": "Paramount Plus Apple TV Channel ",
+        "display_priority": 18
+      },
+      {
+        "logo_path": "/hExO4PtimLIYn3kBOrzsejNv7cT.jpg",
+        "provider_id": 582,
+        "provider_name": "Paramount+ Amazon Channel",
+        "display_priority": 22
+      },
+      {
+        "logo_path": "/ywIoxSjoYJGUIbR6BfxUiCHdPi3.jpg",
+        "provider_id": 633,
+        "provider_name": "Paramount+ Roku Premium Channel",
+        "display_priority": 26
+      },
+      {
+        "logo_path": "/5wym1C0jAvJeGirPdgVpcW0CCuy.jpg",
+        "provider_id": 2616,
+        "provider_name": "Paramount Plus Essential",
+        "display_priority": 366
+      },
+      {
+        "logo_path": "/fts6X10Jn4QT0X6ac3udKEn2tJA.jpg",
+        "provider_id": 2303,
+        "provider_name": "Paramount Plus Premium",
+        "display_priority": 367
+      }
+    ],
+    "buy": [
+      {
+        "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+        "provider_id": 10,
+        "provider_name": "Amazon Video",
+        "display_priority": 6
+      },
+      {
+        "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "display_priority": 7
+      },
+      {
+        "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+        "provider_id": 3,
+        "provider_name": "Google Play Movies",
+        "display_priority": 16
+      },
+      {
+        "logo_path": "/19fkcOz0xeUgCVW8tO85uOYnYK9.jpg",
+        "provider_id": 7,
+        "provider_name": "Fandango At Home",
+        "display_priority": 35
+      }
+    ]
+  },
+  "tv:63247": {
+    "link": "https://www.themoviedb.org/tv/63247-westworld/watch?locale=US",
+    "buy": [
+      {
+        "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+        "provider_id": 10,
+        "provider_name": "Amazon Video",
+        "display_priority": 6
+      },
+      {
+        "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "display_priority": 7
+      },
+      {
+        "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+        "provider_id": 3,
+        "provider_name": "Google Play Movies",
+        "display_priority": 16
+      },
+      {
+        "logo_path": "/19fkcOz0xeUgCVW8tO85uOYnYK9.jpg",
+        "provider_id": 7,
+        "provider_name": "Fandango At Home",
+        "display_priority": 35
+      }
+    ]
+  },
+  "tv:76331": {
+    "link": "https://www.themoviedb.org/tv/76331-succession/watch?locale=US",
+    "buy": [
+      {
+        "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+        "provider_id": 10,
+        "provider_name": "Amazon Video",
+        "display_priority": 6
+      },
+      {
+        "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "display_priority": 7
+      },
+      {
+        "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+        "provider_id": 3,
+        "provider_name": "Google Play Movies",
+        "display_priority": 16
+      },
+      {
+        "logo_path": "/19fkcOz0xeUgCVW8tO85uOYnYK9.jpg",
+        "provider_id": 7,
+        "provider_name": "Fandango At Home",
+        "display_priority": 35
+      }
+    ],
+    "flatrate": [
+      {
+        "logo_path": "/jbe4gVSfRlbPTdESXhEKpornsfu.jpg",
+        "provider_id": 1899,
+        "provider_name": "HBO Max",
+        "display_priority": 11
+      },
+      {
+        "logo_path": "/5AkEgpCNaBP3Fbwd2m1GdQIk0vv.jpg",
+        "provider_id": 1825,
+        "provider_name": "HBO Max Amazon Channel",
+        "display_priority": 12
+      }
+    ]
+  },
+  "tv:46648": {
+    "link": "https://www.themoviedb.org/tv/46648-true-detective/watch?locale=US",
+    "flatrate": [
+      {
+        "logo_path": "/jbe4gVSfRlbPTdESXhEKpornsfu.jpg",
+        "provider_id": 1899,
+        "provider_name": "HBO Max",
+        "display_priority": 11
+      },
+      {
+        "logo_path": "/5AkEgpCNaBP3Fbwd2m1GdQIk0vv.jpg",
+        "provider_id": 1825,
+        "provider_name": "HBO Max Amazon Channel",
+        "display_priority": 12
+      },
+      {
+        "logo_path": "/x9zOHTUkQzt3PgPVKbMH9CKBwLK.jpg",
+        "provider_id": 2528,
+        "provider_name": "YouTube TV",
+        "display_priority": 36
+      },
+      {
+        "logo_path": "/76CvnJAKAPbJuiXYwQGN7PFqOci.jpg",
+        "provider_id": 363,
+        "provider_name": "TNT",
+        "display_priority": 101
+      }
+    ],
+    "buy": [
+      {
+        "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+        "provider_id": 10,
+        "provider_name": "Amazon Video",
+        "display_priority": 6
+      },
+      {
+        "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "display_priority": 7
+      },
+      {
+        "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+        "provider_id": 3,
+        "provider_name": "Google Play Movies",
+        "display_priority": 16
+      },
+      {
+        "logo_path": "/19fkcOz0xeUgCVW8tO85uOYnYK9.jpg",
+        "provider_id": 7,
+        "provider_name": "Fandango At Home",
+        "display_priority": 35
+      }
+    ]
+  },
+  "tv:120": null,
+  "tv:121": {
+    "link": "https://www.themoviedb.org/tv/121-doctor-who/watch?locale=US",
+    "buy": [
+      {
+        "logo_path": "/seGSXajazLMCKGB5hnRCidtjay1.jpg",
+        "provider_id": 10,
+        "provider_name": "Amazon Video",
+        "display_priority": 6
+      },
+      {
+        "logo_path": "/SPnB1qiCkYfirS2it3hZORwGVn.jpg",
+        "provider_id": 2,
+        "provider_name": "Apple TV",
+        "display_priority": 7
+      },
+      {
+        "logo_path": "/8z7rC8uIDaTM91X0ZfkRf04ydj2.jpg",
+        "provider_id": 3,
+        "provider_name": "Google Play Movies",
+        "display_priority": 16
+      },
+      {
+        "logo_path": "/19fkcOz0xeUgCVW8tO85uOYnYK9.jpg",
+        "provider_id": 7,
+        "provider_name": "Fandango At Home",
+        "display_priority": 35
+      }
+    ],
+    "flatrate": [
+      {
+        "logo_path": "/xp12VXTZfunk568CAPs2Xqknimq.jpg",
+        "provider_id": 1852,
+        "provider_name": "Britbox Apple TV Channel ",
+        "display_priority": 21
+      },
+      {
+        "logo_path": "/ykV2tyni0cD3XV6BEQnE6NXTq6F.jpg",
+        "provider_id": 151,
+        "provider_name": "BritBox",
+        "display_priority": 59
+      },
+      {
+        "logo_path": "/tLBLABfFYYETf9Zk8gKEWnjhMai.jpg",
+        "provider_id": 197,
+        "provider_name": "BritBox Amazon Channel",
+        "display_priority": 88
+      }
+    ],
+    "ads": [
+      {
+        "logo_path": "/dB8G41Q6tSL5NBisrIeqByfepBc.jpg",
+        "provider_id": 300,
+        "provider_name": "Pluto TV",
+        "display_priority": 73
+      }
+    ]
+  },
+  "tv:122": null
+}

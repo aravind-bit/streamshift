@@ -1,0 +1,22 @@
+timestamp_utc,session_id,event
+2025-12-06 07:52:11,3efda8cc,page_loaded
+2025-12-06 07:55:06,bc83af51,page_loaded
+2025-12-06 07:55:06,bc83af51,scenario_fixed_Netflix_Warner Brothers HBO_netflix_wbd
+2025-12-06 07:55:06,bc83af51,explain_title_selectGame of Thrones
+2025-12-06 07:55:06,bc83af51,ai_question_sent
+2025-12-06 07:56:01,8b2d2608,page_loaded
+2025-12-06 07:56:01,8b2d2608,scenario_fixed_Netflix_Warner Brothers HBO_netflix_wbd
+2025-12-06 07:56:01,8b2d2608,explain_title_selectGame of Thrones
+2025-12-06 07:56:01,8b2d2608,ai_question_sent
+2025-12-06 07:56:55,191e6195,page_loaded
+2025-12-06 07:56:55,191e6195,scenario_fixed_Netflix_Warner Brothers HBO_netflix_wbd
+2025-12-06 07:56:55,191e6195,explain_title_selectGame of Thrones
+2025-12-06 07:56:55,191e6195,ai_question_sent
+2025-12-06 08:00:24,75ee3a44,page_loaded
+2025-12-06 08:00:26,75ee3a44,scenario_fixed_Netflix_Warner Brothers HBO_netflix_wbd
+2025-12-06 08:00:26,75ee3a44,explain_title_selectGame of Thrones
+2025-12-06 08:00:26,75ee3a44,ai_question_sent
+2025-12-06 08:03:25,5ab5c793,page_loaded
+2025-12-06 08:03:26,5ab5c793,scenario_fixed_Netflix_Warner Brothers HBO_netflix_wbd
+2025-12-06 08:03:26,5ab5c793,explain_title_selectGame of Thrones
+2025-12-06 08:03:26,5ab5c793,ai_question_sent

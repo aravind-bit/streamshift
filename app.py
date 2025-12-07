@@ -1,136 +1,53 @@
-# Media Merger Analysis — backup look, plus HBO alias + "Warner Brothers HBO" branding
-from __future__ import annotations
-import re
-from pathlib import Path
-from openai import OpenAI
+# -------------------------------
+# Imports & basic setup
+# -------------------------------
+import os
 import json
-#client = OpenAI()
-# --- Optional OpenAI client (for AI Deal Analyst) ---
-try:
-    from openai import OpenAI
-    _openai_ok = True
-    client = OpenAI()
-except Exception:
-    _openai_ok = False
-    client = None
+from pathlib import Path
 
-
-import numpy as np
 import pandas as pd
 import streamlit as st
-from logging_utils import log_usage, LOG_PATH
-LAST_UPDATED = "2025-12-06"  # date of last refresh of deal details
+import plotly.express as px
+import re
+from pathlib import Path
 
-import base64
-
-import uuid
-import pandas as pd
+# ---------- Lightweight CSV logging (usage + feedback) ----------
+import csv
 from datetime import datetime
-import os
 
-SESSION_ID = str(uuid.uuid4())[:8]  # lightweight anonymous session tracking
-
-ANALYTICS_DIR = "analytics"
-os.makedirs(ANALYTICS_DIR, exist_ok=True)
-
-USAGE_PATH = os.path.join(ANALYTICS_DIR, "usage_log.csv")
-
-def log_usage(event_type: str):
-    """Append a lightweight usage event."""
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    row = pd.DataFrame([{
-        "timestamp_utc": now,
-        "session_id": SESSION_ID,
-        "event": event_type
-    }])
-
-    if not os.path.exists(USAGE_PATH):
-        row.to_csv(USAGE_PATH, index=False)
-    else:
-        row.to_csv(USAGE_PATH, mode="a", header=False, index=False)
-
-# Log page visit
-log_usage("page_loaded")
-
-AI_QA_PATH = os.path.join(ANALYTICS_DIR, "ai_questions.csv")
-
-def log_ai_question(question: str, scenario: str):
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-    row = pd.DataFrame([{
-        "timestamp_utc": now,
-        "session_id": SESSION_ID,
-        "scenario": scenario,
-        "question": question
-    }])
-
-    if not os.path.exists(AI_QA_PATH):
-        row.to_csv(AI_QA_PATH, index=False)
-    else:
-        row.to_csv(AI_QA_PATH, mode="a", header=False, index=False)
-
-
-TITLES_ENRICHED_PATH = Path("data") / "titles_enriched.csv"
-
-
-@st.cache_data
-def load_enriched_titles():
-    if not TITLES_ENRICHED_PATH.exists():
-        return None
-    df = pd.read_csv(TITLES_ENRICHED_PATH)
-    # Safety: ensure value_score_norm exists
-    if "value_score_norm" not in df.columns:
-        df["value_score_norm"] = 0.0
-    return df
-
-
-# --- GA4 Measurement Protocol helper ---
-import uuid, requests
-
-def send_ga_event(event_name: str, params: dict):
-    """Fire-and-forget GA4 event. No-op if secrets not configured."""
-    ga = st.secrets.get("ga4", {})
-    mid = ga.get("measurement_id")
-    sec = ga.get("api_secret")
-    if not (mid and sec):
-        return  # GA not configured
-
-    payload = {
-        "client_id": str(uuid.uuid4()),  # anonymous session id
-        "events": [{
-            "name": event_name,
-            "params": params
-        }]
-    }
-    try:
-        requests.post(
-            f"https://www.google-analytics.com/mp/collect"
-            f"?measurement_id={mid}&api_secret={sec}",
-            json=payload,
-            timeout=4
-        )
-    except Exception:
-        # never break the app if GA is down
-        pass
-
-
-# Optional: lightweight clustering for other places (kept from your backup;
-# we will handle TF-IDF import again inside the map block to be robust)
+# --- OpenAI availability flag ---
 try:
-    from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.decomposition import PCA
-    HAVE_SK = True
+    from openai import OpenAI
+    client = OpenAI()
+    _openai_ok = True
 except Exception:
-    HAVE_SK = False
+    _openai_ok = False
 
-ROOT = Path(__file__).resolve().parent
-DATA = ROOT / "data"
+LOG_DIR = Path("analytics")
+LOG_DIR.mkdir(exist_ok=True)
 
-# ---------------- embeddings + projection helpers (NEW) ----------------
-def _load_embeddings():
+USAGE_LOG = LOG_DIR / "usage_log.csv"
+FEEDBACK_LOG = LOG_DIR / "feedback_log.csv"
+
+
+def _append_csv(path: Path, fieldnames, row: dict) -> None:
+    """Append a row to CSV, writing header if file is new."""
+    is_new = not path.exists()
+    with path.open("a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if is_new:
+            writer.writeheader()
+        writer.writerow(row)
+
+
+def log_usage(event_type: str, scenario: str | None = None, extra: dict | None = None) -> None:
     """
-    Return (index, meta_df) if FAISS artifacts exist; else (None, None).
-    We still re-encode text with Sentence-Transformers to keep logic simple and portable.
+    Log simple usage events: page load, scenario change, AI question, etc.
+    event_type: short code like 'page_load', 'scenario_change', 'ai_question'
+    scenario:   'Conservative' / 'Base case' / 'Aggressive', or None
+    extra:      optional dict that will be JSON-stringified
     """
+<<<<<<< HEAD
     idx_path = DATA / "embeddings.index"
     meta_path = DATA / "embeddings_meta.parquet"
     try:
@@ -638,811 +555,1441 @@ Think of this as a **first-pass deal prep lens**:
 *“If Netflix ends up with full WB control, where are the obvious content and platform pressure points?”*  
 Use it to frame questions and sanity-check narratives, not as a binding rights database.
         """
+=======
+    row = {
+        "timestamp_utc": datetime.utcnow().isoformat(timespec="seconds"),
+        "event_type": event_type,
+        "scenario": scenario or "",
+        "extra": json.dumps(extra, ensure_ascii=False) if extra is not None else "",
+    }
+    _append_csv(
+        USAGE_LOG,
+        fieldnames=["timestamp_utc", "event_type", "scenario", "extra"],
+        row=row,
+>>>>>>> 7dbf3bd (Update: WB sample expanded to 173 + AI Analyst + fallout simulator visuals)
     )
 
-with right_col:
+# --- Helper: derive "Top 5 Fallout Findings" from current data ----------------
+def build_shock_findings(titles_df: pd.DataFrame, summary: dict, platform_exposure: pd.DataFrame, scenario: str) -> list[str]:
+    findings = []
+
+    # 1) Platform exposure headline
+    top_platform = summary.get("top_platform", "another platform")
+    outside_pct = summary.get("outside_pct", 0.0)
+    findings.append(
+        f"**{top_platform}** currently carries about **{outside_pct:.0f}%** of the modeled WB value that still lives outside Netflix."
+    )
+
+    # 2) Franchise headline
+    top_franchise = summary.get("top_franchise", "a key WB franchise")
+    findings.append(
+        f"**{top_franchise}** screens as the single biggest WB franchise in this sample by modeled content value."
+    )
+
+    # 3) Rival platform “hurt index”
+    if isinstance(platform_exposure, pd.DataFrame) and not platform_exposure.empty:
+        pe = platform_exposure.sort_values("value", ascending=False).reset_index(drop=True)
+        if len(pe) > 0:
+            p_name = pe.loc[0, "platform"]
+            p_share = float(pe.loc[0, "share"]) * 100.0 if "share" in pe.columns else float("nan")
+            findings.append(
+                f"Under the current catalog, **{p_name}** is the rival service most exposed to a Netflix–WB consolidation "
+                f"(about **{p_share:.0f}%** of the modeled WB value that sits off Netflix)."
+            )
+
+        if len(pe) > 1:
+            p2_name = pe.loc[1, "platform"]
+            findings.append(
+                f"Second in line: **{p2_name}**, which could lose key WB depth even if the very top franchises stay put."
+            )
+    else:
+        findings.append(
+            "Rival platform exposure is still being modeled; add more WB titles to sharpen where the pain lands."
+        )
+
+    # 4) Scenario framing
+    scenario_label = {
+        "Conservative": "only the most exposed titles move first",
+        "Base case": "a measured pull-in of the highest-leverage WB series",
+        "Aggressive": "a hard pivot where Netflix gradually becomes the default WB home",
+    }.get(scenario, "a measured consolidation of WB content into Netflix")
+
+    findings.append(
+        f"With the slider set to **{scenario}**, the model assumes **{scenario_label}** — use this to stress-test best, base, and worst-case views."
+    )
+
+    # 5) “Long tail” note (if we have enough titles)
+    if isinstance(titles_df, pd.DataFrame) and "title" in titles_df.columns:
+        n_titles = int(titles_df["title"].nunique())
+        findings.append(
+            f"This view is built on **{n_titles}** modeled WB titles — enough to show how value clusters in a few big franchises while the long tail spreads across rivals."
+        )
+
+    # Keep exactly 5 lines (truncate if more)
+    return findings[:5]
+
+
+def log_feedback(rating: int, comment: str, scenario: str | None = None) -> None:
+    """
+    Log quick user feedback (1–5 stars + free-text comment).
+    """
+    row = {
+        "timestamp_utc": datetime.utcnow().isoformat(timespec="seconds"),
+        "rating": rating,
+        "comment": comment.strip(),
+        "scenario": scenario or "",
+    }
+    _append_csv(
+        FEEDBACK_LOG,
+        fieldnames=["timestamp_utc", "rating", "comment", "scenario"],
+        row=row,
+    )
+# ---------- End logging helpers ----------
+
+
+# If you removed logging_utils, you can delete this import.
+from logging_utils import log_usage
+#, log_ai_question
+
+# Page config MUST be the first Streamlit call.
+st.set_page_config(
+    page_title="Netflix / Warner Bros Deal Impact Lab",
+    layout="wide",
+)
+
+def render_poster_strip():
+    """
+    Shows a thin horizontal collage of WB / Netflix posters under the hero.
+    Non-blocking: if there are no images, it silently does nothing.
+    """
+    poster_dir = Path("assets/posters")
+    if not poster_dir.exists():
+        return
+
+    files = sorted(list(poster_dir.glob("*.jpg")) + list(poster_dir.glob("*.png")))
+
+    if not files:
+        return  # nothing to show
+
+    # Keep it to first 8 to avoid clutter
+    files = files[:8]
+
     st.markdown(
-        """<div class='section-heading' style='margin-top:0;'>WHAT THIS DASHBOARD HELPS YOU ANSWER</div>
+        "<div style='margin-top:10px; margin-bottom:6px; font-size:0.8rem; "
+        "opacity:0.75;'>Sample of WB IP in this model</div>",
+        unsafe_allow_html=True,
+    )
 
-**For analysts, reporters & strategists**
+    cols = st.columns(len(files))
+    for col, f in zip(cols, files):
+        # OLD: col.image(str(f), use_container_width=True)
+        col.image(str(f), use_column_width=True)
 
-- **Which WB titles matter most to Netflix?**  
-  → Check the **Deal Deck metrics** and **Spotlight IPs** ranked by value score.
 
-- **Which platforms lose leverage if Netflix pulls WB content in-house?**  
-  → See the **Platform Exposure Risk** table.
 
-- **How do WB franchises cluster by audience DNA?**  
-  → Use the **IP similarity map** (UMAP/PCA scatter).
+# -------------------------------
+# Paths / constants
+# -------------------------------
+DATA_DIR = Path("data")
+#CATALOG_PATH = DATA_DIR / "titles_catalog.csv"
+ENRICHED_PATH = DATA_DIR / "tites_enriched.csv"
+#FRANCHISE_PATH = DATA_DIR / "franchises.csv"
 
-- **How big is the “value pool” Netflix consolidates in aggressive scenarios?**  
-  → Read the **deal-impact snapshot** headline above the risk table.
-
-Use this page as a **one-stop prep sheet** before building slides, writing notes, or doing deeper Excel modeling.
+# -------------------------------
+# Base CSS & small UI helpers
+# -------------------------------
+def inject_base_css() -> None:
+    """Inject shared CSS for tiles and headings."""
+    st.markdown(
+        """
+        <style>
+        .main .block-container {
+            padding-top: 1.5rem;
+            padding-bottom: 2rem;
+        }
+        .metric-tile {
+            background: #111827;
+            border-radius: 18px;
+            padding: 1.1rem 1.3rem;
+            border: 1px solid #1f2937;
+        }
+        .metric-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #9CA3AF;
+        }
+        .metric-value {
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: #F9FAFB;
+        }
+        .section-heading {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.6rem 0;
+        }
+        </style>
         """,
         unsafe_allow_html=True,
     )
 
-st.markdown(
-    "<div class='section-heading'>KEY QUESTIONS AROUND THIS DEAL</div>",
-    unsafe_allow_html=True,
-)
 
-st.markdown(
+
+def metric_tile(label: str, value: str, caption: str = "") -> None:
+    """Reusable metric tile."""
+    st.markdown(
+        f"""
+        <div class="metric-tile">
+          <div class="metric-label">{label}</div>
+          <div class="metric-value">{value}</div>
+          <div style="font-size:0.8rem; color:#9CA3AF; margin-top:0.25rem;">
+            {caption}
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+def section_heading(text: str) -> None:
+    """Consistent section heading."""
+    st.markdown(f"<div class='section-heading'>{text}</div>", unsafe_allow_html=True)
+
+
+# Call once near the top of the app
+inject_base_css()
+
+
+# -------------------------------
+# Data loading & core metrics
+# -------------------------------
+
+# #@st.cache_data(show_spinner=False)
+# def load_titles() -> pd.DataFrame:
+#     """Load catalog + enriched data and return a clean titles DataFrame."""
+#     # Base catalog
+#     try:
+#         catalog = pd.read_csv(CATALOG_PATH)
+#     except FileNotFoundError:
+#         st.error(f"Missing catalog file at {CATALOG_PATH}")
+#         return pd.DataFrame()
+
+#     # Optional enrichment
+#     enriched = None
+#     try:
+#         enriched = pd.read_csv(ENRICHED_PATH)
+#     except FileNotFoundError:
+#         enriched = None
+
+#     if enriched is not None:
+#         # Prefer merge on tmdb_id if available
+#         if "tmdb_id" in catalog.columns and "tmdb_id" in enriched.columns:
+#             df = catalog.merge(enriched, on="tmdb_id", how="left")
+#         elif len(catalog) == len(enriched):
+#             # Fallback: assume row-aligned and concat
+#             df = pd.concat(
+#                 [catalog.reset_index(drop=True), enriched.reset_index(drop=True)],
+#                 axis=1,
+#             )
+#         else:
+#             df = catalog.copy()
+#     else:
+#         df = catalog.copy()
+
+#     # Deduplicate columns
+#     df = df.loc[:, ~df.columns.duplicated()]
+#     # ---- Normalize title column (handle title_x/title_y from merges) ----
+#     title_cols = [c for c in df.columns if c.lower().startswith("title")]
+#     if "title" in df.columns:
+#         df["title"] = df["title"].astype(str)
+#     elif title_cols:
+#         # Take the first title-like column (e.g., title_x) as canonical
+#         df["title"] = df[title_cols[0]].astype(str)
+#     else:
+#         # Fallback if somehow no title present
+#         df["title"] = ""
+
+
+#     # ---- Ensure core columns exist ----
+#     # current_platform
+#     if "current_platform" not in df.columns:
+#         plat_cols = [c for c in df.columns if "platform" in c.lower()]
+#         if plat_cols:
+#             df["current_platform"] = df[plat_cols[0]]
+#         else:
+#             df["current_platform"] = ""
+#     df["current_platform"] = df["current_platform"].astype(str).fillna("")
+
+#     # franchise_group
+#     if "franchise_group" not in df.columns:
+#         fr_cols = [c for c in df.columns if "franchise" in c.lower()]
+#         if fr_cols:
+#             df["franchise_group"] = df[fr_cols[0]]
+#         else:
+#             df["franchise_group"] = "Standalone / other"
+#     df["franchise_group"] = df["franchise_group"].astype(str).fillna("Standalone / other")
+
+#     # value_score_norm
+#     if "value_score_norm" not in df.columns:
+#         if "value_score_raw" in df.columns:
+#             raw = df["value_score_raw"].astype(float)
+#             df["value_score_norm"] = (raw - raw.min()) / (raw.max() - raw.min() + 1e-9)
+#         else:
+#             df["value_score_norm"] = 1.0  # flat fallback
+
+#     # Sort by modeled value, highest first
+#     df = df.sort_values("value_score_norm", ascending=False).reset_index(drop=True)
+#     return df
+
+DATA = Path("data")
+TITLES_ENRICHED_PATH = DATA / "titles_enriched.csv"
+
+@st.cache_data(show_spinner=False)
+def load_titles() -> pd.DataFrame:
     """
-Use this dashboard as a **first-pass lens** on questions like:
+    Load the modeled WB titles directly from titles_enriched.csv.
 
-- **Which WB franchises become true differentiators for Netflix?**  
-  → e.g., *Game of Thrones, Harry Potter, DC, LOTR*, and which long-tail titles quietly matter.
-
-- **Which platforms are most exposed if Netflix pulls WB content closer over time?**  
-  → Which Max / third-party deals look most vulnerable under aggressive consolidation.
-
-- **How much “value pool” is at stake in different scenarios?**  
-  → How much of WB’s modeled content value currently touches other platforms vs. Netflix.
-
-- **Where will fans feel the impact first?**  
-  → Which shows are likely to move, disappear, or become harder to binge outside Netflix.
-
-- **What story do investors / reporters tend to miss?**  
-  → That it’s not just about one or two flagships, but about clusters of similar IP and the 
-    **aggregate leverage** Netflix gains over time.
-"""
-)
-
-
-with st.expander(" New to streaming deals? Start here"):
-    st.markdown("""
-**Key ideas in plain English**
-
-- A show has an **owner** (who owns the IP) and a **home** (where it streams).  
-- Sometimes the owner and the streamer are the same company; sometimes they are not.  
-- When a big merger happens, the new parent company can **pull shows closer** over time:
-  - Keep them where they are until contracts expire  
-  - Move them to their own platform when it makes strategic sense  
-- High-value titles (huge fandom, lots of viewing) have **outsized impact**:
-  - They drive subscriptions, reduce churn, and anchor bundles  
-- This tool:
-  - Lists key WB franchises  
-  - Uses audience data (via TMDb) to estimate **relative importance**  
-  - Shows where those titles live today  
-  - Highlights where the **biggest competitive shocks** could be if Netflix consolidates them.
-""")
-
-
-# --- Brand matching helpers (place near imports / after reading CSV) ---
-BRAND_PATTERNS = {
-    "Amazon": ["Amazon", "Prime Video"],
-    "Warner Brothers HBO": ["HBO", r"\bMax\b", "Warner", "WBD", "Warner Bros"],
-    "Paramount Global": ["Paramount", "Showtime"],
-    "Comcast (NBCUniversal)": ["Peacock", "NBC", "NBCUniversal", "Comcast"],
-    "Disney": ["Disney", "Hotstar", r"Star\+"],
-    "Netflix": ["Netflix"],
-    "Apple": [r"Apple TV\+"],
-    "Sony": ["Sony", "Crunchyroll"],   # adjust if you don’t want Crunchyroll here
-    "Hulu": ["Hulu"],
-    "Max":  [r"\bMax\b", "HBO"],
-    "Peacock": ["Peacock"],
-}
-
-def brand_regex(brand: str) -> str:
-    pats = BRAND_PATTERNS.get(brand, [brand])
-    return r"(?i)(" + "|".join(pats) + r")"
-
-def filter_for_buyer_target(fr: pd.DataFrame, buyer: str, target: str) -> pd.DataFrame:
+    For v2 we treat titles_enriched.csv (built from wb_seed_titles.csv + TMDb)
+    as the single source of truth, instead of merging with titles_catalog.
     """
-    Return rows relevant to buyer or target based on platform or origin/brand hints.
-    - Looks in current_platform and origin_label/original_network
-    - Uses brand-specific regex patterns (expanded with Apple TV+ variants)
+    df = pd.read_csv(TITLES_ENRICHED_PATH)
+
+    # Ensure basic columns exist
+    if "title" not in df.columns:
+        raise ValueError("titles_enriched.csv must have a 'title' column")
+    if "current_platform" not in df.columns:
+        # default to empty if missing, but you really want the TMDb-driven value
+        df["current_platform"] = ""
+    if "franchise_group" not in df.columns:
+        df["franchise_group"] = "Standalone"
+
+    # Normalize column types
+    df["title"] = df["title"].astype(str)
+    df["current_platform"] = df["current_platform"].astype(str).fillna("")
+    df["franchise_group"] = df["franchise_group"].astype(str).fillna("Standalone")
+
+    # Ensure value_score_norm exists
+    if "value_score_norm" not in df.columns:
+        if "value_score_raw" in df.columns:
+            raw = df["value_score_raw"].astype(float)
+            df["value_score_norm"] = (raw - raw.min()) / (raw.max() - raw.min() + 1e-9)
+        else:
+            # fallback: everyone equal weight
+            df["value_score_norm"] = 1.0 / max(len(df), 1)
+
+    # Sort by modeled value
+    df_sorted = df.sort_values("value_score_norm", ascending=False).reset_index(drop=True)
+    return df_sorted
+
+
+def _canonical_platform(name: str) -> str:
+    """Map messy platform strings to a small set of platform labels."""
+    if not isinstance(name, str):
+        return "Other/Unknown"
+    n = name.lower()
+    if "netflix" in n:
+        return "Netflix"
+    if "max" in n or "hbo" in n:
+        return "Max"
+    if "prime" in n or "amazon" in n:
+        return "Prime Video"
+    if "hulu" in n:
+        return "Hulu"
+    if "disney" in n:
+        return "Disney+"
+    return name.strip() or "Other/Unknown"
+
+
+def build_platform_exposure_df(df: pd.DataFrame) -> pd.DataFrame:
     """
-    BRAND_PATTERNS = {
-        "Amazon": r"amazon|prime video|freevee",
-        "Warner Brothers HBO": r"hbo|max|warner bros|wbd",
-        "Comcast (NBCUniversal)": r"peacock|nbc|comcast|universal",
-        "Paramount Global": r"paramount\+|paramount plus|showtime",
-        "Disney": r"disney\+|hulu|star\+",
-        "Netflix": r"netflix",
-        "Apple": r"apple tv\+|apple tv plus|appletv\+|apple tv",
-        "Sony": r"\bsony\b",
-        "Hulu": r"\bhulu\b",
-        "Max": r"\bmax\b|hbo",
-        "Peacock": r"\bpeacock\b",
+    Take titles_df and return a row-per-(title, platform) table with
+    a value_share column that splits value_score_norm across platforms.
+
+    Example:
+      current_platform = 'Netflix/Max', value_score_norm = 10
+      -> Netflix: 5, Max: 5
+    """
+    if df is None or df.empty:
+        return pd.DataFrame(columns=["title", "platform", "value_share"])
+
+    df = df.copy()
+    df["current_platform"] = df["current_platform"].fillna("Other/Unknown").astype(str)
+
+    rows = []
+    for _, row in df.iterrows():
+        raw = row["current_platform"]
+        # split on / , & etc.
+        parts = re.split(r"[\/,&]", raw)
+        platforms = [_canonical_platform(p) for p in parts if p.strip()]
+        if not platforms:
+            platforms = ["Other/Unknown"]
+
+        value = row.get("value_score_norm", 1.0)
+        share = value / len(platforms)
+
+        for p in platforms:
+            rows.append(
+                {
+                    "title": row.get("title", ""),
+                    "platform": p,
+                    "value_share": share,
+                }
+            )
+
+    return pd.DataFrame(rows)
+
+@st.cache_data(show_spinner=False)
+def compute_summary_metrics(df: pd.DataFrame) -> dict:
+    """
+    High-level metrics for the hero tiles.
+
+    Uses the same shared-window exposure model as the platform chart:
+    multi-platform titles split their value across the services they appear on.
+    """
+    if df is None or df.empty:
+        empty_plat = pd.DataFrame(columns=["platform", "value", "share", "value_share"])
+        return {
+            # old keys (still used in some places)
+            "total_titles": 0,
+            "outside_pct": 0.0,
+            "top_franchise": "N/A",
+            "top_platform": "N/A",
+            # new / nicer keys
+            "share_outside_netflix": 0.0,      # 0–1 for % formatting
+            "platform_exposure": empty_plat,   # for charts
+        }
+
+    df = df.copy()
+
+    # How many unique WB titles are we modeling?
+    if "title" in df.columns:
+        total_titles = int(df["title"].nunique())
+    else:
+        total_titles = int(len(df))
+
+    # ---- Platform exposure using shared-window model ----
+    plat_exposure = build_platform_exposure_df(df)  # uses value_score_norm
+
+    if plat_exposure.empty:
+        outside_share = 0.0
+        outside_pct = 0.0
+        top_platform = "N/A"
+    else:
+        total_value = plat_exposure["value_share"].sum()
+        outside_value = plat_exposure.loc[
+            plat_exposure["platform"] != "Netflix", "value_share"
+        ].sum()
+
+        outside_share = (outside_value / total_value) if total_value > 0 else 0.0
+        outside_pct = outside_share * 100.0
+
+        non_nf = plat_exposure[plat_exposure["platform"] != "Netflix"]
+        if non_nf.empty:
+            top_platform = "None"
+        else:
+            plat_agg = (
+                non_nf.groupby("platform")["value_share"]
+                .sum()
+                .reset_index()
+                .sort_values("value_share", ascending=False)
+            )
+            top_platform = str(plat_agg.iloc[0]["platform"])
+
+    # ---- Top franchise by modeled value ----
+    if "franchise_group" in df.columns:
+        fr_col = "franchise_group"
+    elif "franchise" in df.columns:
+        fr_col = "franchise"
+    else:
+        fr_col = None
+
+    if fr_col is None:
+        top_franchise = "Not labeled yet"
+    else:
+        fr_agg = (
+            df.groupby(fr_col)["value_score_norm"]
+            .sum()
+            .reset_index()
+            .sort_values("value_score_norm", ascending=False)
+        )
+        top_franchise = str(fr_agg.iloc[0][fr_col])
+
+    return {
+        # old keys (for any legacy references)
+        "total_titles": total_titles,
+        "outside_pct": outside_pct,              # 0–100
+        "top_franchise": top_franchise,
+        "top_platform": top_platform,
+        # new / nicer keys used by tiles & donut
+        "share_outside_netflix": outside_share,  # 0–1, use with :.0%
+        "platform_exposure": plat_exposure,
     }
 
-    buy_pat = BRAND_PATTERNS.get(buyer, buyer.lower())
-    tgt_pat = BRAND_PATTERNS.get(target, target.lower())
 
-    def _text_cols(row) -> str:
-        return " | ".join([
-            str(row.get("current_platform", "")),
-            str(row.get("origin_label", "")),
-            str(row.get("original_network", "")),
-            str(row.get("original_brand", "")),
-        ]).lower()
+# --- Franchise normalizer for seed data ---------------------------------------
+def normalize_franchise(raw: str) -> str:
+    """Map messy franchise labels from wb_seed_titles.csv into clean buckets."""
+    if not isinstance(raw, str) or not raw.strip():
+        return "Other WB IP"
 
-    df2 = fr.copy()
-    hay = df2.apply(_text_cols, axis=1)
+    s = raw.strip()
 
-    buy_mask = hay.str.contains(buy_pat, regex=True, na=False)
-    tgt_mask = hay.str.contains(tgt_pat, regex=True, na=False)
-    out = df2.loc[buy_mask | tgt_mask].copy()
+    # Thrones / Westeros universe
+    if any(k in s for k in ["Game of Thrones", "Song of Ice and Fire", "Westeros"]):
+        return "Game of Thrones / Westeros"
 
-    # As a last resort, infer from platform text if origin is missing
-    if "origin_label" in out.columns:
-        empty_origin = out["origin_label"].fillna("").eq("")
-        out.loc[empty_origin, "origin_label"] = out.loc[empty_origin, "current_platform"].apply(infer_brand_text)
+    # Big Bang universe
+    if "Big Bang Theory" in s:
+        return "The Big Bang Theory Franchise"
 
-    return out.reset_index(drop=True)
+    # Wizarding World
+    if any(k in s for k in ["Harry Potter", "Wizarding World", "Fantastic Beasts"]):
+        return "Wizarding World / Harry Potter"
+
+    # DC + Arrowverse + Gotham/Metropolis heroes
+    if any(
+        k in s
+        for k in [
+            "Arrowverse",
+            "DC Extended Universe",
+            "DC Movies",
+            "Batman",
+            "Superman",
+            "Justice League",
+            "Wonder Woman",
+            "Gotham",
+        ]
+    ):
+        return "DC / Gotham / Metropolis"
+
+    # Sopranos world
+    if "Sopranos" in s:
+        return "The Sopranos Franchise"
+
+    # Friends
+    if "Friends" in s:
+        return "Friends"
+
+    # Fallback: generic bucket for remaining WB titles
+    return "Other WB IP"
 
 
-# ---------------- Fixed Scenario: Netflix × Warner Bros Discovery ----------------
-buyer = "Netflix"
-target = "Warner Brothers HBO"
 
-st.markdown("""
-<div class='toolbar'>
-  <p><strong>Scenario:</strong> This special edition focuses on <strong>Netflix</strong> acquiring 
-  <strong>Warner Bros Discovery / HBO</strong>. Other combinations are out of scope by design.</p>
-</div>
-""", unsafe_allow_html=True)
+def build_platform_exposure_df(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Returns a tidy dataframe with modeled WB value on non-Netflix platforms.
 
-log_usage(f"scenario_fixed_{buyer}_{target}_netflix_wbd")
+    Columns: platform, value, share, value_share
+    """
+    base = df.copy()
 
+    # Clean up platform labels a bit
+    plat_raw = base["current_platform"].fillna("Unknown")
+
+    plat_clean = (
+        plat_raw
+        .str.replace("HBO Max", "Max", regex=False)
+        .str.replace("HBOMax", "Max", regex=False)
+        .str.replace("Netflix / Max", "Netflix + Max", regex=False)
+        .str.strip()
+    )
+
+    base["platform_clean"] = plat_clean
+
+    # Keep only non-Netflix platforms for this view
+    non_nf = base[~base["platform_clean"].str.contains("Netflix", case=False, na=False)]
+
+    if non_nf.empty:
+        return pd.DataFrame(columns=["platform", "value", "share", "value_share"])
+
+    plat_exposure = (
+        non_nf
+        .groupby("platform_clean")["value_score_norm"]
+        .sum()
+        .reset_index()
+        .rename(columns={"platform_clean": "platform", "value_score_norm": "value"})
+    )
+
+    total = plat_exposure["value"].sum()
+    plat_exposure["share"] = (
+        plat_exposure["value"] / total if total > 0 else 0.0
+    )
+    # keep a separate column so older code using "value_share" still works
+    plat_exposure["value_share"] = plat_exposure["share"]
+
+    return plat_exposure
+
+
+
+
+# Load data once and compute summary
+titles_df = load_titles()
+# ------------------------------------------
+# Normalize title column across datasets
+# ------------------------------------------
+possible_title_cols = ["title", "Title", "name", "Name", "show", "movie"]
+
+found_title = None
+for col in possible_title_cols:
+    if col in titles_df.columns:
+        found_title = col
+        break
+
+if found_title:
+    titles_df = titles_df.rename(columns={found_title: "title"})
+else:
+    titles_df["title"] = ""  # fallback if nothing found
+
+if "franchise_group" in titles_df.columns:
+    titles_df["franchise_group"] = titles_df["franchise_group"].apply(normalize_franchise)
+
+
+
+# --- Helper: representative poster per franchise (for hover) ---
+poster_lookup = {}
+if (
+    isinstance(titles_df, pd.DataFrame)
+    and "franchise_group" in titles_df.columns
+    and "tmdb_poster_path" in titles_df.columns
+):
+    poster_lookup = (
+        titles_df.dropna(subset=["franchise_group", "tmdb_poster_path"])
+        .groupby("franchise_group")["tmdb_poster_path"]
+        .first()
+        .to_dict()
+    )
+
+TMDB_POSTER_BASE = "https://image.tmdb.org/t/p/w185"
+
+
+titles_sorted = titles_df  # backwards-compat with older code
+SUMMARY = compute_summary_metrics(titles_df)
+PLATFORM_EXPOSURE = build_platform_exposure_df(titles_df)
+
+# --- Ensure risk_top is available for the AI context -------------------------
+try:
+    _risk_df = titles_df.copy()
+
+    # Compute base risk using your scenario multiplier logic
+    _risk_df["risk_score"] = _risk_df["value_score_norm"] * (
+        1.0 if scenario == "Base case"
+        else 0.6 if scenario == "Conservative"
+        else 1.4
+    )
+
+    # Pick the columns we need
+    cols = [
+        c for c in _risk_df.columns
+        if c in ("title", "franchise_group", "current_platform", "risk_score")
+    ]
+
+    risk_top = (
+        _risk_df[cols]
+        .sort_values("risk_score", ascending=False)
+        .head(6)
+        .reset_index(drop=True)
+    )
+
+except Exception as e:
+    print("Risk model fallback:", e)
+    risk_top = None
+
+
+# -------------------------------
+# Hero + headline metrics
+# -------------------------------
+
+if titles_df is None or titles_df.empty:
+    st.error("Catalog data could not be loaded. Check the CSVs in the data/ folder.")
+    st.stop()
+
+total_titles = SUMMARY["total_titles"]
+outside_pct = SUMMARY["outside_pct"]
+top_franchise = SUMMARY["top_franchise"]
+top_platform = SUMMARY["top_platform"]
+
+# ---- Hero title & version ----
 st.markdown(
-    "<div class='section-heading'>SCENARIO ASSUMPTIONS</div>",
+    """
+    <div style='text-align:center; margin-top:0.5rem; margin-bottom:0.2rem;'>
+      <span style='font-size:3.8rem; font-weight:800; color:#E50914; '>Netflix</span>
+      <span style='font-size:3.8rem; font-weight:800; color:#DDDDDD; '>&nbsp;/</span>
+      <span style='font-size:3.8rem; font-weight:800; color:#FFC72C; '>&nbsp;Warner&nbsp;Bros</span>
+    </div>
+    <div style='text-align:center; font-size:2.0rem; color:#BBBBBB; margin-bottom:0.8rem;'>
+      Deal Impact Lab • A.I Analyst • <span style='font-weight:600;'>Media Merger Analysis v2</span>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
+log_usage("page_load")
+
+# # ---- One-line fallout insight ----
+# st.markdown(
+#     f"""
+#     <div style='text-align:center; max-width:900px; margin:0 auto 1.3rem auto; font-size:0.98rem; color:#DDDDDD;'>
+#       <strong>Fallout at a glance:</strong> roughly <strong>{outside_pct:0.0f}%</strong> of the modeled WB content value in this sample
+#       currently lives on <em>non-Netflix platforms</em>. If Netflix consolidates the WB library, those services take the first hit.
+#     </div>
+#     """,
+#     unsafe_allow_html=True,
+# )
+# --- Narrative Hook ---
+st.markdown(
+    """
+    <div style='font-size:1.15rem; font-weight:500; margin-top:-10px; margin-bottom:25px; opacity:0.9;'>
+        <span style='color:#ffffff;'>If Netflix takes Warner Bros,</span>
+        <b>who bleeds first?</b><br>
+        This Fallout Simulator models which <b>platforms</b> and <b>franchises</b> feel the pain first 
+        under Conservative / Base / Aggressive pull-in scenarios.
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# st.markdown(
+#     """
+# <div style='margin-top:10px; padding:10px; border-left: 3px solid #E50914;'>
+# <strong>AI Deal Analyst available:</strong>  
+# You can ask questions about the Netflix × Warner Bros deal — scenario impacts, platform exposure, 
+# and title-level dynamics. Responses are generated using the dashboard’s real data and selected assumptions.
+# </div>
+# """,
+#     unsafe_allow_html=True,
+# )
+
+# ---- AI DEAL ANALYST — NETFLIX × WB CO-PILOT ----
+#st.markdown("---")
+# st.markdown(
+#     """
+# <div style='padding:14px 16px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);
+#             background:rgba(10,10,10,0.75); margin-bottom:12px;'>
+#   <div style='font-size:1.75rem; font-weight:600; margin-bottom:4px;'>
+#     AI Deal Analyst — ask how this Netflix–Warner Bros scenario plays out
+#   </div>
+#   <div style='font-size:0.85rem; opacity:0.85; margin-bottom:6px;'>
+#     Answers are grounded in this dashboard’s live data: franchise value, platform exposure,
+#     your scenario setting, and the modeled WB catalog sample.
+#   </div>
+# </div>
+# """,
+#     unsafe_allow_html=True,
+# )
+
+st.markdown(
+    """
+<style>
+/* 1. Global Injection for High-Contrast Text */
+.data-analyst-box p {
+    font-family: monospace, sans-serif; /* Monospace for a terminal feel */
+}
+/* 2. Style for the accent color used on "AI Deal Analyst" */
+.accent-title {
+    color: #00FF7F; /* Bright, high-contrast Financial Green */
+    font-size: 1.25rem !important; 
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+/* 3. Style for the main description text */
+.sub-text {
+    font-size: 0.95rem;
+    color: #AAAAAA; /* Softer white for secondary information */
+    opacity: 0.85;
+}
+/* 4. Style for the grounded data text */
+.grounded-data-text {
+    color: #4CAF50; /* A slightly darker green for the emphasis text */
+    font-weight: 500;
+}
+</style>
+
+<div class='data-analyst-box' style='
+    padding: 16px; 
+    border-radius: 6px; 
+    border-left: 5px solid #00FF7F; /* Prominent left border (Financial accent) */
+    background: #1C1C1C; /* Very dark charcoal background */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); /* Subtle drop shadow for depth */
+    margin-bottom: 20px;
+'>
+  <div class='accent-title' style='margin-bottom: 8px;'>
+    AI Deal Analyst — ask how this Netflix–Warner Bros scenario plays out
+  </div>
+  <div class='sub-text' style='margin-bottom: 4px;'>
+    Answers are grounded in this dashboard’s <span class='grounded-data-text'>live data</span>: franchise value, platform exposure,
+    your scenario setting, and the modeled WB catalog sample.
+  </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+risk_top = globals().get("risk_top", None)
+
+import json
+
+def build_context_for_llm(
+    titles_df: pd.DataFrame,
+    platform_exposure: pd.DataFrame | None,
+    risk_top: pd.DataFrame | None,
+    scenario: str,
+    hero_summary: dict,
+) -> str:
+    """
+    Build a compact, JSON-serializable context object for the AI analyst.
+
+    We ONLY send small slices of data, and everything is converted to
+    primitive Python types (lists/dicts/floats/strings).
+    """
+
+    # --- Titles slice: top 25 by modeled value ---
+    if titles_df is not None and not titles_df.empty:
+        cols = [
+            c
+            for c in titles_df.columns
+            if c in ("title", "franchise_group", "current_platform", "value_score_norm")
+        ]
+        titles_slice = (
+            titles_df[cols]
+            .sort_values("value_score_norm", ascending=False)
+            .head(25)
+            .reset_index(drop=True)
+            .to_dict(orient="records")
+        )
+    else:
+        titles_slice = []
+
+    # --- Platform exposure slice for donut chart data ---
+    if platform_exposure is not None and not platform_exposure.empty:
+        plat_slice = (
+            platform_exposure[["platform", "value", "share"]]
+            .reset_index(drop=True)
+            .to_dict(orient="records")
+        )
+    else:
+        plat_slice = []
+
+    # --- Top risk titles slice ---
+    if risk_top is not None and not isinstance(risk_top, list):
+        try:
+            risk_slice = risk_top.reset_index(drop=True).to_dict(orient="records")
+        except Exception:
+            risk_slice = []
+    else:
+        risk_slice = risk_top or []
+
+    # --- Hero summary already a dict (from compute_summary_metrics) ---
+    hero_safe = {
+        "total_titles": float(hero_summary.get("total_titles", 0)),
+        "outside_pct": float(hero_summary.get("outside_pct", 0.0)),
+        "top_franchise": str(hero_summary.get("top_franchise", "")),
+        "top_platform": str(hero_summary.get("top_platform", "")),
+    }
+
+    ctx = {
+        "scenario": scenario,
+        "hero_summary": hero_safe,
+        "titles_sample": titles_slice,
+        "platform_exposure": plat_slice,
+        "top_risk_titles": risk_slice,
+    }
+
+    # Make absolutely sure everything is serializable
+    return json.dumps(ctx, indent=2, default=str)
+
+
 scenario = st.radio(
-    "How aggressively do you think Netflix will pull WB content in-house?",
+    r"$\textsf{ How aggressively do you think Netflix will pull WB content in-house?}$",
     options=["Conservative", "Base case", "Aggressive"],
     index=1,
     horizontal=True,
     help=(
         "Conservative: only the most exposed titles move.\n"
-        "Base case: matches current model.\n"
-        "Aggressive: assume Netflix eventually consolidates most WB tentpoles."
+        "Base case: measured consolidation of high-value WB tentpoles.\n"
+        "Aggressive: deep consolidation where Netflix pulls most WB content in-house."
     ),
 )
+log_usage("scenario_change", scenario=scenario)
+
+user_q = st.text_input(
+    r"$\textsf{\Large Question to the analyst}$",
+    placeholder="e.g., Which platforms lose the most leverage if Netflix pulls the top HBO dramas in-house?",
+    key="ai_question",
+)
 
 
-# ---------------- Business-Impact Mode: Netflix × Warner Bros ----------------
-if buyer == "Netflix" and "Warner" in str(target):
-    titles_df = load_enriched_titles()
 
-    if titles_df is not None and not titles_df.empty:
-        # Sort once, reuse everywhere inside this block
-        titles_sorted = titles_df.sort_values("value_score_norm", ascending=False)
-
-        st.markdown("### Deal Deck – Netflix × Warner Bros IP Snapshot")
-
-        # Basic metrics
-        total_titles = len(titles_sorted)
-        high_value_cutoff = 70.0
-        high_value_count = int((titles_sorted["value_score_norm"] >= high_value_cutoff).sum())
-        top_franchises = (
-            titles_sorted["franchise_group"]
-            .value_counts()
-            .head(3)
-            .index.tolist()
+if user_q:
+    if not _openai_ok:
+        st.warning(
+            "The AI Deal Analyst is temporarily unavailable on this deployment. "
+            "Check that OPENAI_API_KEY is set and the OpenAI client is installed."
         )
-
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.metric("Total WB Titles in Focus", f"{total_titles}")
-        with c2:
-            st.metric("High-Value IPs (score ≥ 70)", f"{high_value_count}")
-        with c3:
-            st.metric("Top Franchise Clusters", ", ".join(top_franchises) if top_franchises else "–")
-
-        top5 = titles_sorted.head(5)[["title", "franchise_group", "value_score_norm"]]
-        st.markdown("#### Top IPs by Attention & Popularity (TMDb-based)")
-        st.dataframe(
-            top5.rename(
-                columns={
-                    "title": "Title",
-                    "franchise_group": "Franchise",
-                    "value_score_norm": "Value Score (0–100)",
-                }
-            ),
-            use_container_width=True,
-        )
-
-        st.caption(
-            "Value scores are derived from TMDb popularity and vote counts, normalized to 0–100. "
-            "Data from TMDb; this view is illustrative, not investment advice."
-        )
-
-        # ---- Poster Spotlight ----
-        st.markdown(
-            """
-        <span style='padding:2px 8px; border-radius:999px; background-color:#E50914; font-size:0.7rem; margin-right:4px;'>Netflix</span>
-        <span style='padding:2px 8px; border-radius:999px; background-color:#1E88FF; font-size:0.7rem;'>Warner Bros</span>
-
-        ### Spotlight IPs – What Makes WB Valuable to Netflix
-        """,
-            unsafe_allow_html=True,
-        )
-
-        spotlight = titles_sorted.head(4)
-        cols = st.columns(4)
-        for i, (_, row) in enumerate(spotlight.iterrows()):
-            with cols[i]:
-                poster_url = (
-                    f"https://image.tmdb.org/t/p/w300{row['tmdb_poster_path']}"
-                    if pd.notna(row["tmdb_poster_path"]) and row["tmdb_poster_path"]
-                    else None
-                )
-                if poster_url:
-                    st.image(poster_url, use_column_width=True)
-
-                st.markdown(
-                    f"**{row['title']}**  \n"
-                    f"{row['franchise_group']} • *Value Score:* **{row['value_score_norm']:.1f}**"
-                )
-
-        # ---- Platform Exposure Risk ----
-
-        st.markdown(
-            "<div class='section-heading'>SCENARIO ASSUMPTIONS</div>",
-            unsafe_allow_html=True,
-        )
-
-        scenario = st.radio(
-            "How aggressively do you think Netflix will pull WB content in-house?",
-            options=["Conservative", "Base case", "Aggressive"],
-            index=1,
-            horizontal=True,
-            help=(
-                "Conservative: only the most exposed titles move.\n"
-                "Base case: matches current model.\n"
-                "Aggressive: assume Netflix eventually consolidates most WB tentpoles."
-            ),
-            key="scenario_assumptions_radio",  # <-- unique key
-        )
-
-
-        scenario_multiplier = {
-            "Conservative": 0.6,
-            "Base case": 1.0,
-            "Aggressive": 1.4,
-        }[scenario]
-
-        st.markdown(
-            """
-        <span style='padding:2px 8px; border-radius:999px; background-color:#E50914; font-size:0.7rem; margin-right:4px;'>Netflix</span>
-        <span style='padding:2px 8px; border-radius:999px; background-color:#1E88FF; font-size:0.7rem;'>Warner Bros</span>
-
-        ### Platform Exposure Risk  
-        <small>Which WB titles create the most disruption outside Netflix if brought in-house.</small>
-        """,
-            unsafe_allow_html=True,
-        )
-
-
-        def compute_risk_score(row):
-            platform = str(row["current_platform"])
-            value = row["value_score_norm"]
-
-            if "Max" in platform:
-                return value * 0.2  # low disruption / exposure (owned by WBD)
-            if "Netflix" in platform:
-                return value * 0.4  # medium exposure (already partly on Netflix)
-            return value * 1.0      # highest exposure for third-party platforms
-
-
-        # Base risk dataframe
-        risk_df = titles_sorted.copy()
-        risk_df["risk_score"] = risk_df.apply(compute_risk_score, axis=1)
-
-        # ---- Scenario-adjusted risk dataframe ----
-        # We assume titles_sorted has: title, franchise_group, current_platform, value_score_norm
-        risk_df_scenario = risk_df.copy()
-        risk_df_scenario["Risk Score"] = risk_df_scenario["risk_score"] * scenario_multiplier
-
-        # Rename internal columns to display names once
-        risk_display = risk_df_scenario.rename(
-            columns={
-                "title": "Title",
-                "franchise_group": "Franchise",
-                "current_platform": "Currently On",
-            }
-        )
-
-        # Build the "who is most exposed" table
-        display_cols = ["Title", "Franchise", "Currently On", "Risk Score"]
-
-        risk_top = (
-            risk_display
-            .sort_values("Risk Score", ascending=False)
-            [display_cols]
-            .head(6)
-        )
-
-        st.dataframe(risk_top, use_container_width=True, hide_index=True)
-        st.caption("Risk score = value score × non-Netflix exposure, scaled by the scenario above.")
-
-        # ---- Evidence-based headline summary ----
-        total_value = titles_sorted["value_score_norm"].sum()
-        top_risk_value = risk_top["Risk Score"].sum() if not risk_top.empty else 0.0
-        share_pct = (top_risk_value / total_value * 100) if total_value > 0 else 0.0
-
-        scenario_label = {
-            "Conservative": "only the most exposed titles move",
-            "Base case": "a gradual consolidation of key WB series",
-            "Aggressive": "an aggressive pull-in of most WB tentpoles",
-        }[scenario]
-
-        headline = (
-            f"Under a **{scenario}** view ({scenario_label}), the top {len(risk_top)} exposed WB titles "
-            f"represent roughly **{share_pct:.1f}%** of the modeled WB value pool that currently touches non-Netflix platforms."
-        )
-
-        st.markdown(f"#### Deal-impact snapshot\n{headline}")
-
-        # ---- AI-style explainer for a selected WB title ----
-        st.markdown(
-            "<div class='section-heading'>EXPLAIN THIS TITLE</div>",
-            unsafe_allow_html=True,
-        )
-
-        st.markdown(
-            "Pick a WB title and get a short, scenario-aware explanation of why it matters in this deal."
-        )
-
-        # Build a simple list of titles sorted by risk under the current scenario
-        explainer_df = (
-            risk_display.sort_values("Risk Score", ascending=False)
-            [["Title", "Franchise", "Currently On", "Risk Score", "value_score_norm"]]
-            .drop_duplicates(subset=["Title"])
-        )
-
-        if not explainer_df.empty:
-            default_title = explainer_df["Title"].iloc[0]
-            selected_title = st.selectbox(
-                "Choose a title to explain",
-                explainer_df["Title"].tolist(),
-                index=0,
-                key="explain_title_select",
-            )
-            log_usage(f"explain_title_select{selected_title}")
-
-            row = explainer_df[explainer_df["Title"] == selected_title].iloc[0]
-            franchise = row["Franchise"]
-            platform = row["Currently On"]
-            risk_score = row["Risk Score"]
-            value_score = row["value_score_norm"]
-
-            # Very simple interpretation of platform situation
-            platform_note = "currently anchored on Max."
-            if "Netflix" in platform and "Max" in platform:
-                platform_note = "shared between Netflix and Max right now."
-            elif "Netflix" in platform and "Max" not in platform:
-                platform_note = "already strongly associated with Netflix."
-            elif "Netflix" not in platform and "Max" not in platform:
-                platform_note = f"primarily living on {platform}, outside Netflix and Max."
-
-            # Scenario sentence
-            scenario_label = {
-                "Conservative": "only modest movement from existing windows",
-                "Base case": "a gradual pull of key WB hits into Netflix over time",
-                "Aggressive": "an aggressive consolidation of most WB tentpoles under Netflix",
-            }[scenario]
-
-            st.markdown(
-                f"""
-        **Title:** `{selected_title}`  
-        **Franchise:** `{franchise}`  
-        **Current home:** `{platform}`  
-
-        > **Why this matters under a {scenario} view**
-
-        - This title sits in the **top tier of WB content** by modeled value (normalized score ≈ `{value_score:.2f}`).
-        - Its **platform exposure** risk is relatively high (scenario-adjusted risk score ≈ `{risk_score:.2f}`) because it is {platform_note}
-        - Under the current scenario, we assume **{scenario_label}**, which makes this title a **useful signal** for:
-        - How far Netflix is willing to go on **exclusivity** vs. shared licensing.
-        - How much **churn / leverage** Max and other platforms could lose if Netflix pulls WB content closer.
-        - How fast fans would *feel* the deal in their day-to-day app usage (search, recommendations, binge behavior).
-
-        **How an analyst might use this**
-
-        - In a deck or note, this becomes an example of *“high-value WB IP where the pain lands first”*  
-        - You can pair it with the **Platform Exposure Risk table** and **Spotlight IPs** to show both **micro** (this title) and **macro** (franchise & platform) impact.
-        """
-            )
-        else:
-            st.info("No titles available to explain for this scenario.")
-
-        # ---- AI DEAL ANALYST (PREMIUM MODE) ----
-        st.markdown(
-            "<div style='font-size:1.1rem; font-weight:600; margin-bottom:6px;'>Ask the AI Deal Analyst About The Netflix–WB Deal:</div>",
-            unsafe_allow_html=True,
-        )
-
-        st.markdown("scenario impacts, or how to use this dashboard for reporting and notes.")
-
-        user_q = st.text_input(
-            "Your question",
-            placeholder="e.g., Which platforms lose the most leverage if Netflix consolidates the top WB franchises?",
-        )
-
-        # Only log when user types something
-        if user_q:
-            log_usage("ai_question_typed")
-            log_ai_question(user_q, scenario)
-
-
-        # Helper to build structured context for the LLM
-        def build_context():
-            ctx = {
-                "deal_summary": deal_summary_text,
-                "scenario": scenario,
-                "scenario_multiplier": scenario_multiplier,
-                "top_risk_titles": risk_top.to_dict(orient="records"),
-                "spotlight_titles": titles_sorted.head(8).to_dict(orient="records"),
-            }
-            return json.dumps(ctx, indent=2)
-
-
-        # ---- Handle AI Response ----
-        if user_q:
-            # If OpenAI is not available, show graceful fallback
-            if not _openai_ok:
-                st.warning(
-                    "⚠️ The AI Deal Analyst is temporarily unavailable on this deployment "
-                    "(OpenAI client is not installed or configured). The rest of the dashboard works normally."
-                )
-            else:
-                with st.spinner("Analyzing with your scenario, exposure scores, and franchise data..."):
-                    try:
-                        sys_prompt = f"""
-        You are an elite senior media strategy analyst specializing in mergers, content economics,
-        and platform exposure. You answer concisely, using evidence from the provided structured data only.
-
-        Here is the structured context from the dashboard (deal summary, scenario, top risk titles, spotlight IP, risk scores):
-        {build_context()}
-
-        Rules:
-        - Never hallucinate titles not in the provided data.
-        - You MUST tie your answer to scenario label and risk scores where relevant.
-        - If user asks for a prediction, phrase it as directional analysis not certainty.
-        - No more than 8 sentences unless asked.
-        """
-
-                        completion = client.chat.completions.create(
-                            model="gpt-4o-mini",
-                            messages=[
-                                {"role": "system", "content": sys_prompt},
-                                {"role": "user", "content": user_q},
-                            ],
-                            max_tokens=350,
-                        )
-
-                        answer = completion.choices[0].message["content"]
-                        st.markdown(f"### AI Analyst Response\n{answer}")
-
-                    except Exception as e:
-                        st.error(
-                            "AI unavailable. Falling back to basic answers.\n\n"
-                            f"Error: {e}"
-                        )
-
-
-
-
-
-        st.dataframe(
-            risk_top.rename(
-                columns={
-                    "title": "Title",
-                    "franchise_group": "Franchise",
-                    "current_platform": "Currently On",
-                    "risk_score": "Risk Score",
-                }
-            ),
-            use_container_width=True,
-        )
-
-        st.markdown(
-            """
-**What this table tells you**
-
-- Ranks WB titles by how much **competitive disruption** they create for other platforms  
-- **Higher scores** = more valuable + less already controlled by Netflix/WBD  
-- Useful for thinking about **licensing fallout, churn risk, and negotiating leverage**
-            """
-        )
-
-        with st.expander("How exposure is calculated"):
-            st.markdown(
-                """
-- **Max titles** → low incremental exposure (already owned by Warner Bros Discovery)  
-- **Netflix/Max titles** → medium exposure (shared or licensed)  
-- **Other platforms** → highest exposure if Netflix consolidates WB IP  
-Risk score = *value score × platform-exposure multiplier*.
-                """
-            )
-
     else:
-        st.info(
-            "Enriched title data not available yet. Run the enrichment step to enable the Deal Deck view."
-        )
-else:
-    # For now, keep the app stable and on-message if users switch buyer.
-    st.info(
-        "This special edition focuses on the Netflix × Warner Bros deal. "
-        "For the full Business-Impact view, set Buyer to Netflix and Target to Warner Brothers HBO."
-    )
-
-st.markdown("<div id='target-audiance'></div>", unsafe_allow_html=True)
-st.markdown("### 🔗 WHO THIS DASHBOARD IS BUILT FOR")    
-
-#st.markdown(
-#    "<div class='section-heading'>WHO THIS DASHBOARD IS BUILT FOR</div>",
-#    unsafe_allow_html=True,
-#)
-
-
-st.markdown(
-    """
-**Who might actually use this in real life**
-
-- **Equity & credit analysts**  
-  Quickly gauge *which WB IP drives leverage* for Netflix and *which platforms are most exposed* if content is pulled in-house.
-
-- **Streaming & content strategy teams**  
-  Use it as a first-pass view before deeper Excel / internal rights work when prepping **churn / pricing / windowing** scenarios.
-
-- **Reporters & newsletter writers**  
-  Gut-check headlines like *“Netflix wins the HBO universe”* with a simple **“who keeps what, who loses leverage”** view.
-
-- **Students / junior analysts / interns**  
-  As a concrete example of turning messy IP + contract noise into a **structured, evidence-backed framework**.
-
-**How to use it in <5 minutes**
-
-1. **Skim the deal summary** to anchor what’s actually been announced.  
-2. **Pick your scenario** (Conservative / Base / Aggressive) in *Platform Exposure Risk*.  
-3. Look at **Spotlight IPs** to see which WB franchises matter most to Netflix on a value basis.  
-4. Check **Platform Exposure Risk** to see which titles create the most disruption outside Netflix.  
-5. Use the **deal-impact snapshot** sentence as a starting line for decks, emails, or notes.
-
-It's meant to be a **first-pass deal prep tool** — something you open *before* the 50-page model or 80-page bank deck, not instead of them.
-"""
-)
-
-# Normalize display selections to canonical internal brand ids
-def _canonical(b: str) -> str:
-    b = (b or "").strip()
-    if b == "Max":                         # treat Max as the HBO brand
-        return "Warner Brothers HBO"
-    if b == "Peacock":                     # treat Peacock as Comcast (NBCU)
-        return "Comcast (NBCUniversal)"
-    return b
-
-buyer_c = _canonical(buyer)
-target_c = _canonical(target)
-
-# keep labels for optional sentiment; store canonical for logic
-st.session_state["buyer_label"] = buyer
-st.session_state["target_label"] = target
-st.session_state["buyer_canon"] = buyer_c
-st.session_state["target_canon"] = target_c
-
-# --- Side-by-side: IP Similarity Map (left) and Rippleboard (right) ---
-# --- Side-by-side: IP Similarity Map (left) and Rippleboard (right) ---
-L, R = st.columns([1, 1], vertical_alignment="top")
-
-with L:
-    st.subheader("✣ IP Similarity Map")
-    st.markdown(
-    """
-        **What this shows**  
-        Turning titles into vectors (fancy math), squash to 2D, and color by cluster.  
-        Closer dots → **similar audience DNA**. Use it like a cross-sell radar.  
-        Positions are from a 2-D projection of text embeddings (UMAP/PCA).
-        
-        **How to read the IP Similarity Map**
-        - Each dot = a show/film.
-        - Closer dots = more similar audience DNA (genre/keywords/description).
-        - Colors = rough clusters (e.g., prestige drama, sci-fi, comedy).
-        - Use it to spot good fits for the buyer (dots near the buyer’s current slate) vs outliers (harder brand fit).
-        - **Caveat:** it’s a content-text signal, not a rights contract—pair with the Rippleboard and sources.
-        
-        **Investor lens**
-        - Fit suggests cross-sell/retention upside if pulled exclusive.
-        - Outliers may be better left licensed out (cash engine) rather than pulled in.
-        - Combine with Stay/Licensed/Exclusive calls for a quick timing + exposure picture.
-        """
-)
-
-
-    # ---------------- Map engine: Embeddings → TF-IDF fallback ----------------
-    try:
-        # Build corpus: title + optional tags
-        if "genre_tags" not in fr.columns:
-            fr["genre_tags"] = ""
-        corpus = (fr["title"].astype(str).str.strip() + " " +
-                  fr["genre_tags"].astype(str).str.strip()).str.strip()
-        mask = corpus.str.len() > 0
-        df_map = fr.loc[mask].reset_index(drop=True).copy()
-
-        X = None
-        used_embeddings = False
-
-        # 1) Try Sentence-Transformers
-        try:
-            from sentence_transformers import SentenceTransformer  # type: ignore
-            model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-            X = model.encode(
-                df_map["title"].astype(str).str.cat(df_map["genre_tags"].astype(str), sep=" ").tolist(),
-                batch_size=64, show_progress_bar=False, normalize_embeddings=True
-            ).astype("float32")
-            used_embeddings = True
-        except Exception:
-            # 2) Fall back to TF-IDF if ST is unavailable (e.g., Streamlit Cloud)
+        with st.spinner("Analyzing using your scenario and WB exposure model..."):
             try:
-                from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
-                tfidf = TfidfVectorizer(max_features=3000, ngram_range=(1, 2), min_df=1)
-                X = tfidf.fit_transform(corpus.tolist()).toarray().astype("float32")
-                used_embeddings = False
+                context_json = build_context_for_llm(
+                    titles_df=titles_df,
+                    platform_exposure=PLATFORM_EXPOSURE,
+                    risk_top=risk_top,
+                    scenario=scenario,
+                    hero_summary=SUMMARY,   # your hero metrics dict
+                )
+
+                sys_prompt = f"""
+You are an elite senior media strategy analyst specializing in mergers, content economics,
+and platform exposure. Use ONLY the structured data below to answer questions.
+
+Here is the structured context (JSON):
+{context_json}
+
+Rules:
+- Never hallucinate titles that are not in the data.
+- Always tie answers to platforms, franchises, and relative exposure.
+- Treat values as directional, not precise forecasts.
+"""
+
+                completion = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": sys_prompt},
+                        {"role": "user", "content": user_q},
+                    ],
+                    max_tokens=350,
+                )
+
+                answer = completion.choices[0].message.content
+                st.markdown(f"### AI Analyst Response\n{answer}")
+                #st.markdown(answer)
+
             except Exception as e:
-                st.caption(f"Map unavailable (no embeddings, no scikit-learn): {e}")
-                X = None
+                st.error(f"AI unavailable. Falling back to basic answers.\n\nError: {e}")
 
-        engine_label = "Embeddings • FAISS/ST" if used_embeddings else "Classic • TF-IDF"
-        st.caption(f"Similarity engine: {engine_label}")
 
-        if X is not None and len(df_map) >= 3:
-            mx, my = project_points(X)  # uses np.ptp internally (NumPy 2-safe)
-            dfp = pd.DataFrame({
-                "x": mx,
-                "y": my,
-                "brand": df_map.apply(
-                    lambda r: (r.get("original_brand")
-                               or infer_brand_text(r.get("current_platform"))
-                               or "Other"),
-                    axis=1,
-                ),
-            })
-            import plotly.express as px
-            fig = px.scatter(dfp, x="x", y="y", color="brand", height=360)
-            fig.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                margin=dict(l=10, r=10, t=10, b=10),
-                legend_title_text="",
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        elif X is None:
-            pass  # already messaged
-        else:
-            st.caption("Add more rows to see the map.")
-    except Exception as e:
-        st.caption(f"Map unavailable: {e}")
+# ---- Metric tiles row ----
+c1, c2, c3, c4 = st.columns(4)
 
-with R:
-    st.subheader("Rippleboard: The Future of Content")
+with c1:
+    metric_tile(
+        "WB titles modeled",
+        f"{total_titles}",
+        "Number of WB series & films included in this scenario sample.",
+    )
+
+with c2:
+    metric_tile("WB VALUE ON NON-NETFLIX PLATFORMS",
+                f"{outside_pct}",
+        "Share of modeled WB content value that, in this sample"
+        "other services (Max, Hulu, Prime etc.)"
+    )
+
+with c3:
+    metric_tile(
+        "Top leverage franchise",
+        top_franchise or "—",
+        "Franchise with the highest modeled Warner Bros value in this sample.",
+    )
+
+with c4:
+    metric_tile(
+        "Most exposed platform",
+        top_platform or "—",
+        "Non-Netflix platform with the most WB value at risk if Netflix consolidates WB.",
+    )
+
+# -------------------------------
+# Quick Fallout Snapshot + Franchises
+# -------------------------------
+
+#section_heading("Quick Fallout Snapshot")
+
+
+col_left, col_right = st.columns([1.2, 1.8])
+
+with col_left:
+    st.markdown("## Quick Fallout Snapshot")
+
+    # --- Sharper Quick Snapshot ---
     st.markdown(
-    """
-        **What this is**  
-        A post-deal TV guide for suits (but in plain English).  
-        Each title gets a status (**stay / licensed / exclusive**) and a one-liner.  
-        Tweak the rule and watch the board shift.
-        
-        **How to read this**
-        - **Stay** → Likely the contract/window keeps it where it is for now.
-        - **Licensed** → Shared/syndicated outcome likely (may move in parts or by region).
-        - **Exclusive** → If the buyer owns the IP, they’d likely pull it in-house at renewal.
-        - *Note:* Spin-offs depend on **derivative rights**, not just today’s streamer.
         """
-)
+        <div style='font-size:1rem; line-height:1.6; margin-top:-10px;'>
+        
+        Most merger coverage focuses on debt, regulators, and Hollywood politics.<br>
+        <b>This tool focuses on one question:</b>  
+        <span style='font-size:1.05rem;'><b>Which platforms and franchises actually feel it first?</b></span>
 
+        <ul style='margin-top:10px;'>
+            <li><b>Which WB franchises drive real leverage</b> (not just fan sentiment)</li>
+            <li><b>Which rival platforms lose the most value first</b> if Netflix pulls WB in-house</li>
+            <li><b>How the fallout shifts</b> across Conservative / Base / Aggressive scenarios</li>
+        </ul>
 
-    # Filter rows related to Buyer or Target (platform or origin label)
-    rb = filter_for_buyer_target(fr, buyer, target)  # use FR, not df
-
-    # Visible columns
-    rb_view = rb[["title", "predicted_policy", "current_platform"]].copy()
-    rb_view.rename(columns={
-        "title": "IP / Franchise",
-        "predicted_policy": "Predicted Status",
-        "current_platform": "Current Platform"
-    }, inplace=True)
-
-    # Synthesize notes when missing
-    if "Notes" not in rb.columns:
-        rb_view["Notes"] = rb.apply(
-            lambda r: (str(r.get("predicted_policy", "")).strip()
-                       or synth_note(str(r.get("origin_label", "")), buyer, target)),
-            axis=1,
-        )
-        # Reorder
-        rb_view = rb_view[["IP / Franchise", "Predicted Status", "Notes", "Current Platform"]]
-
-    # Alias HBO/Max for consistency
-    rb_view["Current Platform"] = rb_view["Current Platform"].astype(str).apply(apply_platform_aliases)
-
-    st.dataframe(rb_view, hide_index=True, use_container_width=True)
-
-st.caption("Investor lens: ‘Stay’ often = locked windows/contracts; ‘Exclusive’ = potential near-term pull-in.")
-
-# ---------------- Originals (expander) ----------------
-with st.expander("Originals from the target"):
-    st.markdown(
-        "<div class='section-blurb'>"
-        "First-party stuff that defines the brand. If this table is loud, "
-        "the brand will fight to keep these <b>home</b>."
-        "</div>",
+        <i style='opacity:0.8;'>Use this as a content-impact lens for decks, memos, or reporting.</i>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
-    # strict originals first
-    orig = fr[
-    (fr.get("original_flag", "").astype(str).str.upper() == "Y")
-    & (fr.get("original_brand", "").astype(str).str.lower() == target_c.lower())
-    ][["title", "original_network", "producer_list", "current_platform", "source_urls"]].copy()
-
-
-    # if empty, infer by platform/network brand
-    if orig.empty:
-        mask = fr.apply(
-            lambda r: infer_brand_text(r.get("current_platform", "")) == target_c
-            or infer_brand_text(r.get("original_network", "")) == target_c,
-            axis=1,
-        )
-        orig = fr.loc[
-            mask, ["title", "original_network", "producer_list", "current_platform", "source_urls"]
-        ].head(20).copy()
-
-    # UI alias for platforms
-    orig["current_platform"] = orig["current_platform"].astype(str).apply(apply_platform_aliases)
-
-    orig = compact_table(
-        orig, ["title", "original_network", "producer_list", "current_platform", "source_urls"]
-    )
-    if not orig.empty:
-        st.dataframe(
-            orig.rename(columns={"current_platform": "platform"}),
-            use_container_width=True,
-            hide_index=True,
-        )
-    else:
-        st.caption("No clear originals visible yet—add a few and rerun enrichment.")
-
-# ---------------- Sources / Traceability ----------------
-with st.expander("Sources / Traceability (for titles shown)"):
     st.markdown(
-        "<div class='section-blurb'>"
-        "Predictions need receipts. official pages; if missing, a TMDB search link. "
-        "<i>Not gospel — just a transparent starting point.</i>"
-        "</div>",
-        unsafe_allow_html=True,
+    "<div class='hero-link'><a href='#sources-section'>Jump to deal coverage & risk →</a></div>",
+    unsafe_allow_html=True,
     )
-    shown = pd.concat(
-        [
-            rb_view.head(20)[["IP / Franchise"]].rename(columns={"IP / Franchise": "title"}),
-            orig[["title"]] if 'orig' in locals() and not orig.empty else pd.DataFrame(columns=["title"]),
-        ],
-        ignore_index=True,
-    ).drop_duplicates()
 
-    if shown.empty:
-        st.caption("No titles in view yet.")
-    else:
-        joined = shown.merge(fr[["title", "source_urls"]], on="title", how="left")
-        for _, r in joined.iterrows():
-            t = str(r["title"]).strip()
-            links = tmdb_links(t, r.get("source_urls", ""))
-            st.markdown(f"**{t}**")
-            for u in links:
-                st.write(f"- {u}")
+
+# with col_right:
+#     PLATFORM_EXPOSURE = SUMMARY["PLATFORM_EXPOSURE"]  # from compute_summary_metrics
+
+#     labels = PLATFORM_EXPOSURE["platform"].tolist()
+#     sizes = PLATFORM_EXPOSURE["share"].tolist()
+
+#     fig, ax = plt.subplots(figsize=(3.3, 3.3))
+#     wedges, _ = ax.pie(
+#         sizes,
+#         labels=labels,
+#         startangle=90,
+#         wedgeprops=dict(width=0.35, edgecolor="#0E1117"),
+#     )
+#     ax.axis("equal")
+
+#     st.pyplot(fig)  # no use_container_width → respects figsize
+
+# st.caption(
+#     f"In this sample, {PLATFORM_EXPOSURE.iloc[0]['platform']} carries about "
+#     f"{PLATFORM_EXPOSURE.iloc[0]['share']:.0%} of the modeled WB value that sits outside Netflix. "
+#     "As additional platforms are tagged in the dataset, this view will split across more services."
+# )
 
 st.markdown("<div id='sources-section'></div>", unsafe_allow_html=True)
-#st.markdown("### 🔗 Deal coverage & sources")
-st.markdown("### 🔗 Deal coverage & sources")
+with col_right:
+    st.markdown("#### Rival platforms with WB value at risk")
+
+    if PLATFORM_EXPOSURE.empty:
+        st.info("Not enough non-Netflix platform data in this sample yet.")
+    else:
+        # Brand-ish colors for the main streaming platforms
+        brand_colors = {
+            "Max": "#8B48DD",          # Max purple
+            "Hulu": "#1CE783",         # Hulu green
+            "Prime Video": "#00A8E1",  # Prime Video cyan
+            "Peacock": "#F5C518",      # Peacock yellow
+            "Disney+": "#113CCF",      # Disney+ blue
+            "Rent/Buy": "#6C757D",     # neutral gray for TVOD / rent-buy
+        }
+
+        # Build a color map with a sensible default for anything not listed above
+        default_color = "#9E86FF"  # fallback WB purple
+        color_map = {
+            plat: brand_colors.get(plat, default_color)
+            for plat in PLATFORM_EXPOSURE["platform"].unique()
+        }
+
+        platform_fig = px.pie(
+            PLATFORM_EXPOSURE,
+            names="platform",
+            values="value",
+            hole=0.45,
+            color="platform",
+            color_discrete_map=color_map,
+        )
+
+        platform_fig.update_traces(
+            textinfo="label+percent",
+            hovertemplate="<b>%{label}</b><br>Modeled WB value at risk: %{value:.2f}<extra></extra>",
+        )
+        platform_fig.update_layout(
+            showlegend=False,
+            margin=dict(l=0, r=0, t=20, b=0),
+        )
+
+        st.plotly_chart(platform_fig, use_container_width=True)
+
+        top_row = PLATFORM_EXPOSURE.sort_values("share", ascending=False).iloc[0]
+        st.caption(
+            f"In this sample, **{top_row['platform']}** carries about "
+            f"**{top_row['share']*100:.1f}%** of the modeled WB value that sits outside Netflix."
+        )
+
+        # top_row = PLATFORM_EXPOSURE.sort_values("share", ascending=False).iloc[0]
+        # st.caption(
+        #     f"In this sample, **{top_row['platform']}** carries about "
+        #     f"**{top_row['share']*100:.1f}%** of the modeled WB value that sits outside Netflix."
+        # )
+
+# --- Top 5 Fallout Findings strip --------------------------------------------
+shock_findings = build_shock_findings(titles_df, SUMMARY, PLATFORM_EXPOSURE, scenario)
+
+if shock_findings:
+    st.markdown("## Top 5 fallout findings from this scenario")
+
+    # Glassy card container
+    st.markdown(
+        "<div style='padding:10px 12px; border-radius:12px; "
+        "background:rgba(10,10,20,0.85); border:1px solid rgba(255,255,255,0.08);'>",
+        unsafe_allow_html=True,
+    )
+
+    for i, line in enumerate(shock_findings, start=1):
+        st.markdown(f"- {line}")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+section_heading("Top WB franchises by modeled value")
+
+# Franchise Value Stack: who matters most?
+fr_df = titles_df.copy()
+
+if isinstance(fr_df, pd.DataFrame) and "franchise_group" in fr_df.columns:
+    fr_col_name = "franchise_group"
+else:
+    fr_col_name = None
+
+if fr_col_name is None or "value_score_norm" not in fr_df.columns:
+    st.info("Franchise metadata not available in this sample yet.")
+else:
+    # Clean up franchise labels
+    fr_df[fr_col_name] = (
+        fr_df[fr_col_name]
+        .fillna("Standalone / other")
+        .astype(str)
+    )
+
+    # Aggregate modeled value by franchise
+    fr_agg = (
+        fr_df.groupby(fr_col_name)["value_score_norm"]
+        .sum()
+        .reset_index()
+        .sort_values("value_score_norm", ascending=False)
+    )
+
+    if fr_agg.empty:
+        st.info("No franchise-level value data to display yet.")
+    else:
+        TOP_N = 8
+        top_franchises = fr_agg.head(TOP_N).copy()
+
+        # Aggregate the rest into an "All other WB IP" bucket (kept in data, not plotted)
+        others_value = fr_agg["value_score_norm"].iloc[TOP_N:].sum()
+        if others_value > 0:
+            top_franchises = pd.concat(
+                [
+                    top_franchises,
+                    pd.DataFrame(
+                        [
+                            {
+                                fr_col_name: "All other WB IP",
+                                "value_score_norm": others_value,
+                            }
+                        ]
+                    ),
+                ],
+                ignore_index=True,
+            )
+
+        fr_chart_df = top_franchises.rename(
+            columns={fr_col_name: "Franchise", "value_score_norm": "Modeled value"}
+        ).copy()
+        
+        plot_df = fr_chart_df[fr_chart_df["Franchise"] != "All other WB IP"].copy()
+
+        # Compute percentage share
+        total_val = fr_chart_df["Modeled value"].sum()
+        fr_chart_df["pct"] = fr_chart_df["Modeled value"] / total_val
+        fr_chart_df["pct_label"] = (fr_chart_df["pct"] * 100).round(1).astype(str) + "%"
+
+        # Attach a poster URL if we have one
+        def _poster_for(fr_name: str) -> str:
+            path = poster_lookup.get(fr_name)
+            if not path:
+                return ""
+            return TMDB_POSTER_BASE + path
+
+        fr_chart_df["poster_url"] = fr_chart_df["Franchise"].map(_poster_for)
+
+        # Clean up franchise labels using normalizer and generic bucket
+        fr_df[fr_col_name] = fr_df[fr_col_name].apply(normalize_franchise)
+        fr_df[fr_col_name] = (
+            fr_df[fr_col_name]
+            .fillna("Other WB IP")
+            .astype(str)
+        )
+
+
+        plot_df = fr_chart_df[
+            ~fr_chart_df["Franchise"].isin(["All other WB IP", "Other WB IP"])
+        ].copy()
+
+
+        # Multi-color bars + poster link in hover
+        fig_fr = px.bar(
+            plot_df,
+            x="pct",
+            y="Franchise",
+            orientation="h",
+            text="pct_label",
+            color="Franchise",
+            color_discrete_sequence=px.colors.qualitative.Pastel,
+            custom_data=["poster_url"],
+        )
+
+        fig_fr.update_traces(
+            textposition="outside",
+            hovertemplate=(
+                "<b>%{y}</b><br>"
+                "% share of modeled WB value: %{x:.1%}<br>"
+                "<span style='font-size:0.8rem;'>"
+                "Poster: %{customdata}"
+                "</span>"
+                "<extra></extra>"
+            ),
+        )
+
+        fig_fr.update_layout(
+            xaxis_title="% of modeled WB value",
+            yaxis_title="Franchise / IP group",
+            template="plotly_dark",
+            margin=dict(l=0, r=20, t=10, b=10),
+            height=360,
+            showlegend=False,
+        )
+
+        # Percent ticks on x-axis
+        fig_fr.update_xaxes(
+            tickformat="0%",
+            range=[0, plot_df["pct"].max() * 1.1],
+        )
+        
+        st.markdown(
+            f"""
+            <div style='font-size:1.05rem; font-weight:600; margin-bottom:5px;'>
+                Rival platforms with WB value at risk
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        st.markdown(
+            """
+            <div style='font-size:1.05rem; font-weight:600; margin-top:20px; margin-bottom:5px;'>
+                Franchise leverage: who holds the real power in this content universe?
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+        st.plotly_chart(fig_fr, use_container_width=True)
+
+        st.markdown(
+            "<div style='font-size:0.75rem; opacity:0.7; margin-top:-8px;'>"
+            "% share of modeled Warner Bros content value in this sample. "
+            "Hover to see a TMDB poster link for each franchise."
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
+
+# # Franchise Value Stack: who matters most?
+# fr_df = titles_df.copy()
+# if "franchise_group" in fr_df.columns:
+#     fr_col_name = "franchise_group"
+# else:
+#     fr_col_name = None
+
+# if fr_col_name is None:
+#     st.info("Franchise metadata not available in this sample yet.")
+# else:
+#     fr_df[fr_col_name] = (
+#         fr_df[fr_col_name]
+#         .fillna("Standalone / other")
+#         .astype(str)
+#     )
+
+#     fr_agg = (
+#         fr_df.groupby(fr_col_name)["value_score_norm"]
+#         .sum()
+#         .reset_index()
+#         .sort_values("value_score_norm", ascending=False)
+#     )
+
+#     TOP_N = 8
+#     top_franchises = fr_agg.head(TOP_N).copy()
+
+#     others_value = fr_agg["value_score_norm"].iloc[TOP_N:].sum()
+#     if others_value > 0:
+#         top_franchises = pd.concat(
+#             [
+#                 top_franchises,
+#                 pd.DataFrame(
+#                     [
+#                         {
+#                             fr_col_name: "All other WB IP",
+#                             "value_score_norm": others_value,
+#                         }
+#                     ]
+#                 ),
+#             ],
+#             ignore_index=True,
+#         )
+
+#     fr_chart_df = top_franchises.rename(
+#         columns={fr_col_name: "Franchise", "value_score_norm": "Modeled value"}
+#     ).copy()
+#     fr_chart_df["value_label"] = fr_chart_df["Modeled value"].round(1)
+
+#     fig_fr = px.bar(
+#         fr_chart_df,
+#         x="Modeled value",
+#         y="Franchise",
+#         orientation="h",
+#         text="value_label",
+#     )
+#     fig_fr.update_traces(
+#         marker_color="#9E86FF",  # HBOMAX
+#         hovertemplate="<b>%{y}</b><br>Modeled value: %{x:.1f}<extra></extra>",
+#         textposition="outside",
+#     )
+#     fig_fr.update_layout(
+#         xaxis_title="Modeled WB value (relative units)",
+#         yaxis_title="Franchise / IP group",
+#         template="plotly_dark",
+#         margin=dict(l=0, r=20, t=10, b=10),
+#         height=360,
+#     )
+
+#     st.plotly_chart(fig_fr, use_container_width=True)
+
+#     st.caption(
+#         "Ranked view of WB franchises in this sample by modeled content value. "
+#         "It shows which IP clusters matter most if Netflix consolidates WB content."
+#     )
+
+# -------------------------------
+# Scenario assumptions + Platform Exposure Risk
+# -------------------------------
+
+# --- Fallout Dial ---
+# -------------------------------
+# Consumer Impact Card
+# -------------------------------
+
+st.markdown("## How this affects **you** as a streaming subscriber")
+
+exp_df = build_platform_exposure_df(titles_df)
+non_nf = exp_df[exp_df["platform"] != "Netflix"]
+
+max_share = (
+    non_nf[non_nf["platform"].str.contains("Max", case=False, na=False)]["value_share"].sum()
+    / non_nf["value_share"].sum() * 100
+    if not non_nf.empty else 0
+)
+
+prime_share = (
+    non_nf[non_nf["platform"].str.contains("Prime", case=False, na=False)]["value_share"].sum()
+    / non_nf["value_share"].sum() * 100
+    if not non_nf.empty else 0
+)
+
+hulu_share = (
+    non_nf[non_nf["platform"].str.contains("Hulu", case=False, na=False)]["value_share"].sum()
+    / non_nf["value_share"].sum() * 100
+    if not non_nf.empty else 0
+)
+
+st.markdown(
+    f"""
+<div style='padding:14px; border-radius:10px; background-color:#111111; border:1px solid #333;'>
+<b>If you're a Max subscriber:</b>  
+Max carries <b>{max_share:.1f}%</b> of WB value outside Netflix today.  
+Under the <b>{scenario}</b> scenario, this is the platform that feels it first if Netflix consolidates WB content.
+<br><br>
+<b>If you're a Prime Video viewer:</b>  
+Prime carries ~<b>{prime_share:.1f}%</b> of external WB value. Mostly catalog titles — low tentpole impact.
+<br><br>
+<b>If you're on Hulu:</b>  
+Hulu carries ~<b>{hulu_share:.1f}%</b> of WB value. Exposure is long-tail rather than prestige draw.
+<br><br>
+<b>If you're a Netflix user:</b>  
+Under <b>{scenario}</b>, Netflix increasingly becomes the home of WB's prestige franchises (Harry Potter, GoT, DC, etc.).
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+# -------------------------------
+# Shareable takeaway card
+# -------------------------------
+
+st.markdown("## One-slide takeaway deck")
+#section_heading("One-slide takeaway deck")
+
+# Reuse exposure model to estimate how much WB value could consolidate into Netflix
+exp_df_takeaway = build_platform_exposure_df(titles_df)
+total_value_takeaway = exp_df_takeaway["value_share"].sum()
+
+non_nf_takeaway = exp_df_takeaway[exp_df_takeaway["platform"] != "Netflix"]
+rivals_value = non_nf_takeaway["value_share"].sum()
+
+# If Netflix ultimately pulls most WB content in-house, this rivals_value is what gets redistributed
+netflix_gain_pct = (rivals_value / total_value_takeaway * 100.0) if total_value_takeaway > 0 else 0.0
+
+# Top 2 WB franchises by modeled value
+fr_df_takeaway = titles_df.copy()
+if "franchise_group" in fr_df_takeaway.columns:
+    fr_df_takeaway["franchise_group"] = (
+        fr_df_takeaway["franchise_group"].fillna("Standalone / other").astype(str)
+    )
+    fr_agg_takeaway = (
+        fr_df_takeaway.groupby("franchise_group")["value_score_norm"]
+        .sum()
+        .sort_values(ascending=False)
+    )
+    top_franchises_list = list(fr_agg_takeaway.index[:2])
+else:
+    top_franchises_list = []
+
+scenario_blurb = {
+    "Conservative": "light consolidation of only the most exposed WB titles",
+    "Base case": "measured consolidation of WB’s highest-value tentpoles",
+    "Aggressive": "deep consolidation where Netflix pulls most WB content in-house",
+}.get(scenario, "measured consolidation of key WB content")
+
+top_fr_1 = top_franchises_list[0] if len(top_franchises_list) > 0 else "top WB franchises"
+top_fr_2 = top_franchises_list[1] if len(top_franchises_list) > 1 else ""
+
+takeaway_line_2 = (
+    f"{top_fr_1}"
+    if not top_fr_2
+    else f"{top_fr_1} and {top_fr_2}"
+)
+
+st.markdown(
+    f"""
+<div style='padding:16px; border-radius:14px; background-color:#050816; border:1px solid #27272f;'>
+  <div style='font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9CA3AF; margin-bottom:4px;'>
+    Netflix / WB Fallout Simulator • Snapshot
+  </div>
+  <div style='font-size:1.1rem; font-weight:600; margin-bottom:6px;'>
+    Under the <span style='font-weight:700;'>{scenario}</span> scenario ({scenario_blurb}),
+    Netflix could effectively absorb around <span style='font-weight:700;'>{netflix_gain_pct:.1f}%</span>
+    of the modeled WB content value currently sitting on rival platforms in this sample.
+  </div>
+  <div style='font-size:0.95rem; color:#D1D5DB;'>
+    The leverage comes from franchises like <b>{takeaway_line_2}</b>, which dominate the modeled value pool
+    and shift perception of where prestige WB storytelling lives.
+  </div>
+  <div style='font-size:0.8rem; color:#9CA3AF; margin-top:8px;'>
+    Screenshot this card for decks, memos, or social posts – it’s generated directly from the scenario,
+    franchise scores, and platform exposure model used above.
+  </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
 
 st.markdown(
     """
+<<<<<<< HEAD
 Use this as a **one-stop reading list** around the Netflix–Warner Bros deal.  
 The analytics on this page are meant to *complement*, not replace, these sources.
 
@@ -1472,71 +2019,240 @@ The analytics on this page are meant to *complement*, not replace, these sources
 - AP News — *Notable early reaction to Netflix’s deal to acquire Warner Bros*  
   – [Industry & political reaction](https://apnews.com/article/netflix-warner-bros-deal-reaction-3acea5d81e630d20560299764bf4c37c) :contentReference[oaicite:6]{index=6}  
 """
+=======
+    <div style='font-size:1.1rem; font-weight:600; margin-top:25px;'>
+        Fallout Dial: How aggressively does Netflix pull WB in-house?
+    </div>
+    """,
+    unsafe_allow_html=True,
+>>>>>>> 7dbf3bd (Update: WB sample expanded to 173 + AI Analyst + fallout simulator visuals)
 )
 
-
-with st.expander("Tech Stack"):
-    st.markdown("""
-- **Streamlit** for the interactive UI  
-- **Pandas** for catalog modeling and scoring  
-- **TMDb API** for title-level metadata  
-- **Rule-based logic** for value scores & exposure  
-- **LLM explainers** and **vector search** for deeper IP similarity.
-    """)
-
-
-
-# --- Quick feedback (lightweight, local only)
-
-
-st.markdown("<div class='section-heading'>FEEDBACK</div>", unsafe_allow_html=True)
-st.write("How useful was this dashboard?")
-
-rating = st.radio(
-    "Your rating:",
-    ["Very useful", "Useful", "Not useful"],
+scenario = st.radio(
+    "Select a fallout mode:",
+    options=["Conservative", "Base case", "Aggressive"],
+    index=1,
     horizontal=True,
-    key="feedback_rating",
 )
 
-feedback_text = st.text_area(
-    "Optional comments",
-    placeholder="What helped? What should we improve?",
-    key="feedback_text",
+
+
+st.caption(
+    "This setting scales how much WB content you assume Netflix ultimately consolidates. "
+    "It only affects the exposure views below — not the raw catalog numbers above."
 )
 
-if st.button("Submit feedback"):
-    FB_PATH = os.path.join(ANALYTICS_DIR, "feedback.csv")
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-
-    row = pd.DataFrame([{
-        "timestamp_utc": now,
-        "session_id": SESSION_ID,
-        "rating": rating,
-        "comment": feedback_text,
-    }])
-
-    if not os.path.exists(FB_PATH):
-        row.to_csv(FB_PATH, index=False)
-    else:
-        row.to_csv(FB_PATH, mode="a", header=False, index=False)
-
-    log_usage("feedback_submitted")
-    st.success("Thank you! Your feedback has been recorded.")
+scenario_multiplier = {
+    "Conservative": 0.6,
+    "Base case": 1.0,
+    "Aggressive": 1.4,
+}[scenario]
 
 
-# ---------------- Usage Footnote ----------------
-#try:
-#    if LOG_PATH.exists():
-#        import pandas as pd  # uses existing import if already there
-#        usage_df = pd.read_csv(LOG_PATH)
-#        total_runs = len(usage_df)
-#        st.caption(f"{total_runs} scenarios run so far.")
-#except Exception as e:
-#    # We never want a usage counter error to break the app
-#    print(f"[usage counter error] {e}")
+def compute_risk_score(row: pd.Series) -> float:
+    """
+    Simple content-risk heuristic:
 
-# ---------------- footer ----------------
-#st.caption(
-#    "Hobby demo for media M&A what-ifs. Data: TMDB where available; status/notes are testing for illustration."
-#)'''
+    - Max (HBO / WBD-owned)  : lowest incremental pain (already in the WB family)
+    - Netflix                : medium (partially consolidated already)
+    - Everyone else          : highest — they stand to lose licensed WB value
+    """
+    platform = str(row.get("current_platform", ""))
+    value = float(row.get("value_score_norm", 0.0))
+
+    if "max" in platform.lower() or "hbo" in platform.lower():
+        return value * 0.2  # low incremental disruption
+    if "netflix" in platform.lower():
+        return value * 0.4  # medium exposure
+    return value * 1.0      # highest exposure for third-party platforms
+
+
+# Build a scenario-adjusted risk view per title
+risk_df = titles_df.copy()
+risk_df["current_platform"] = risk_df["current_platform"].astype(str)
+
+risk_df["risk_score_base"] = risk_df.apply(compute_risk_score, axis=1)
+risk_df["Risk Score"] = risk_df["risk_score_base"] * scenario_multiplier
+
+
+# Build display-friendly columns safely
+risk_display = risk_df.copy()
+
+# Title column: fallback to empty string if not present
+if "title" in risk_display.columns:
+    risk_display["Title"] = risk_display["title"].astype(str)
+elif "Title" in risk_display.columns:
+    risk_display["Title"] = risk_display["Title"].astype(str)
+else:
+    risk_display["Title"] = ""
+
+# Franchise column: prefer franchise_group, then franchise, else placeholder
+if "franchise_group" in risk_display.columns:
+    risk_display["Franchise"] = risk_display["franchise_group"].astype(str)
+elif "franchise" in risk_display.columns:
+    risk_display["Franchise"] = risk_display["franchise"].astype(str)
+else:
+    risk_display["Franchise"] = "Not labeled"
+
+# Currently On: from current_platform
+risk_display["Currently On"] = risk_display["current_platform"].astype(str)
+
+cols_for_display = ["Title", "Franchise", "Currently On", "Risk Score"]
+
+# Top titles that most hurt rivals if pulled in-house
+risk_top = (
+    risk_display[cols_for_display]
+    .sort_values("Risk Score", ascending=False)
+    .head(6)
+)
+
+st.dataframe(
+    risk_top,
+    use_container_width=True,
+    hide_index=True,
+)
+
+st.caption(
+    "Risk Score is a simple heuristic: modeled content value × how exposed that title is "
+    "to non-Netflix platforms, scaled by the scenario above."
+)
+
+
+def render_deal_sources():
+    st.markdown("## Deal coverage & sources")
+
+    st.markdown(
+        """
+Use this as a one-stop reading list around the Netflix–Warner Bros deal.  
+The analytics on this page are meant to **complement, not replace**, these sources.
+        """
+    )
+
+    st.markdown("#### Official / primary sources")
+    st.markdown(
+        """
+- **Company communications**
+  - Netflix IR — *Deal announcement & strategic rationale*  
+    - [Press release](https://about.netflix.com/en/news/netflix-to-acquire-warner-bros)  
+  - Warner Bros Discovery — *Strategic update on studio & streaming assets*  
+    - [Corporate News](https://www.prnewswire.com/in/news-releases/netflix-to-acquire-warner-bros-following-the-separation-of-discovery-global-for-a-total-enterprise-value-of-82-7-billion-equity-value-of-72-0-billion-302633998.html)
+        """
+    )
+#     - **Transaction structure**
+#   - Deal terms, consideration mix, and spin-off details  
+#     - [Deal summary / prospectus](https://example.com/deal-terms)
+
+    st.markdown("#### Hard news coverage")
+    st.markdown(
+        """
+    - AP News — *Netflix to acquire Warner Bros studio and streaming business for $72 billion*  
+    – [AP coverage](https://apnews.com/article/netflix-warner-acquisition-studio-hbo-streaming-f4884402cadfd07a99af0c8e4353bd83) :contentReference[oaicite:2]{index=2}  
+    - Reuters — *Instant view: Netflix to buy Warner Bros Discovery's studios, streaming unit*  
+    – [Reuters instant view](https://www.reuters.com/legal/transactional/view-netflix-buy-warner-bros-discoverys-studios-streaming-unit-72-billion-2025-12-05/) :contentReference[oaicite:3]{index=3}  
+    - Financial Times — *Netflix agrees $83bn takeover of Warner Bros Discovery*  
+    – [FT deal write-up](https://www.ft.com/content/6532be94-c0bf-4101-8126-f249aa6be3c5) :contentReference[oaicite:4]{index=4} """)
+
+    st.markdown("#### Financing & market angl")
+
+    st.markdown("""- Bloomberg — *Netflix lines up $59bn of debt for Warner Bros deal*  
+    – [Financing piece](https://www.bloomberg.com/news/articles/2025-12-05/netflix-lines-up-59-billion-of-debt-for-warner-bros-deal) :contentReference[oaicite:5]{index=5} """) 
+
+    st.markdown("#### HReaction & impact")
+
+    st.markdown("""- AP News — *Notable early reaction to Netflix’s deal to acquire Warner Bros*  
+    – [Industry & political reaction](https://apnews.com/article/netflix-warner-bros-deal-reaction-3acea5d81e630d20560299764bf4c37c) :contentReference[oaicite:6]{index=6}  
+    """
+    )
+
+render_deal_sources()
+
+
+st.markdown("---")
+st.markdown("### Quick feedback")
+
+st.markdown(
+    "<span style='font-size:0.85rem; opacity:0.8;'>"
+    "Help me improve this Netflix–WB Fallout Simulator. "
+    "This takes less than 10 seconds."
+    "</span>",
+    unsafe_allow_html=True,
+)
+
+with st.form("feedback_form"):
+    col_rating, col_comment = st.columns([1, 3])
+
+    with col_rating:
+        rating = st.radio(
+            "Useful?",
+            options=[5, 4, 3, 2, 1],
+            format_func=lambda x: {5: "Great", 4: "Good", 3: "Ok", 2: "More Info", 1: "Pineapple on pizza!"}[x],
+            horizontal=True,
+        )
+
+    with col_comment:
+        comment = st.text_input(
+            "Optional note (what did you like / what’s missing? / Feature you'd like to see)",
+            placeholder="e.g., ‘Good for a quick sanity check on Max exposure.’",
+        )
+
+    submitted = st.form_submit_button("Send feedback")
+
+if submitted:
+    try:
+        current_scenario = SCENARIO if "SCENARIO" in globals() else None
+        log_feedback(rating, comment, scenario=current_scenario)
+        log_usage("feedback_submitted", scenario=current_scenario)
+        st.success("Thanks — your feedback is logged.")
+    except Exception as e:
+        st.warning(f"Feedback could not be saved: {e}")
+
+
+st.markdown(
+    """
+<div style="font-size:0.8rem; opacity:0.65; margin-top:1.5rem;">
+Content metadata sourced from <strong>TMDB</strong> (The Movie Database) and manually
+curated coverage from outlets like AP, Reuters, Bloomberg, and the Financial Times.
+All modeling and scoring is independent and for analysis only.
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+# -------------------------------
+# Share link with click-to-copy
+# -------------------------------
+SHARE_URL = "https://streamshift-aiaptrnvxydq4ka23avbsz.streamlit.app/"
+
+with st.expander("Share this dashboard"):
+    st.markdown(
+        f"""
+        <div style="margin-bottom:8px;">
+            Copy and share this link with colleagues or friends:
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <input id="share-link-input" type="text"
+                   value="{SHARE_URL}"
+                   readonly
+                   style="flex:1; padding:6px 8px; border-radius:6px;
+                          border:1px solid #374151; background:#020617; color:#E5E7EB;
+                          font-size:0.85rem;" />
+            <button onclick="navigator.clipboard.writeText(document.getElementById('share-link-input').value);
+                             alert('Link copied to clipboard!');"
+                    style="padding:6px 10px; border-radius:6px; border:none;
+                           background:#2563EB; color:white; font-size:0.8rem; cursor:pointer;">
+                Copy link
+            </button>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+st.markdown(
+    """
+<div style='font-size:0.7rem; opacity:0.65; margin-top:24px;'>
+  Data sample built from publicly available Warner Bros titles and TMDB metadata 
+  (© TMDB & contributors). This tool is a content-impact simulator, not legal or financial advice.
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
