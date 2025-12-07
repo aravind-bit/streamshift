@@ -2024,8 +2024,7 @@ The analytics on this page are meant to *complement*, not replace, these sources
         Fallout Dial: How aggressively does Netflix pull WB in-house?
     </div>
     """,
-    unsafe_allow_html=True,
->>>>>>> 7dbf3bd (Update: WB sample expanded to 173 + AI Analyst + fallout simulator visuals)
+    unsafe_allow_html=True, (Update: WB sample expanded to 173 + AI Analyst + fallout simulator visuals)
 )
 
 scenario = st.radio(
