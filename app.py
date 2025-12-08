@@ -831,6 +831,8 @@ def build_context_for_llm(
     return json.dumps(ctx, indent=2, default=str)
 
 # st.markdown(
+##00FF7F##########################################################################
+
 #     """
 # <style>
 # /* 1. Global Injection for High-Contrast Text */
@@ -924,7 +926,7 @@ div.stTextInput > div:nth-child(2) > div:nth-child(1) {
 
 /* 3. Style for the accent color used on "AI Deal Analyst" */
 .accent-title {
-    color: #00FF7F; /* Bright, high-contrast Financial Green */
+    color: #15F2FD; /* Bright, high-contrast Financial Green */
     font-size: 1.25rem !important; 
     font-weight: 700;
     text-transform: uppercase;
@@ -953,7 +955,7 @@ div.stTextInput > div:nth-child(2) > div:nth-child(1) {
 <div class='data-analyst-box flicker-attention' style='
     padding: 16px; 
     border-radius: 6px; 
-    border-left: 5px solid #00FF7F; 
+    border-left: 5px solid #15F2FD; 
     background: #1C1C1C; 
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); 
     margin-bottom: 20px;
