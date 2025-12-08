@@ -692,8 +692,8 @@ st.markdown(
     """
     <div style='text-align:center; margin-top:0.5rem; margin-bottom:0.2rem;'>
       <span style='font-size:3.8rem; font-weight:800; color:#E50914; '>Netflix</span>
-      <span style='font-size:3.8rem; font-weight:800; color:#DDDDDD; '>&nbsp;/</span>
-      <span style='font-size:3.8rem; font-weight:800; color:#FFC72C; '>&nbsp;Warner&nbsp;Bros</span>
+      <span style='font-size:3.8rem; font-weight:800; color:#FFFFFF; '>&nbsp;/</span>
+      <span style='font-size:3.8rem; font-weight:800; color:#005AAE; '>&nbsp;Warner&nbsp;Bros</span>
     </div>
     <div style='text-align:center; font-size:2.0rem; color:#BBBBBB; margin-bottom:0.8rem;'>
       Deal Impact Lab • A.I Analyst • <span style='font-weight:600;'>Media Merger Analysis v2</span>
@@ -727,6 +727,8 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+
+
 # st.markdown(
 #     """
 # <div style='margin-top:10px; padding:10px; border-left: 3px solid #E50914;'>
@@ -755,55 +757,6 @@ st.markdown(
 # """,
 #     unsafe_allow_html=True,
 # )
-
-st.markdown(
-    """
-<style>
-/* 1. Global Injection for High-Contrast Text */
-.data-analyst-box p {
-    font-family: monospace, sans-serif; /* Monospace for a terminal feel */
-}
-/* 2. Style for the accent color used on "AI Deal Analyst" */
-.accent-title {
-    color: #00FF7F; /* Bright, high-contrast Financial Green */
-    font-size: 1.25rem !important; 
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-}
-/* 3. Style for the main description text */
-.sub-text {
-    font-size: 0.95rem;
-    color: #AAAAAA; /* Softer white for secondary information */
-    opacity: 0.85;
-}
-/* 4. Style for the grounded data text */
-.grounded-data-text {
-    color: #4CAF50; /* A slightly darker green for the emphasis text */
-    font-weight: 500;
-}
-</style>
-
-<div class='data-analyst-box' style='
-    padding: 16px; 
-    border-radius: 6px; 
-    border-left: 5px solid #00FF7F; /* Prominent left border (Financial accent) */
-    background: #1C1C1C; /* Very dark charcoal background */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); /* Subtle drop shadow for depth */
-    margin-bottom: 20px;
-'>
-  <div class='accent-title' style='margin-bottom: 8px;'>
-    AI Deal Analyst — ask how this Netflix–Warner Bros scenario plays out
-  </div>
-  <div class='sub-text' style='margin-bottom: 4px;'>
-    Answers are grounded in this dashboard’s <span class='grounded-data-text'>live data</span>: franchise value, platform exposure,
-    your scenario setting, and the modeled WB catalog sample.
-  </div>
-</div>
-""",
-    unsafe_allow_html=True,
-)
-
 risk_top = globals().get("risk_top", None)
 
 import json
@@ -877,6 +830,53 @@ def build_context_for_llm(
     # Make absolutely sure everything is serializable
     return json.dumps(ctx, indent=2, default=str)
 
+# st.markdown(
+#     """
+# <style>
+# /* 1. Global Injection for High-Contrast Text */
+# .data-analyst-box p {
+#     font-family: monospace, sans-serif; /* Monospace for a terminal feel */
+# }
+# /* 2. Style for the accent color used on "AI Deal Analyst" */
+# .accent-title {
+#     color: #00FF7F; /* Bright, high-contrast Financial Green */
+#     font-size: 1.25rem !important; 
+#     font-weight: 700;
+#     text-transform: uppercase;
+#     letter-spacing: 1.5px;
+# }
+# /* 3. Style for the main description text */
+# .sub-text {
+#     font-size: 0.95rem;
+#     color: #AAAAAA; /* Softer white for secondary information */
+#     opacity: 0.85;
+# }
+# /* 4. Style for the grounded data text */
+# .grounded-data-text {
+#     color: #4CAF50; /* A slightly darker green for the emphasis text */
+#     font-weight: 500;
+# }
+# </style>
+
+# <div class='data-analyst-box' style='
+#     padding: 16px; 
+#     border-radius: 6px; 
+#     border-left: 5px solid #00FF7F; /* Prominent left border (Financial accent) */
+#     background: #1C1C1C; /* Very dark charcoal background */
+#     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); /* Subtle drop shadow for depth */
+#     margin-bottom: 20px;
+# '>
+#   <div class='accent-title' style='margin-bottom: 8px;'>
+#     AI Deal Analyst — ask how this Netflix–Warner Bros scenario plays out
+#   </div>
+#   <div class='sub-text' style='margin-bottom: 4px;'>
+#     Answers are grounded in this dashboard’s <span class='grounded-data-text'>live data</span>: franchise value, platform exposure,
+#     your scenario setting, and the modeled WB catalog sample.
+#   </div>
+# </div>
+# """,
+#     unsafe_allow_html=True,
+# )
 
 scenario = st.radio(
     r"$\textsf{ How aggressively do you think Netflix will pull WB content in-house?}$",
@@ -891,13 +891,90 @@ scenario = st.radio(
 )
 log_usage("scenario_change", scenario=scenario)
 
+st.markdown(
+    """
+<style>
+/* ----------------------------------- */
+/* 1. ANIMATION KEYFRAMES for Flicker */
+/* ----------------------------------- */
+@keyframes slow-glow {
+    0% { box-shadow: 0 0 5px rgba(0, 255, 127, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4); } /* Original Shadow + Subtle Glow */
+    50% { box-shadow: 0 0 10px rgba(0, 255, 127, 0.8), 0 2px 8px rgba(0, 0, 0, 0.4); } /* Brighter Glow */
+    100% { box-shadow: 0 0 5px rgba(0, 255, 127, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4); } /* Return to Subtle Glow */
+}
+
+/* ADD THIS RULE TO YOUR EXISTING <style> BLOCK */
+div[data-testid="stTextInput"] {
+    margin-top: -25px !important; /* Adjust this value (e.g., -10px, -20px) to fine-tune the spacing */
+}
+
+/* Your border rule, ensuring the border remains visible */
+div.stTextInput > div:nth-child(2) > div:nth-child(1) {
+    border: 1px solid #15F2FD; /* Simple 1px green border */
+    border-radius: 4px; /* Slight rounding */
+    padding: 3px; /* Ensure text isn't right against the border */
+}
+
+/* ADD THIS RULE TO YOUR EXISTING <style> BLOCK */
+div.stTextInput > div:nth-child(2) > div:nth-child(1) {
+    border: 1px solid #15F2FD; /* Simple 1px green border */
+    border-radius: 4px; /* Slight rounding */
+    padding: 3px; /* Ensure text isn't right against the border */
+}
+
+/* 3. Style for the accent color used on "AI Deal Analyst" */
+.accent-title {
+    color: #00FF7F; /* Bright, high-contrast Financial Green */
+    font-size: 1.25rem !important; 
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+/* 4. Style for the main description text */
+.sub-text {
+    font-size: 0.95rem;
+    color: #AAAAAA; 
+    opacity: 0.85;
+}
+
+/* 5. Style for the grounded data text */
+.grounded-data-text {
+    color: #4CAF50; 
+    font-weight: 500;
+}
+
+/* 6. NEW ANIMATION APPLICATION */
+.flicker-attention {
+    animation: slow-glow 2s infinite alternate; /* 2s duration, repeats infinitely, alternates direction */
+}
+</style>
+
+<div class='data-analyst-box flicker-attention' style='
+    padding: 16px; 
+    border-radius: 6px; 
+    border-left: 5px solid #00FF7F; 
+    background: #1C1C1C; 
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); 
+    margin-bottom: 20px;
+'>
+  <div class='accent-title' style='margin-bottom: 8px;'>
+    AI Deal Analyst — ask how this Netflix–Warner Bros scenario plays out
+  </div>
+  <div class='sub-text' style='margin-bottom: 4px;'>
+    Answers are grounded in this dashboard’s <span class='grounded-data-text'>live data</span>: franchise value, platform exposure,
+    your scenario setting, and the modeled WB catalog sample.
+  </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
 user_q = st.text_input(
-    r"$\textsf{\Large Question to the analyst}$",
+    r"",#r"$\textsf{\ Question to the analyst}$",
     placeholder="e.g., Which platforms lose the most leverage if Netflix pulls the top HBO dramas in-house?",
     key="ai_question",
 )
-
-
 
 if user_q:
     if not _openai_ok:
@@ -1582,7 +1659,7 @@ The analytics on this page are meant to **complement, not replace**, these sourc
 #   - Deal terms, consideration mix, and spin-off details  
 #     - [Deal summary / prospectus](https://example.com/deal-terms)
 
-    st.markdown("#### Hard news coverage")
+    st.markdown("#### News coverage")
     st.markdown(
         """
     - AP News — *Netflix to acquire Warner Bros studio and streaming business for $72 billion*  
@@ -1592,12 +1669,12 @@ The analytics on this page are meant to **complement, not replace**, these sourc
     - Financial Times — *Netflix agrees $83bn takeover of Warner Bros Discovery*  
     – [FT deal write-up](https://www.ft.com/content/6532be94-c0bf-4101-8126-f249aa6be3c5) :contentReference[oaicite:4]{index=4} """)
 
-    st.markdown("#### Financing & market angl")
+    st.markdown("#### Financing & market")
 
     st.markdown("""- Bloomberg — *Netflix lines up $59bn of debt for Warner Bros deal*  
     – [Financing piece](https://www.bloomberg.com/news/articles/2025-12-05/netflix-lines-up-59-billion-of-debt-for-warner-bros-deal) :contentReference[oaicite:5]{index=5} """) 
 
-    st.markdown("#### HReaction & impact")
+    st.markdown("#### Reaction & impact")
 
     st.markdown("""- AP News — *Notable early reaction to Netflix’s deal to acquire Warner Bros*  
     – [Industry & political reaction](https://apnews.com/article/netflix-warner-bros-deal-reaction-3acea5d81e630d20560299764bf4c37c) :contentReference[oaicite:6]{index=6}  
