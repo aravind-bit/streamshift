@@ -693,7 +693,7 @@ top_platform = SUMMARY["top_platform"]
 # --- Hero header: logo + title + subtitle ---
 hero = st.container()
 with hero:
-    col_logo, col_text = st.columns([0.12, 0.80])  # tweak ratios if needed
+    col_logo, col_text = st.columns([0.14, 0.84])  # tweak ratios if needed
 
     with col_logo:
         # Streamlit handles the asset path; keep the image reasonably small
