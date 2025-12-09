@@ -687,23 +687,86 @@ outside_pct = SUMMARY["outside_pct"]
 top_franchise = SUMMARY["top_franchise"]
 top_platform = SUMMARY["top_platform"]
 
+
 # ---- Hero title & version ----
-st.markdown(
-    """
-    <div style='text-align:center; margin-top:0.5rem; margin-bottom:0.2rem;'>
-      <span style='font-size:3.8rem; font-weight:800; color:#E50914; '>Netflix</span>
-      <span style='font-size:3.8rem; font-weight:800; color:#FFFFFF; '>&nbsp;/</span>
-      <span style='font-size:3.8rem; font-weight:800; color:#005AAE; '>&nbsp;Warner&nbsp;Bros</span>
-    </div>
-    <div style='text-align:center; font-size:2.0rem; color:#BBBBBB; margin-bottom:0.8rem;'>
-      Deal Impact Lab • A.I Analyst • <span style='font-weight:600;'>Media Merger Analysis v2</span>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+# --- Title + Companies Image Banner ---
+# --- Hero header: logo + title + subtitle ---
+hero = st.container()
+with hero:
+    col_logo, col_text = st.columns([0.12, 0.80])  # tweak ratios if needed
 
-log_usage("page_load")
+    with col_logo:
+        # Streamlit handles the asset path; keep the image reasonably small
+        st.image("data/logos/Merger.png", use_column_width=True)
 
+    with col_text:
+        st.markdown(
+            """
+            <div style="padding-top:4px;">
+                <div style="
+                    font-size:1.0rem;
+                    letter-spacing:0.18em;
+                    text-transform:uppercase;
+                    color:#F9FAFB;
+                    margin-bottom:4px;
+                ">
+                    Deal Impact Lab · Streaming & Studio Consolidation
+                </div>
+                <div style="
+                    font-size:2.20rem;
+                    font-weight:700;
+                    line-height:1.1;
+                    color:#F9FAFB;
+                ">
+                    Netflix vs Paramount: Warner&nbsp;Bros Acquisition
+                </div>
+                <div style="
+                    font-size:1.2rem;
+                    color:#9CA3AF;
+                    margin-top:6px;
+                ">
+                    Real-Time Fallout Simulation • A.I Analyst • Media Merger Analysis v3
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+#and Warner Bros franchise leverage.
+#with right:
+#    st.image("data/logos/companies.png", width=180)   # adjust width as needed
+
+
+# st.markdown(
+#     """
+#     <div style='text-align:center; margin-top:0.5rem; margin-bottom:0.2rem;'>
+#       <span style='font-size:3.8rem; font-weight:800; color:#FFFFFF; '>Merger Impact Dashboard</span>
+#     </div>
+#     <div style='text-align:center; font-size:1.50rem; color:#BBBBBB; margin-bottom:0.8rem;'>
+#       Impact modeling • Platform and Subscriber Impact • A.I Deal Analyst • <span style='font-weight:600;'>Media Merger Analysis v2</span>
+#     </div>
+#     """,
+#     unsafe_allow_html=True,
+# )
+
+# log_usage("page_load")
+# LOGOS = {
+#     "Netflix": "data/logos/netflix.png",
+#     "Paramount": "data/logos/paramount.png",
+#     "Warner Bros": "data/logos/wbd.png",
+#     #"Max": "data/logos/max.png",
+# }
+
+# cols = st.columns(len(LOGOS))
+
+# for col, (label, path) in zip(cols, LOGOS.items()):
+#     with col:
+#         st.image(path, width=172)
+
+
+    #   <span style='font-size:3.8rem; font-weight:800; color:#FFFFFF; '>&nbsp;/</span>
+    #   <span style='font-size:3.8rem; font-weight:800; color:#005AAE; '>&nbsp;Warner&nbsp;Bros</span>
 # # ---- One-line fallout insight ----
 # st.markdown(
 #     f"""
@@ -715,17 +778,17 @@ log_usage("page_load")
 #     unsafe_allow_html=True,
 # )
 # --- Narrative Hook ---
-st.markdown(
-    """
-    <div style='font-size:1.15rem; font-weight:500; margin-top:-10px; margin-bottom:25px; opacity:0.9;'>
-        <span style='color:#ffffff;'>If Netflix takes Warner Bros,</span>
-        <b>who bleeds first?</b><br>
-        This Fallout Simulator models which <b>platforms</b> and <b>franchises</b> feel the pain first 
-        under Conservative / Base / Aggressive pull-in scenarios.
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
+# st.markdown(
+#     """
+#     <div style='font-size:1.15rem; font-weight:500; margin-top:-10px; margin-bottom:25px; opacity:0.9;'>
+#         <span style='color:#ffffff;'>If Netflix takes Warner Bros,</span>
+#         <b>who bleeds first?</b><br>
+#         This Fallout Simulator models which <b>platforms</b> and <b>franchises</b> feel the pain first 
+#         under Conservative / Base / Aggressive pull-in scenarios.
+#     </div>
+#     """,
+#     unsafe_allow_html=True,
+# )
 
 
 
@@ -757,6 +820,255 @@ st.markdown(
 # """,
 #     unsafe_allow_html=True,
 # )
+# risk_top = globals().get("risk_top", None)
+
+# import json
+
+# def build_context_for_llm(
+#     titles_df: pd.DataFrame,
+#     platform_exposure: pd.DataFrame | None,
+#     risk_top: pd.DataFrame | None,
+#     scenario: str,
+#     hero_summary: dict,
+# ) -> str:
+#     """
+#     Build a compact, JSON-serializable context object for the AI analyst.
+
+#     We ONLY send small slices of data, and everything is converted to
+#     primitive Python types (lists/dicts/floats/strings).
+#     """
+
+#     # --- Titles slice: top 25 by modeled value ---
+#     if titles_df is not None and not titles_df.empty:
+#         cols = [
+#             c
+#             for c in titles_df.columns
+#             if c in ("title", "franchise_group", "current_platform", "value_score_norm")
+#         ]
+#         titles_slice = (
+#             titles_df[cols]
+#             .sort_values("value_score_norm", ascending=False)
+#             .head(25)
+#             .reset_index(drop=True)
+#             .to_dict(orient="records")
+#         )
+#     else:
+#         titles_slice = []
+
+#     # --- Platform exposure slice for donut chart data ---
+#     if platform_exposure is not None and not platform_exposure.empty:
+#         plat_slice = (
+#             platform_exposure[["platform", "value", "share"]]
+#             .reset_index(drop=True)
+#             .to_dict(orient="records")
+#         )
+#     else:
+#         plat_slice = []
+
+#     # --- Top risk titles slice ---
+#     if risk_top is not None and not isinstance(risk_top, list):
+#         try:
+#             risk_slice = risk_top.reset_index(drop=True).to_dict(orient="records")
+#         except Exception:
+#             risk_slice = []
+#     else:
+#         risk_slice = risk_top or []
+
+#     # --- Hero summary already a dict (from compute_summary_metrics) ---
+#     hero_safe = {
+#         "total_titles": float(hero_summary.get("total_titles", 0)),
+#         "outside_pct": float(hero_summary.get("outside_pct", 0.0)),
+#         "top_franchise": str(hero_summary.get("top_franchise", "")),
+#         "top_platform": str(hero_summary.get("top_platform", "")),
+#     }
+
+#     ctx = {
+#         "scenario": scenario,
+#         "hero_summary": hero_safe,
+#         "titles_sample": titles_slice,
+#         "platform_exposure": plat_slice,
+#         "top_risk_titles": risk_slice,
+#     }
+
+#     # Make absolutely sure everything is serializable
+#     return json.dumps(ctx, indent=2, default=str)
+
+# st.markdown(
+##00FF7F##########################################################################
+
+
+
+# ----------------- Scenario selector + config -----------------
+
+SCENARIO_CONFIG = {
+    "Netflix": {
+        "buyer_label": "Netflix",
+        "deal_tagline": "Netflix-led bid for Warner Bros",
+        "subscriber_heading": "How this Netflix-led bid hits you as a streaming subscriber",
+        "deck_heading": "One-slide takeaway — Netflix consolidation snapshot",
+        "curated_title": "Live: Curated Deal Headlines — Netflix / Warner Bros",
+        "curated_subtitle": (
+            "Live headlines on Netflix’s bid, studio pushback, and what the deal "
+            "means for the streaming stack."
+        ),
+        "news_queries": [
+            "netflix+warner+bros+deal",
+            "netflix+acquisition+warner+bros",
+            "netflix+wb+merger"
+        ],
+    },
+    "Paramount": {
+        "buyer_label": "Paramount",
+        "deal_tagline": "Paramount-led bid for Warner Bros",
+        "subscriber_heading": "How this Paramount-led bid hits you as a streaming subscriber",
+        "deck_heading": "One-slide takeaway — Paramount consolidation snapshot",
+        "curated_title": "Live: Curated Deal Headlines — Paramount / Warner Bros",
+        "curated_subtitle": (
+            "Live headlines on Paramount’s offer, shareholder reaction, and the fallout "
+            "across the streaming landscape."
+        ),
+        "news_queries": [
+            "paramount+hostile+bid+warner+bros",
+            "paramount+warner+bros+takeover",
+            "paramount+wb+merger"
+        ],
+    },
+}
+
+st.markdown("### Choose whose bid you want to model")
+scenario = st.radio(
+    "Deal lens",
+    options=list(SCENARIO_CONFIG.keys()),
+    index=0,
+    horizontal=True,
+    label_visibility="collapsed",
+)
+
+import requests
+import xml.etree.ElementTree as ET
+
+def get_news_items(query: str, limit: int = 5):
+    """
+    Fetch RSS headlines from Google News for a given query.
+    Returns a list of dicts: {"title", "link", "published"}.
+    """
+    url = f"https://news.google.com/rss/search?q={query}"
+    try:
+        resp = requests.get(url, timeout=5)
+        resp.raise_for_status()
+        root = ET.fromstring(resp.content)
+
+        items = []
+        for item in root.findall(".//item")[:limit]:
+            title = item.find("title").text if item.find("title") is not None else "No Title"
+            link = item.find("link").text if item.find("link") is not None else "#"
+            pub = item.find("pubDate").text if item.find("pubDate") is not None else ""
+            items.append({"title": title, "link": link, "published": pub})
+        return items
+    except Exception:
+        return []
+
+
+cfg = SCENARIO_CONFIG[scenario]
+#st.subheader(cfg["subscriber_heading"])
+
+def render_curated_headlines(cfg: dict):
+    # 1. fetch + dedupe using scenario-specific queries
+    queries = cfg["news_queries"]
+
+    articles = []
+    for q in queries:
+        articles.extend(get_news_items(q, limit=3))
+
+    seen = set()
+    clean_articles = []
+    for a in articles:
+        if a["title"] not in seen:
+            seen.add(a["title"])
+            clean_articles.append(a)
+        if len(clean_articles) >= 5:
+            break
+
+    parts = []
+
+    # open box + scenario-aware header/subtitle
+    parts.append(
+        f"""
+<div style="
+    padding: 20px 24px;
+    border-radius: 12px;
+    background: #050709;
+    border: 1px solid #1F2933;
+    margin-bottom: 24px;
+">
+  <div style="color:#F9FAFB; font-size:22px; font-weight:700; margin-bottom:6px;">
+    {cfg['curated_title']}
+  </div>
+  <div style="color:#9CA3AF; font-size:15px; margin-bottom:14px;">
+    {cfg['curated_subtitle']}
+  </div>
+"""
+    )
+
+    # rows
+    for item in clean_articles:
+        title = item["title"]
+        link = item["link"]
+        published = item["published"]
+
+        simple_date = ""
+        if published:
+            try:
+                simple_date = published.split(", ", 1)[-1].replace(" GMT", "")
+            except Exception:
+                simple_date = published
+
+        source = title.split(" - ")[-1] if " - " in title else ""
+        meta_bits = []
+        if source:
+            meta_bits.append(source)
+        if simple_date:
+            meta_bits.append(simple_date)
+        meta_text = " · ".join(meta_bits)
+
+        parts.append(
+            f"""
+  <div style="margin-bottom:10px;">
+    <div style="font-size:17px; color:#F9FAFB; margin-bottom:3px;">
+      • <a href="{link}" target="_blank"
+           style="color:#F9FAFB; text-decoration:none; font-weight:600;">
+           {title}
+        </a>
+    </div>
+    <div style="color:#9CA3AF; font-size:13px; margin-left:1.2rem;">
+      {meta_text}
+    </div>
+  </div>
+"""
+        )
+
+    parts.append("</div>")
+
+    html = "\n".join(parts)
+    st.markdown(html, unsafe_allow_html=True)
+
+
+buyer_label = cfg["buyer_label"]  # "Netflix" or "Paramount"
+
+scenario = st.radio(
+    rf"$\textsf{{ How aggressively do you think {buyer_label} will pull WB content in-house? }}$",
+    options=["Conservative", "Base case", "Aggressive"],
+    index=1,
+    horizontal=True,
+    help=(
+        f"Conservative: only the most exposed titles move.\n"
+        f"Base case: measured consolidation of high-value WB tentpoles.\n"
+        f"Aggressive: deep consolidation where {buyer_label} pulls most WB content in-house."
+    ),
+)
+
+log_usage("scenario_change", scenario=scenario)
+
 risk_top = globals().get("risk_top", None)
 
 import json
@@ -820,7 +1132,7 @@ def build_context_for_llm(
     }
 
     ctx = {
-        "scenario": scenario,
+        "scenario": scenario,  # "Netflix" or "Paramount"
         "hero_summary": hero_safe,
         "titles_sample": titles_slice,
         "platform_exposure": plat_slice,
@@ -830,42 +1142,73 @@ def build_context_for_llm(
     # Make absolutely sure everything is serializable
     return json.dumps(ctx, indent=2, default=str)
 
-# st.markdown(
-##00FF7F##########################################################################
 
+
+# st.markdown(
 #     """
 # <style>
-# /* 1. Global Injection for High-Contrast Text */
-# .data-analyst-box p {
-#     font-family: monospace, sans-serif; /* Monospace for a terminal feel */
+# /* ----------------------------------- */
+# /* 1. ANIMATION KEYFRAMES for Flicker */
+# /* ----------------------------------- */
+# @keyframes slow-glow {
+#     0% { box-shadow: 0 0 5px rgba(0, 255, 127, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4); } /* Original Shadow + Subtle Glow */
+#     50% { box-shadow: 0 0 10px rgba(0, 255, 127, 0.8), 0 2px 8px rgba(0, 0, 0, 0.4); } /* Brighter Glow */
+#     100% { box-shadow: 0 0 5px rgba(0, 255, 127, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4); } /* Return to Subtle Glow */
 # }
-# /* 2. Style for the accent color used on "AI Deal Analyst" */
+
+# /* ADD THIS RULE TO YOUR EXISTING <style> BLOCK */
+# div[data-testid="stTextInput"] {
+#     margin-top: -25px !important; /* Adjust this value (e.g., -10px, -20px) to fine-tune the spacing */
+# }
+
+# /* Your border rule, ensuring the border remains visible */
+# div.stTextInput > div:nth-child(2) > div:nth-child(1) {
+#     border: 1px solid #15F2FD; /* Simple 1px green border */
+#     border-radius: 4px; /* Slight rounding */
+#     padding: 3px; /* Ensure text isn't right against the border */
+# }
+
+# /* ADD THIS RULE TO YOUR EXISTING <style> BLOCK */
+# div.stTextInput > div:nth-child(2) > div:nth-child(1) {
+#     border: 1px solid #15F2FD; /* Simple 1px green border */
+#     border-radius: 4px; /* Slight rounding */
+#     padding: 3px; /* Ensure text isn't right against the border */
+# }
+
+# /* 3. Style for the accent color used on "AI Deal Analyst" */
 # .accent-title {
-#     color: #00FF7F; /* Bright, high-contrast Financial Green */
+#     color: #15F2FD; /* Bright, high-contrast Financial Green */
 #     font-size: 1.25rem !important; 
 #     font-weight: 700;
 #     text-transform: uppercase;
 #     letter-spacing: 1.5px;
 # }
-# /* 3. Style for the main description text */
+
+# /* 4. Style for the main description text */
 # .sub-text {
 #     font-size: 0.95rem;
-#     color: #AAAAAA; /* Softer white for secondary information */
+#     color: #AAAAAA; 
 #     opacity: 0.85;
 # }
-# /* 4. Style for the grounded data text */
+
+# /* 5. Style for the grounded data text */
 # .grounded-data-text {
-#     color: #4CAF50; /* A slightly darker green for the emphasis text */
+#     color: #4CAF50; 
 #     font-weight: 500;
+# }
+
+# /* 6. NEW ANIMATION APPLICATION */
+# .flicker-attention {
+#     animation: slow-glow 2s infinite alternate; /* 2s duration, repeats infinitely, alternates direction */
 # }
 # </style>
 
-# <div class='data-analyst-box' style='
+# <div class='data-analyst-box flicker-attention' style='
 #     padding: 16px; 
 #     border-radius: 6px; 
-#     border-left: 5px solid #00FF7F; /* Prominent left border (Financial accent) */
-#     background: #1C1C1C; /* Very dark charcoal background */
-#     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); /* Subtle drop shadow for depth */
+#     border-left: 5px solid #15F2FD; 
+#     background: #1C1C1C; 
+#     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); 
 #     margin-bottom: 20px;
 # '>
 #   <div class='accent-title' style='margin-bottom: 8px;'>
@@ -880,149 +1223,57 @@ def build_context_for_llm(
 #     unsafe_allow_html=True,
 # )
 
-scenario = st.radio(
-    r"$\textsf{ How aggressively do you think Netflix will pull WB content in-house?}$",
-    options=["Conservative", "Base case", "Aggressive"],
-    index=1,
-    horizontal=True,
-    help=(
-        "Conservative: only the most exposed titles move.\n"
-        "Base case: measured consolidation of high-value WB tentpoles.\n"
-        "Aggressive: deep consolidation where Netflix pulls most WB content in-house."
-    ),
-)
-log_usage("scenario_change", scenario=scenario)
+# user_q = st.text_input(
+#     r"",#r"$\textsf{\ Question to the analyst}$",
+#     placeholder="e.g., Which platforms lose the most leverage if Netflix pulls the top HBO dramas in-house?",
+#     key="ai_question",
+# )
 
-st.markdown(
-    """
-<style>
-/* ----------------------------------- */
-/* 1. ANIMATION KEYFRAMES for Flicker */
-/* ----------------------------------- */
-@keyframes slow-glow {
-    0% { box-shadow: 0 0 5px rgba(0, 255, 127, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4); } /* Original Shadow + Subtle Glow */
-    50% { box-shadow: 0 0 10px rgba(0, 255, 127, 0.8), 0 2px 8px rgba(0, 0, 0, 0.4); } /* Brighter Glow */
-    100% { box-shadow: 0 0 5px rgba(0, 255, 127, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4); } /* Return to Subtle Glow */
-}
+# if user_q:
+#     if not _openai_ok:
+#         st.warning(
+#             "The AI Deal Analyst is temporarily unavailable on this deployment. "
+#             "Check that OPENAI_API_KEY is set and the OpenAI client is installed."
+#         )
+#     else:
+#         with st.spinner("Analyzing using your scenario and WB exposure model..."):
+#             try:
+#                 context_json = build_context_for_llm(
+#                     titles_df=titles_df,
+#                     platform_exposure=PLATFORM_EXPOSURE,
+#                     risk_top=risk_top,
+#                     scenario=scenario,
+#                     hero_summary=SUMMARY,   # your hero metrics dict
+#                 )
 
-/* ADD THIS RULE TO YOUR EXISTING <style> BLOCK */
-div[data-testid="stTextInput"] {
-    margin-top: -25px !important; /* Adjust this value (e.g., -10px, -20px) to fine-tune the spacing */
-}
+#                 sys_prompt = f"""
+# You are an elite senior media strategy analyst specializing in mergers, content economics,
+# and platform exposure. Use ONLY the structured data below to answer questions.
 
-/* Your border rule, ensuring the border remains visible */
-div.stTextInput > div:nth-child(2) > div:nth-child(1) {
-    border: 1px solid #15F2FD; /* Simple 1px green border */
-    border-radius: 4px; /* Slight rounding */
-    padding: 3px; /* Ensure text isn't right against the border */
-}
+# Here is the structured context (JSON):
+# {context_json}
 
-/* ADD THIS RULE TO YOUR EXISTING <style> BLOCK */
-div.stTextInput > div:nth-child(2) > div:nth-child(1) {
-    border: 1px solid #15F2FD; /* Simple 1px green border */
-    border-radius: 4px; /* Slight rounding */
-    padding: 3px; /* Ensure text isn't right against the border */
-}
+# Rules:
+# - Never hallucinate titles that are not in the data.
+# - Always tie answers to platforms, franchises, and relative exposure.
+# - Treat values as directional, not precise forecasts.
+# """
 
-/* 3. Style for the accent color used on "AI Deal Analyst" */
-.accent-title {
-    color: #15F2FD; /* Bright, high-contrast Financial Green */
-    font-size: 1.25rem !important; 
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-}
+#                 completion = client.chat.completions.create(
+#                     model="gpt-4o-mini",
+#                     messages=[
+#                         {"role": "system", "content": sys_prompt},
+#                         {"role": "user", "content": user_q},
+#                     ],
+#                     max_tokens=350,
+#                 )
 
-/* 4. Style for the main description text */
-.sub-text {
-    font-size: 0.95rem;
-    color: #AAAAAA; 
-    opacity: 0.85;
-}
+#                 answer = completion.choices[0].message.content
+#                 st.markdown(f"### AI Analyst Response\n{answer}")
+#                 #st.markdown(answer)
 
-/* 5. Style for the grounded data text */
-.grounded-data-text {
-    color: #4CAF50; 
-    font-weight: 500;
-}
-
-/* 6. NEW ANIMATION APPLICATION */
-.flicker-attention {
-    animation: slow-glow 2s infinite alternate; /* 2s duration, repeats infinitely, alternates direction */
-}
-</style>
-
-<div class='data-analyst-box flicker-attention' style='
-    padding: 16px; 
-    border-radius: 6px; 
-    border-left: 5px solid #15F2FD; 
-    background: #1C1C1C; 
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); 
-    margin-bottom: 20px;
-'>
-  <div class='accent-title' style='margin-bottom: 8px;'>
-    AI Deal Analyst — ask how this Netflix–Warner Bros scenario plays out
-  </div>
-  <div class='sub-text' style='margin-bottom: 4px;'>
-    Answers are grounded in this dashboard’s <span class='grounded-data-text'>live data</span>: franchise value, platform exposure,
-    your scenario setting, and the modeled WB catalog sample.
-  </div>
-</div>
-""",
-    unsafe_allow_html=True,
-)
-
-user_q = st.text_input(
-    r"",#r"$\textsf{\ Question to the analyst}$",
-    placeholder="e.g., Which platforms lose the most leverage if Netflix pulls the top HBO dramas in-house?",
-    key="ai_question",
-)
-
-if user_q:
-    if not _openai_ok:
-        st.warning(
-            "The AI Deal Analyst is temporarily unavailable on this deployment. "
-            "Check that OPENAI_API_KEY is set and the OpenAI client is installed."
-        )
-    else:
-        with st.spinner("Analyzing using your scenario and WB exposure model..."):
-            try:
-                context_json = build_context_for_llm(
-                    titles_df=titles_df,
-                    platform_exposure=PLATFORM_EXPOSURE,
-                    risk_top=risk_top,
-                    scenario=scenario,
-                    hero_summary=SUMMARY,   # your hero metrics dict
-                )
-
-                sys_prompt = f"""
-You are an elite senior media strategy analyst specializing in mergers, content economics,
-and platform exposure. Use ONLY the structured data below to answer questions.
-
-Here is the structured context (JSON):
-{context_json}
-
-Rules:
-- Never hallucinate titles that are not in the data.
-- Always tie answers to platforms, franchises, and relative exposure.
-- Treat values as directional, not precise forecasts.
-"""
-
-                completion = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": sys_prompt},
-                        {"role": "user", "content": user_q},
-                    ],
-                    max_tokens=350,
-                )
-
-                answer = completion.choices[0].message.content
-                st.markdown(f"### AI Analyst Response\n{answer}")
-                #st.markdown(answer)
-
-            except Exception as e:
-                st.error(f"AI unavailable. Falling back to basic answers.\n\nError: {e}")
+#             except Exception as e:
+#                 st.error(f"AI unavailable. Falling back to basic answers.\n\nError: {e}")
 
 
 # ---- Metric tiles row ----
@@ -1079,7 +1330,7 @@ with col_left:
 
         <ul style='margin-top:10px;'>
             <li><b>Which WB franchises drive real leverage</b> (not just fan sentiment)</li>
-            <li><b>Which rival platforms lose the most value first</b> if Netflix pulls WB in-house</li>
+            <li><b>Which rival platforms lose the most value first</b> if Netflix / Paramount pulls WB in-house</li>
             <li><b>How the fallout shifts</b> across Conservative / Base / Aggressive scenarios</li>
         </ul>
 
@@ -1092,6 +1343,22 @@ with col_left:
     "<div class='hero-link'><a href='#sources-section'>Jump to deal coverage & risk →</a></div>",
     unsafe_allow_html=True,
     )
+st.markdown("<div id='sources-section'></div>", unsafe_allow_html=True)
+with col_right:
+        # --- Top 5 Fallout Findings strip (unchanged) --------------------------------
+        shock_findings = build_shock_findings(titles_df, SUMMARY, PLATFORM_EXPOSURE, scenario)
+
+        if shock_findings:
+            st.markdown("## Top 5 fallout findings from this scenario")
+
+            st.markdown(
+                "<div style='padding:10px 12px; border-radius:12px; "
+                "background:rgba(10,10,20,0.85); border:1px solid rgba(255,255,255,0.08);'>",
+                unsafe_allow_html=True,
+            )
+            for i, line in enumerate(shock_findings, start=1):
+                st.markdown(f"- {line}")
+            st.markdown("</div>", unsafe_allow_html=True)
 
 
 # with col_right:
@@ -1117,8 +1384,14 @@ with col_left:
 #     "As additional platforms are tagged in the dataset, this view will split across more services."
 # )
 
-st.markdown("<div id='sources-section'></div>", unsafe_allow_html=True)
-with col_right:
+# Anchor for internal link
+
+# --- Side-by-side charts: platforms vs franchises ----------------------------
+
+chart_col1, chart_col2 = st.columns([1, 1])
+
+# LEFT: platform exposure (pie)
+with chart_col1:
     st.markdown("#### Rival platforms with WB value at risk")
 
     if PLATFORM_EXPOSURE.empty:
@@ -1134,7 +1407,6 @@ with col_right:
             "Rent/Buy": "#6C757D",     # neutral gray for TVOD / rent-buy
         }
 
-        # Build a color map with a sensible default for anything not listed above
         default_color = "#9E86FF"  # fallback WB purple
         color_map = {
             plat: brand_colors.get(plat, default_color)
@@ -1149,7 +1421,6 @@ with col_right:
             color="platform",
             color_discrete_map=color_map,
         )
-
         platform_fig.update_traces(
             textinfo="label+percent",
             hovertemplate="<b>%{label}</b><br>Modeled WB value at risk: %{value:.2f}<extra></extra>",
@@ -1157,6 +1428,7 @@ with col_right:
         platform_fig.update_layout(
             showlegend=False,
             margin=dict(l=0, r=0, t=20, b=0),
+            height=320,
         )
 
         st.plotly_chart(platform_fig, use_container_width=True)
@@ -1167,185 +1439,262 @@ with col_right:
             f"**{top_row['share']*100:.1f}%** of the modeled WB value that sits outside Netflix."
         )
 
-        # top_row = PLATFORM_EXPOSURE.sort_values("share", ascending=False).iloc[0]
-        # st.caption(
-        #     f"In this sample, **{top_row['platform']}** carries about "
-        #     f"**{top_row['share']*100:.1f}%** of the modeled WB value that sits outside Netflix."
-        # )
+# RIGHT: franchise leverage (horizontal bar)
+with chart_col2:
+    section_heading("Top WB franchises by modeled value")
 
-# --- Top 5 Fallout Findings strip --------------------------------------------
-shock_findings = build_shock_findings(titles_df, SUMMARY, PLATFORM_EXPOSURE, scenario)
+    fr_df = titles_df.copy()
 
-if shock_findings:
-    st.markdown("## Top 5 fallout findings from this scenario")
-
-    # Glassy card container
-    st.markdown(
-        "<div style='padding:10px 12px; border-radius:12px; "
-        "background:rgba(10,10,20,0.85); border:1px solid rgba(255,255,255,0.08);'>",
-        unsafe_allow_html=True,
-    )
-
-    for i, line in enumerate(shock_findings, start=1):
-        st.markdown(f"- {line}")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-section_heading("Top WB franchises by modeled value")
-
-# Franchise Value Stack: who matters most?
-fr_df = titles_df.copy()
-
-if isinstance(fr_df, pd.DataFrame) and "franchise_group" in fr_df.columns:
-    fr_col_name = "franchise_group"
-else:
-    fr_col_name = None
-
-if fr_col_name is None or "value_score_norm" not in fr_df.columns:
-    st.info("Franchise metadata not available in this sample yet.")
-else:
-    # Clean up franchise labels
-    fr_df[fr_col_name] = (
-        fr_df[fr_col_name]
-        .fillna("Standalone / other")
-        .astype(str)
-    )
-
-    # Aggregate modeled value by franchise
-    fr_agg = (
-        fr_df.groupby(fr_col_name)["value_score_norm"]
-        .sum()
-        .reset_index()
-        .sort_values("value_score_norm", ascending=False)
-    )
-
-    if fr_agg.empty:
-        st.info("No franchise-level value data to display yet.")
+    if isinstance(fr_df, pd.DataFrame) and "franchise_group" in fr_df.columns:
+        fr_col_name = "franchise_group"
     else:
-        TOP_N = 8
-        top_franchises = fr_agg.head(TOP_N).copy()
+        fr_col_name = None
 
-        # Aggregate the rest into an "All other WB IP" bucket (kept in data, not plotted)
-        others_value = fr_agg["value_score_norm"].iloc[TOP_N:].sum()
-        if others_value > 0:
-            top_franchises = pd.concat(
-                [
-                    top_franchises,
-                    pd.DataFrame(
-                        [
-                            {
-                                fr_col_name: "All other WB IP",
-                                "value_score_norm": others_value,
-                            }
-                        ]
-                    ),
-                ],
-                ignore_index=True,
-            )
-
-        fr_chart_df = top_franchises.rename(
-            columns={fr_col_name: "Franchise", "value_score_norm": "Modeled value"}
-        ).copy()
-        
-        plot_df = fr_chart_df[fr_chart_df["Franchise"] != "All other WB IP"].copy()
-
-        # Compute percentage share
-        total_val = fr_chart_df["Modeled value"].sum()
-        fr_chart_df["pct"] = fr_chart_df["Modeled value"] / total_val
-        fr_chart_df["pct_label"] = (fr_chart_df["pct"] * 100).round(1).astype(str) + "%"
-
-        # Attach a poster URL if we have one
-        def _poster_for(fr_name: str) -> str:
-            path = poster_lookup.get(fr_name)
-            if not path:
-                return ""
-            return TMDB_POSTER_BASE + path
-
-        fr_chart_df["poster_url"] = fr_chart_df["Franchise"].map(_poster_for)
-
-        # Clean up franchise labels using normalizer and generic bucket
-        fr_df[fr_col_name] = fr_df[fr_col_name].apply(normalize_franchise)
+    if fr_col_name is None or "value_score_norm" not in fr_df.columns:
+        st.info("Franchise metadata not available in this sample yet.")
+    else:
         fr_df[fr_col_name] = (
             fr_df[fr_col_name]
-            .fillna("Other WB IP")
+            .fillna("Standalone / other")
             .astype(str)
         )
 
-
-        plot_df = fr_chart_df[
-            ~fr_chart_df["Franchise"].isin(["All other WB IP", "Other WB IP"])
-        ].copy()
-
-
-        # Multi-color bars + poster link in hover
-        fig_fr = px.bar(
-            plot_df,
-            x="pct",
-            y="Franchise",
-            orientation="h",
-            text="pct_label",
-            color="Franchise",
-            color_discrete_sequence=px.colors.qualitative.Pastel,
-            custom_data=["poster_url"],
+        fr_agg = (
+            fr_df.groupby(fr_col_name)["value_score_norm"]
+            .sum()
+            .reset_index()
+            .sort_values("value_score_norm", ascending=False)
         )
 
-        fig_fr.update_traces(
-            textposition="outside",
-            hovertemplate=(
-                "<b>%{y}</b><br>"
-                "% share of modeled WB value: %{x:.1%}<br>"
-                "<span style='font-size:0.8rem;'>"
-                "Poster: %{customdata}"
-                "</span>"
-                "<extra></extra>"
-            ),
+        if fr_agg.empty:
+            st.info("No franchise-level value data to display yet.")
+        else:
+            TOP_N = 8
+            top_franchises = fr_agg.head(TOP_N).copy()
+
+            others_value = fr_agg["value_score_norm"].iloc[TOP_N:].sum()
+            if others_value > 0:
+                top_franchises = pd.concat(
+                    [
+                        top_franchises,
+                        pd.DataFrame(
+                            [
+                                {
+                                    fr_col_name: "All other WB IP",
+                                    "value_score_norm": others_value,
+                                }
+                            ]
+                        ),
+                    ],
+                    ignore_index=True,
+                )
+
+            fr_chart_df = top_franchises.rename(
+                columns={fr_col_name: "Franchise", "value_score_norm": "Modeled value"}
+            ).copy()
+
+            # Compute percentage share
+            total_val = fr_chart_df["Modeled value"].sum()
+            fr_chart_df["pct"] = fr_chart_df["Modeled value"] / total_val
+            fr_chart_df["pct_label"] = (fr_chart_df["pct"] * 100).round(1).astype(str) + "%"
+
+            # Attach a poster URL if we have one
+            def _poster_for(fr_name: str) -> str:
+                path = poster_lookup.get(fr_name)
+                if not path:
+                    return ""
+                return TMDB_POSTER_BASE + path
+
+            fr_chart_df["poster_url"] = fr_chart_df["Franchise"].map(_poster_for)
+
+            # Normalize / bucket names for other analytics
+            fr_df[fr_col_name] = fr_df[fr_col_name].apply(normalize_franchise)
+            fr_df[fr_col_name] = fr_df[fr_col_name].fillna("Other WB IP").astype(str)
+
+            plot_df = fr_chart_df[
+                ~fr_chart_df["Franchise"].isin(["All other WB IP", "Other WB IP"])
+            ].copy()
+
+            fig_fr = px.bar(
+                plot_df,
+                x="pct",
+                y="Franchise",
+                orientation="h",
+                text="pct_label",
+                color="Franchise",
+                color_discrete_sequence=px.colors.qualitative.Pastel,
+                custom_data=["poster_url"],
+            )
+
+            fig_fr.update_traces(
+                textposition="outside",
+                hovertemplate=(
+                    "<b>%{y}</b><br>"
+                    "% share of modeled WB value: %{x:.1%}<br>"
+                    "<span style='font-size:0.8rem;'>Poster: %{customdata}</span>"
+                    "<extra></extra>"
+                ),
+            )
+
+            fig_fr.update_layout(
+                xaxis_title="% of modeled WB value",
+                yaxis_title="Franchise / IP group",
+                template="plotly_dark",
+                margin=dict(l=0, r=10, t=20, b=10),
+                height=320,
+                showlegend=False,
+            )
+            fig_fr.update_xaxes(
+                tickformat="0%",
+                range=[0, plot_df["pct"].max() * 1.1],
+            )
+
+            st.markdown(
+                """
+                <div style='font-size:1.05rem; font-weight:600; margin-bottom:5px;'>
+                    Franchise leverage: who holds the real power in this content universe?
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            st.plotly_chart(fig_fr, use_container_width=True)
+
+            st.markdown(
+                "<div style='font-size:0.75rem; opacity:0.7; margin-top:-8px;'>"
+                "% share of modeled Warner Bros content value in this sample. "
+                "Hover to see a TMDB poster link for each franchise."
+                "</div>",
+                unsafe_allow_html=True,
+            )
+
+# -------- AI Deal Analyst UI --------
+primary_buyer = cfg["buyer_label"]  # "Netflix" or "Paramount"
+
+st.markdown(
+    f"""
+<style>
+/* ----------------------------------- */
+/* 1. ANIMATION KEYFRAMES for Flicker */
+/* ----------------------------------- */
+@keyframes slow-glow {{
+    0% {{ box-shadow: 0 0 5px rgba(0, 255, 127, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4); }}
+    50% {{ box-shadow: 0 0 10px rgba(0, 255, 127, 0.8), 0 2px 8px rgba(0, 0, 0, 0.4); }}
+    100% {{ box-shadow: 0 0 5px rgba(0, 255, 127, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4); }}
+}}
+
+div[data-testid="stTextInput"] {{
+    margin-top: -25px !important;
+}}
+
+div.stTextInput > div:nth-child(2) > div:nth-child(1) {{
+    border: 1px solid #15F2FD;
+    border-radius: 4px;
+    padding: 3px;
+}}
+
+.accent-title {{
+    color: #15F2FD;
+    font-size: 1.25rem !important; 
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}}
+
+.sub-text {{
+    font-size: 0.95rem;
+    color: #AAAAAA; 
+    opacity: 0.85;
+}}
+
+.grounded-data-text {{
+    color: #4CAF50; 
+    font-weight: 500;
+}}
+
+.flicker-attention {{
+    animation: slow-glow 2s infinite alternate;
+}}
+</style>
+
+<div class='data-analyst-box flicker-attention' style='
+    padding: 16px; 
+    border-radius: 6px; 
+    border-left: 5px solid #15F2FD; 
+    background: #1C1C1C; 
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); 
+    margin-bottom: 20px;
+'>
+  <div class='accent-title' style='margin-bottom: 8px;'>
+    AI Deal Analyst — ask how this {primary_buyer} / Warner Bros scenario plays out
+  </div>
+  <div class='sub-text' style='margin-bottom: 4px;'>
+    Answers are grounded in this dashboard’s <span class='grounded-data-text'>live data</span>: franchise value, platform exposure,
+    your scenario setting, and the modeled WB catalog sample.
+  </div>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+user_q = st.text_input(
+    r"",
+    placeholder=(
+        f"e.g., Which platforms lose the most leverage if {primary_buyer} pulls the top HBO dramas in-house?"
+    ),
+    key="ai_question",
+)
+
+if user_q:
+    if not _openai_ok:
+        st.warning(
+            "The AI Deal Analyst is temporarily unavailable on this deployment. "
+            "Check that OPENAI_API_KEY is set and the OpenAI client is installed."
         )
+    else:
+        with st.spinner("Analyzing using your scenario and WB exposure model..."):
+            try:
+                context_json = build_context_for_llm(
+                    titles_df=titles_df,
+                    platform_exposure=PLATFORM_EXPOSURE,
+                    risk_top=risk_top,
+                    scenario=scenario,      # "Netflix" or "Paramount"
+                    hero_summary=SUMMARY,   # your hero metrics dict
+                )
 
-        fig_fr.update_layout(
-            xaxis_title="% of modeled WB value",
-            yaxis_title="Franchise / IP group",
-            template="plotly_dark",
-            margin=dict(l=0, r=20, t=10, b=10),
-            height=360,
-            showlegend=False,
-        )
+                sys_prompt = f"""
+You are an elite senior media strategy analyst specializing in mergers, content economics,
+and platform exposure.
 
-        # Percent ticks on x-axis
-        fig_fr.update_xaxes(
-            tickformat="0%",
-            range=[0, plot_df["pct"].max() * 1.1],
-        )
-        
-        st.markdown(
-            f"""
-            <div style='font-size:1.05rem; font-weight:600; margin-bottom:5px;'>
-                Rival platforms with WB value at risk
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+The current buyer lens is: {primary_buyer} bidding for Warner Bros.
+Use ONLY the structured data below to answer questions.
 
-        st.markdown(
-            """
-            <div style='font-size:1.05rem; font-weight:600; margin-top:20px; margin-bottom:5px;'>
-                Franchise leverage: who holds the real power in this content universe?
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+Here is the structured context (JSON):
+{context_json}
+
+Rules:
+- Never hallucinate titles that are not in the data.
+- Always tie answers to platforms, franchises, and relative exposure.
+- Treat values as directional, not precise forecasts.
+"""
+
+                completion = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": sys_prompt},
+                        {"role": "user", "content": user_q},
+                    ],
+                    max_tokens=350,
+                )
+
+                answer = completion.choices[0].message.content
+                st.markdown(f"### AI Analyst Response\n{answer}")
+
+            except Exception as e:
+                st.error(f"AI unavailable. Falling back to basic answers.\n\nError: {e}")
 
 
-        st.plotly_chart(fig_fr, use_container_width=True)
-
-        st.markdown(
-            "<div style='font-size:0.75rem; opacity:0.7; margin-top:-8px;'>"
-            "% share of modeled Warner Bros content value in this sample. "
-            "Hover to see a TMDB poster link for each franchise."
-            "</div>",
-            unsafe_allow_html=True,
-        )
-
+render_curated_headlines(cfg)
 
 # # Franchise Value Stack: who matters most?
 # fr_df = titles_df.copy()
@@ -1430,8 +1779,9 @@ else:
 # -------------------------------
 # Consumer Impact Card
 # -------------------------------
+st.subheader(cfg["subscriber_heading"])
 
-st.markdown("## How this affects **you** as a streaming subscriber")
+#st.markdown("## How this affects **you** as a streaming subscriber")
 
 exp_df = build_platform_exposure_df(titles_df)
 non_nf = exp_df[exp_df["platform"] != "Netflix"]
@@ -1477,8 +1827,9 @@ Under <b>{scenario}</b>, Netflix increasingly becomes the home of WB's prestige 
 # -------------------------------
 # Shareable takeaway card
 # -------------------------------
+st.subheader(cfg["deck_heading"])
 
-st.markdown("## One-slide takeaway deck")
+#st.markdown("## One-slide takeaway deck")
 #section_heading("One-slide takeaway deck")
 
 # Reuse exposure model to estimate how much WB value could consolidate into Netflix
@@ -1521,29 +1872,103 @@ takeaway_line_2 = (
     else f"{top_fr_1} and {top_fr_2}"
 )
 
+import base64
+
+def encode_img_to_base64(path):
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+buyer_label = cfg["buyer_label"]
+#scenario_meta = scenario_blurb[scenario]
+
+buyer_logo_paths = {
+    "Netflix": "data/logos/netflix.png",
+    "Paramount": "data/logos/paramount.png",
+}
+
+buyer_label = cfg["buyer_label"]
+logo_path = buyer_logo_paths.get(buyer_label, "")
+
+# Optional: slightly different tone line per scenario (local only, doesn’t touch scenario_blurb)
+impact_tone_map = {
+    "Conservative": "a low-disruption, early-warning scenario.",
+    "Base case": "the central, most-likely path the market may price in.",
+    "Aggressive": "a high-impact consolidation shock across the streaming stack.",
+}
+impact_tone = impact_tone_map.get(scenario, "")
+
+# Build watermark <img> only if we have a logo path
+watermark_html = ""
+if logo_path:
+    try:
+        b64_logo = encode_img_to_base64(logo_path)
+        watermark_html = (
+            f"<img src='data:image/png;base64,{b64_logo}' "
+            f"style='position:absolute; right:10px; bottom:10px; opacity:10; width:90px;'>"
+        )
+    except Exception as e:
+        st.write("Logo load error:", e)
+
 st.markdown(
     f"""
-<div style='padding:16px; border-radius:14px; background-color:#050816; border:1px solid #27272f;'>
+<div style='
+    position:relative;
+    padding:18px 16px 20px 16px;
+    border-radius:14px;
+    background-color:#050816;
+    border:1px solid #27272f;
+    overflow:hidden;
+'>
+  {watermark_html}
+
   <div style='font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9CA3AF; margin-bottom:4px;'>
-    Netflix / WB Fallout Simulator • Snapshot
+    {buyer_label} / Warner Bros Fallout Simulator • {scenario} snapshot
   </div>
-  <div style='font-size:1.1rem; font-weight:600; margin-bottom:6px;'>
+
+  <div style='font-size:1.1rem; font-weight:600; margin-bottom:8px;'>
     Under the <span style='font-weight:700;'>{scenario}</span> scenario ({scenario_blurb}),
-    Netflix could effectively absorb around <span style='font-weight:700;'>{netflix_gain_pct:.1f}%</span>
+    <b>{buyer_label}</b> could effectively absorb around
+    <span style='font-weight:700;'>{netflix_gain_pct:.1f}%</span>
     of the modeled WB content value currently sitting on rival platforms in this sample.
   </div>
-  <div style='font-size:0.95rem; color:#D1D5DB;'>
+
+  <div style='font-size:0.95rem; color:#D1D5DB; margin-bottom:8px;'>
     The leverage comes from franchises like <b>{takeaway_line_2}</b>, which dominate the modeled value pool
     and shift perception of where prestige WB storytelling lives.
   </div>
-  <div style='font-size:0.8rem; color:#9CA3AF; margin-top:8px;'>
-    Screenshot this card for decks, memos, or social posts – it’s generated directly from the scenario,
-    franchise scores, and platform exposure model used above.
+
+  <div style='font-size:0.85rem; color:#9CA3AF;'>
+    This reflects {impact_tone} Screenshot this card for decks, memos, or social posts – it's generated directly 
+    from the scenario, franchise scores, and platform exposure model used above.
   </div>
 </div>
 """,
     unsafe_allow_html=True,
 )
+
+# st.markdown(
+#     f"""
+# <div style='padding:16px; border-radius:14px; background-color:#050816; border:1px solid #27272f;'>
+#   <div style='font-size:0.8rem; text-transform:uppercase; letter-spacing:.12em; color:#9CA3AF; margin-bottom:4px;'>
+#     Netflix / WB Fallout Simulator • Snapshot
+#   </div>
+#   <div style='font-size:1.1rem; font-weight:600; margin-bottom:6px;'>
+#     Under the <span style='font-weight:700;'>{scenario}</span> scenario ({scenario_blurb}),
+#     Netflix could effectively absorb around <span style='font-weight:700;'>{netflix_gain_pct:.1f}%</span>
+#     of the modeled WB content value currently sitting on rival platforms in this sample.
+#   </div>
+#   <div style='font-size:0.95rem; color:#D1D5DB;'>
+#     The leverage comes from franchises like <b>{takeaway_line_2}</b>, which dominate the modeled value pool
+#     and shift perception of where prestige WB storytelling lives.
+#   </div>
+#   <div style='font-size:0.8rem; color:#9CA3AF; margin-top:8px;'>
+#     Screenshot this card for decks, memos, or social posts – it’s generated directly from the scenario,
+#     franchise scores, and platform exposure model used above.
+#   </div>
+# </div>
+# """,
+#     unsafe_allow_html=True,
+# )
 
 # scenario = st.radio(
 #     "Select a fallout mode:",
