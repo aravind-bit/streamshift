@@ -39,6 +39,17 @@ def _append_csv(path: Path, fieldnames, row: dict) -> None:
             writer.writeheader()
         writer.writerow(row)
 
+def get_latest_headlines(cfg, limit=4):
+    """Return recent headline snippets based on active scenario config."""
+    queries = cfg.get("news_queries", [])
+    articles = []
+    for q in queries:
+        try:
+            articles.extend(get_news_items(q, limit=1))
+        except:
+            continue  # skip failed sources
+    return articles[:limit]
+
 
 def log_usage(event_type: str, scenario: str | None = None, extra: dict | None = None) -> None:
     """
@@ -1072,14 +1083,11 @@ scenario = st.radio(
 log_usage("scenario_change", scenario=scenario)
 
 risk_top = globals().get("risk_top", None)
-
-import json
-
 def build_context_for_llm(
     titles_df: pd.DataFrame,
     platform_exposure: pd.DataFrame | None,
     risk_top: pd.DataFrame | None,
-    scenario: str,
+    scenario: str,          # "Conservative", "Base case", "Aggressive"
     hero_summary: dict,
 ) -> str:
     """
@@ -1125,16 +1133,70 @@ def build_context_for_llm(
     else:
         risk_slice = risk_top or []
 
+    # --- Cleaned "hero franchise" (never returns 'Other WB IP') ---
+    hero_franchise_clean = ""
+    if titles_df is not None and not titles_df.empty:
+        fr_col = None
+        for c in ["franchise_group", "franchise", "ip_group"]:
+            if c in titles_df.columns:
+                fr_col = c
+                break
+
+        if fr_col and "value_score_norm" in titles_df.columns:
+            tmp = titles_df[[fr_col, "value_score_norm"]].copy()
+            tmp[fr_col] = tmp[fr_col].fillna("Other WB IP").astype(str)
+            generic = {"Other WB IP", "All other WB IP", "Standalone / other"}
+
+            tmp = tmp[~tmp[fr_col].isin(generic)]
+            if not tmp.empty:
+                agg = (
+                    tmp.groupby(fr_col)["value_score_norm"]
+                    .sum()
+                    .sort_values(ascending=False)
+                )
+                hero_franchise_clean = str(agg.index[0])
+
+    if not hero_franchise_clean:
+        # Fallback: use whatever top_franchise hero summary had, unless it is one of the generic buckets
+        raw_top_fr = str(hero_summary.get("top_franchise", "") or "").strip()
+        if raw_top_fr and raw_top_fr not in ("Other WB IP", "All other WB IP", "Standalone / other"):
+            hero_franchise_clean = raw_top_fr
+        else:
+            hero_franchise_clean = "Multi-franchise mix"
+
+    # --- Top 2 rivals by WB share from platform_exposure ---
+    top_rivals = []
+    if platform_exposure is not None and not platform_exposure.empty:
+        if "platform" in platform_exposure.columns and "share" in platform_exposure.columns:
+            tmp_p = platform_exposure.copy()
+            tmp_p["platform"] = tmp_p["platform"].astype(str)
+            top_rivals = (
+                tmp_p.groupby("platform")["share"]
+                .sum()
+                .sort_values(ascending=False)
+                .head(2)
+                .index.tolist()
+            )
+
     # --- Hero summary already a dict (from compute_summary_metrics) ---
     hero_safe = {
         "total_titles": float(hero_summary.get("total_titles", 0)),
         "outside_pct": float(hero_summary.get("outside_pct", 0.0)),
         "top_franchise": str(hero_summary.get("top_franchise", "")),
         "top_platform": str(hero_summary.get("top_platform", "")),
+        "value_at_risk_pct": float(hero_summary.get("value_at_risk_pct", 0.0)),
+        "hero_franchise_clean": hero_franchise_clean,
+    }
+
+    # Light-weight scenario meta (handy for the AI, non-breaking)
+    scenario_meta = {
+        "level": scenario,  # "Conservative", "Base case", "Aggressive"
+        "top_rivals": top_rivals,
     }
 
     ctx = {
-        "scenario": scenario,  # "Netflix" or "Paramount"
+        "scenario": scenario,
+        "scenario_meta": scenario_meta,
         "hero_summary": hero_safe,
         "titles_sample": titles_slice,
         "platform_exposure": plat_slice,
@@ -1143,7 +1205,6 @@ def build_context_for_llm(
 
     # Make absolutely sure everything is serializable
     return json.dumps(ctx, indent=2, default=str)
-
 
 
 # st.markdown(
@@ -1279,35 +1340,135 @@ def build_context_for_llm(
 
 
 # ---- Metric tiles row ----
+
+# Buyer label from SCENARIO_CONFIG, but fail-safe to Netflix if cfg isn't in scope
+buyer_label = "Netflix"
+if "cfg" in globals() and isinstance(cfg, dict):
+    buyer_label = cfg.get("buyer_label", buyer_label)
+
+# Scenario level from the aggressiveness radio
+scenario_level = scenario  # "Conservative", "Base case", "Aggressive"
+
+# Simple directional pull-in factors for how much of outside_pct is "at risk"
+# under each aggressiveness setting. This is heuristic but honest.
+if "Aggressive" in scenario_level:
+    pull_factor = 1.0
+elif "Base" in scenario_level:
+    pull_factor = 0.6
+else:  # Conservative
+    pull_factor = 0.35
+
+# outside_pct is already a percentage-style number in your tiles (e.g. 100.0)
+value_at_risk_pct = outside_pct * pull_factor
+
+# Short label for copy
+short_scenario = (
+    "Conservative" if "Conservative" in scenario_level
+    else "Base" if "Base" in scenario_level
+    else "Aggressive"
+)
+
+# --- Helper numbers for the tiles, driven by current scenario/buyer ---
+# --- METRIC TILES ROW (replace your existing c1, c2, c3, c4 block) ---
+
+# Count how many rival platforms carry WB value (excluding the buyer itself if present)
+# --- METRIC TILES ROW (buyer + scenario aware, no 'Other WB IP') ---
+
+# 1) SAFE VALUE FOR "VALUE AT RISK" (we rename it in UI)
+# --- METRIC TILES ROW (new version) ---
+
+# 1) Ensure value_at_risk_pct is safe
+# --- Update hero_summary for AI + UI context ---
+SUMMARY.update({
+    "buyer_offer_value": {
+        "Netflix": "$82.7B cash + stock",
+        "Paramount": "$108.4B all-cash"
+    }.get(buyer_label, "—"),
+
+    "top_haul_title": {
+        "Netflix": "Game of Thrones",
+        "Paramount": "Harry Potter"
+    }.get(buyer_label, "—"),
+
+    "key_rival_impact": {
+        "Netflix": "Max shut down",
+        "Paramount": "Netflix loses WB shows"
+    }.get(buyer_label, "—")
+})
+
+# Simulated major asset lists (can later map to news/api/db)
+buyer_assets = {
+    "Netflix": ["HBO", "HBO Max", "Warner Bros. TV", "Warner Bros. Games"],
+    "Paramount": [
+        "HBO", "HBO Max", "CNN", "TNT", "HGTV", "Discovery", "Bleacher Report", "Warner Bros. TV", "Warner Bros. Games"
+    ],
+}
+assets = buyer_assets.get(buyer_label, [])
+asset_count = len(assets)
+asset_names = ", ".join(assets[:4]) + ("..." if len(assets) > 4 else "")
+
+# Extract values for display
+offer = SUMMARY["buyer_offer_value"]
+haul_title = SUMMARY["top_haul_title"]
+rival_impact = SUMMARY["key_rival_impact"]
+haul_caption = f"Most valuable IP pulled in under {buyer_label}'s offer."
+rival_caption = f"Likely first-order shock to a major rival platform."
+news_articles = get_latest_headlines(cfg, limit=4)
+
+# ---- Fancy Tiles ----
 c1, c2, c3, c4 = st.columns(4)
 
 with c1:
     metric_tile(
-        "WB titles modeled",
-        f"{total_titles}",
-        "Number of WB series & films included in this scenario sample.",
+        f"{buyer_label} Offer Value",
+        offer,
+        f"{buyer_label}'s bid for WBD, including studio, HBO, and streaming assets.",
     )
 
 with c2:
-    metric_tile("WB VALUE ON NON-NETFLIX PLATFORMS",
-                f"{outside_pct}",
-        "Share of modeled WB content value that, in this sample"
-        "other services (Max, Hulu, Prime etc.)"
+    metric_tile(
+        "Franchise Haul",
+        haul_title,
+        haul_caption
     )
 
 with c3:
     metric_tile(
-        "Top leverage franchise",
-        top_franchise or "—",
-        "Franchise with the highest modeled Warner Bros value in this sample.",
+        "Studio Assets in Play",
+        f"{asset_count} units",
+        f"Major WBD divisions {buyer_label} could absorb: {asset_names}"
     )
 
+
 with c4:
-    metric_tile(
-        "Most exposed platform",
-        top_platform or "—",
-        "Non-Netflix platform with the most WB value at risk if Netflix consolidates WB.",
-    )
+    if news_articles:
+        news_html = ""
+        for item in news_articles:
+            title = item.get("title", "—")
+            source = item.get("source", "")
+            date = item.get("published", "")[:16]
+            news_html += (
+                f"<div style='margin-bottom:6px; font-size:0.8rem;'>"
+                f"<b>• {title}</b><br>"
+                f"<span style='font-size:0.7rem; color:#9CA3AF;'>{source} · {date}</span></div>"
+            )
+
+        st.markdown(
+            f"""
+            <div style='padding:12px; border-radius:12px; background-color:#111827;
+                        border:1px solid #27272f; max-height:170px; overflow-y:auto;'>
+              <div style='font-size:0.75rem; text-transform:uppercase; letter-spacing:.12em;
+                          color:#9CA3AF; margin-bottom:6px;'>
+                Live Headlines
+              </div>
+              {news_html}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        metric_tile("Live Headlines", "—", "No recent headlines available.")
+
 
 # -------------------------------
 # Quick Fallout Snapshot + Franchises
@@ -2201,4 +2362,3 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
