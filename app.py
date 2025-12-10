@@ -94,9 +94,9 @@ def build_shock_findings(titles_df: pd.DataFrame, summary: dict, platform_exposu
     }.get(scenario, "a measured consolidation of WB content into Netflix")
 
     findings.append(
-        f"With the slider set to **{scenario}**, the model assumes **{scenario_label}** — use this to stress-test best, base, and worst-case views."
-        f" "
-        f"A {buyer_label} consolidation with WB instantly rewrites the streaming pecking order — and a few platforms suddenly rethink their life choices."
+        f"With the slider set to **{scenario}**, the model assumes **{scenario_label}** use this to stress-test best, base, and worst-case views.
+        "
+        f" A {buyer_label} consolidation with WB instantly rewrites the streaming pecking order and a few platforms suddenly rethink their life choices."
     )
 
     # 5) “Long tail” note (if we have enough titles)
