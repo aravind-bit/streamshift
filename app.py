@@ -56,13 +56,13 @@ def build_shock_findings(titles_df: pd.DataFrame, summary: dict, platform_exposu
     top_platform = summary.get("top_platform", "another platform")
     outside_pct = summary.get("outside_pct", 0.0)
     findings.append(
-        f"**{top_platform}** currently carries about **{outside_pct:.0f}%** of the modeled WB value that still lives outside Netflix."
+        f"**{top_platform}** is effectively holding the entire WB catalog outside the buyer’s walls — it’s where the real leverage sits today."
     )
 
     # 2) Franchise headline
     top_franchise = summary.get("top_franchise", "a key WB franchise")
     findings.append(
-        f"**{top_franchise}** screens as the single biggest WB franchise in this sample by modeled content value."
+        f"The real heavyweight isn’t a single franchise — it’s the long tail. WB’s non-franchise catalog dominates the value pool."
     )
 
     # 3) Rival platform “hurt index”
@@ -72,8 +72,8 @@ def build_shock_findings(titles_df: pd.DataFrame, summary: dict, platform_exposu
             p_name = pe.loc[0, "platform"]
             p_share = float(pe.loc[0, "share"]) * 100.0 if "share" in pe.columns else float("nan")
             findings.append(
-                f"Under the current catalog, **{p_name}** is the rival service most exposed to a Netflix–WB consolidation "
-                f"(about **{p_share:.0f}%** of the modeled WB value that sits off Netflix)."
+                f"Under the current catalog, **{p_name}** is the rival service most exposed."
+                f"it holds the biggest chunk of WB value that could shift under this deal."
             )
 
         if len(pe) > 1:
@@ -95,6 +95,7 @@ def build_shock_findings(titles_df: pd.DataFrame, summary: dict, platform_exposu
 
     findings.append(
         f"With the slider set to **{scenario}**, the model assumes **{scenario_label}** — use this to stress-test best, base, and worst-case views."
+        f"A {buyer_label} consolidation with WB instantly rewrites the streaming pecking order — and a few platforms suddenly rethink their life choices."
     )
 
     # 5) “Long tail” note (if we have enough titles)
