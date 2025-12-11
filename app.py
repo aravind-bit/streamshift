@@ -1971,8 +1971,8 @@ st.markdown(
     f"""
 <div style='padding:14px; border-radius:10px; background-color:#111111; border:1px solid #333;'>
 <b>If you're a Max subscriber:</b>  
-Max carries <b>{max_share:.1f}%</b> of WB value outside Netflix today.  
-Under the <b>{scenario}</b> scenario, this is the platform that feels it first if Netflix consolidates WB content.
+Max carries <b>{max_share:.1f}%</b> of WB value outside {buyer_label} today.  
+Under the <b>{scenario}</b> scenario, this is the platform that feels it first if {buyer_label} consolidates WB content.
 <br><br>
 <b>If you're a Prime Video viewer:</b>  
 Prime carries ~<b>{prime_share:.1f}%</b> of external WB value. Mostly catalog titles — low tentpole impact.
@@ -1981,7 +1981,7 @@ Prime carries ~<b>{prime_share:.1f}%</b> of external WB value. Mostly catalog ti
 Hulu carries ~<b>{hulu_share:.1f}%</b> of WB value. Exposure is long-tail rather than prestige draw.
 <br><br>
 <b>If you're a Netflix user:</b>  
-Under <b>{scenario}</b>, Netflix increasingly becomes the home of WB's prestige franchises (Harry Potter, GoT, DC, etc.).
+Under <b>{scenario}</b>, {buyer_label} increasingly becomes the home of WB's prestige franchises (Harry Potter, GoT, DC, etc.).
 </div>
 """,
     unsafe_allow_html=True,
