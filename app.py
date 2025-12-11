@@ -1980,7 +1980,7 @@ Prime carries ~<b>{prime_share:.1f}%</b> of external WB value. Mostly catalog ti
 <b>If you're on Hulu:</b>  
 Hulu carries ~<b>{hulu_share:.1f}%</b> of WB value. Exposure is long-tail rather than prestige draw.
 <br><br>
-<b>If you're a Netflix user:</b>  
+<b>If you're a {buyer_label} user:</b>  
 Under <b>{scenario}</b>, {buyer_label} increasingly becomes the home of WB's prestige franchises (Harry Potter, GoT, DC, etc.).
 </div>
 """,
